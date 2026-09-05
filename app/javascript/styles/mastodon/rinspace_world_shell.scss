@@ -9,38 +9,166 @@
   position: sticky;
   top: 0;
   flex: 0 0 auto;
-  background: color-mix(in srgb, var(--color-bg-primary) 94%, transparent);
+  min-height: 64px;
+  border-bottom: 1px solid var(--color-border-primary);
+  background: color-mix(in srgb, var(--color-bg-primary) 90%, transparent);
   color: var(--color-text-primary);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px);
 }
 
-.rinspace-world-topbar__search input {
+.rin-world-shell__nav {
+  grid-template-columns: minmax(160px, 1fr) minmax(240px, 420px) minmax(160px, 1fr);
+  gap: 16px;
+  width: 100%;
+  min-height: 64px;
+  padding: 0 28px;
+}
+
+.rin-world-shell__brand {
+  gap: 10px;
+  justify-self: start;
+  font-family: "Rinspace Newsreader", Newsreader, "Noto Serif SC", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.rin-world-shell__logo,
+.rin-world-shell__logo-content {
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+  border: 0;
+  border-radius: 0;
+}
+
+.rin-world-shell__logo-content {
+  overflow: visible;
+}
+
+.rin-world-shell__logo-content > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rin-world-shell__wordmark {
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: normal;
+}
+
+.rinspace-world-topbar__search {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  padding: 0 3px 0 10px;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-bg-secondary) 78%, transparent);
+}
+
+.rinspace-world-topbar__search input:not([type='hidden']) {
   box-sizing: border-box;
   width: 100%;
-  min-height: 38px;
-  border: 1px solid var(--color-border-primary);
-  border-radius: 999px;
-  padding: 0 16px;
-  background: var(--color-bg-secondary);
+  min-width: 0;
+  min-height: 30px;
+  border: 0;
+  padding: 0;
+  outline: 0;
+  background: transparent;
   color: var(--color-text-primary);
+  font-family: ui-monospace, "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
 }
 
-.rin-world-shell__actions > a {
+.rinspace-world-topbar__search button,
+.rin-world-shell__actions > .rinspace-world-topbar__action {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 1px solid var(--color-border-primary);
   border-radius: 999px;
-  padding: 9px 12px;
+  background: var(--color-bg-secondary);
   color: inherit;
-  font-weight: 600;
+  padding: 0;
   text-decoration: none;
+}
+
+.rinspace-world-topbar__search button {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+  border: 0;
+  background: var(--color-text-accent);
+  color: var(--color-bg-primary);
+  cursor: pointer;
+}
+
+.rinspace-world-topbar__search svg,
+.rinspace-world-topbar__action svg {
+  width: 18px;
+  height: 18px;
+}
+
+.rin-world-shell__actions {
+  gap: 10px;
+}
+
+.rin-world-shell__actions > .rinspace-world-topbar__action:hover,
+.rin-world-shell__actions > .rinspace-world-topbar__account:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-accent);
+}
+
+.rin-world-shell__actions > .rinspace-world-topbar__account {
+  display: inline-flex;
+  max-width: 168px;
+  height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 8px 3px 4px;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+  color: inherit;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.rinspace-world-topbar__avatar {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.rinspace-world-topbar__avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rinspace-world-topbar__account-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rin-world-shell__actions > a:hover {
-  background: var(--color-bg-secondary);
-}
-
 .rinspace-inner-runtime .columns-area__panels {
-  min-height: calc(100vh - var(--rin-world-shell-height, 64px));
-  min-height: calc(100dvh - var(--rin-world-shell-height, 64px));
+  min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - 64px);
 }
 
 // The shared world shell owns the Rinspace brand controls. Mastodon's
@@ -49,22 +177,80 @@
   display: none;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 620px) {
+  .rin-world-shell,
+  .rin-world-shell__nav {
+    min-height: 54px;
+  }
+
+  .rin-world-shell__nav {
+    grid-template-columns: minmax(0, 1fr) 38px auto;
+    gap: 8px;
+    padding: 8px max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
+  }
+
+  .rin-world-shell__brand {
+    min-width: 0;
+    max-width: 100%;
+    gap: 6px;
+    font-size: 1.08rem;
+  }
+
+  .rin-world-shell__logo,
+  .rin-world-shell__logo-content {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+
   .rin-world-shell__wordmark {
     max-width: 96px;
+    font-size: 0.9rem;
   }
 
-  .rinspace-world-topbar__search input {
-    width: 38px;
-    padding-inline: 10px;
+  .rin-world-shell__search {
+    grid-column: 2;
+    grid-row: 1;
   }
 
-  .rinspace-world-topbar__search input:not(:focus) {
-    color: transparent;
+  .rinspace-world-topbar__search {
+    width: 36px;
+    min-height: 36px;
+    padding: 0;
+    border-radius: 999px;
   }
 
-  .rin-world-shell__actions > a {
-    padding-inline: 8px;
-    font-size: 0.86rem;
+  .rinspace-world-topbar__search input:not([type='hidden']) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rinspace-world-topbar__search button {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+
+  .rin-world-shell__actions {
+    grid-column: 3;
+    grid-row: 1;
+    gap: 8px;
+  }
+
+  .rinspace-world-topbar__account {
+    max-width: 42px !important;
+    padding-right: 7px !important;
+  }
+
+  .rinspace-world-topbar__account-name {
+    display: none;
+  }
+
+  .rinspace-inner-runtime .columns-area__panels {
+    min-height: calc(100vh - 54px);
+    min-height: calc(100dvh - 54px);
   }
 }

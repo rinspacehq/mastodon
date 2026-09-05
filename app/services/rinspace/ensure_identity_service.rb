@@ -11,6 +11,7 @@ class Rinspace::EnsureIdentityService
     @bio = bio.to_s.strip
     @version = Integer(version)
     @state = state.to_s.strip
+    @recommendation_resync_required = false
     validate!
 
     binding = nil
@@ -29,6 +30,8 @@ class Rinspace::EnsureIdentityService
       apply_state!(binding)
     end
 
+    resync_recommendation_candidates!(binding.account) if @recommendation_resync_required
+
     Result.new(account: binding.account.reload, version: binding.profile_version)
   end
 
@@ -39,7 +42,7 @@ class Rinspace::EnsureIdentityService
     raise ArgumentError, 'invalid handle' unless Account::USERNAME_ONLY_RE.match?(@handle) && @handle.length <= 30
     raise ArgumentError, 'invalid version' if @version.negative?
     raise ArgumentError, 'invalid state' unless %w[active disabled deleted].include?(@state)
-    return if @avatar_url.blank? || Mastodon::RinspaceLocalOnly.allowed_outbound_url?(@avatar_url)
+    return if @avatar_url.blank? || Mastodon::RinspaceLocalOnly.allowed_profile_media_url?(@avatar_url)
 
     raise ArgumentError, 'avatar URL is outside the local trust boundary'
   end
@@ -69,6 +72,10 @@ class Rinspace::EnsureIdentityService
     account.display_name = @display_name
     account.note = @bio
     account.avatar_remote_url = @avatar_url if @avatar_url.present?
+    if account.discoverable.nil?
+      account.discoverable = true
+      @recommendation_resync_required = true
+    end
     account.save!
     binding.update!(current_handle: @handle, profile_version: @version)
   end
@@ -90,5 +97,13 @@ class Rinspace::EnsureIdentityService
 
   def desired_binding_state
     @state == 'active' ? 'verified' : @state
+  end
+
+  def resync_recommendation_candidates!(account)
+    return unless Rails.configuration.x.mastodon.rinspace_recommendations_enabled
+
+    Status.kept.local.where(account_id: account.id).find_each do |status|
+      Rinspace::RecommendationSyncWorker.perform_async(status.id)
+    end
   end
 end

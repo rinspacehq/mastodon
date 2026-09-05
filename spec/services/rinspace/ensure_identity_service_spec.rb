@@ -12,6 +12,22 @@ RSpec.describe Rinspace::EnsureIdentityService do
     expect(second.account.id).to eq(first.account.id)
     expect(Identity.find_by(provider: 'openid_connect', uid: 'uid-1').user.account_id).to eq(first.account.id)
     expect(RinspaceIdentityBinding.where(subject: 'uid-1').count).to eq(1)
+    expect(first.account.discoverable).to be true
+  end
+
+  it 'initializes legacy nil discoverability without overriding an explicit opt-out' do
+    result = service.call(subject: 'uid-discoverable', handle: 'discoverable', display_name: '', avatar_url: '', bio: '', version: 1)
+    result.account.update_column(:discoverable, false)
+
+    replayed = service.call(subject: 'uid-discoverable', handle: 'discoverable', display_name: '', avatar_url: '', bio: '', version: 1)
+
+    expect(replayed.account.discoverable).to be false
+  end
+
+  it 'rejects profile media outside the explicit trust boundary' do
+    expect do
+      service.call(subject: 'uid-avatar', handle: 'avatar', display_name: '', avatar_url: 'https://example.org/avatar.png', bio: '', version: 1)
+    end.to raise_error(ArgumentError, 'avatar URL is outside the local trust boundary')
   end
 
   it 'renames the same account and leaves the old handle reusable' do

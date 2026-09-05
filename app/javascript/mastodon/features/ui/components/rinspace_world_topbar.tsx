@@ -3,6 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import { useLocation } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
+import SearchIcon from '@/material-icons/400-24px/search.svg?react';
+
 import {
   RinspaceTopbar,
   flipTarget,
@@ -14,6 +18,7 @@ import type { WorldNavigationRequest } from '@rinspace/world-shell';
 import '@rinspace/world-shell/styles.css';
 
 const messages = defineMessages({
+  brandName: { id: 'rinspace.world.brand_name', defaultMessage: 'Rinspace' },
   navigation: { id: 'rinspace.world.navigation', defaultMessage: 'Rinspace inner-world navigation' },
   flip: { id: 'rinspace.world.flip_to_outer', defaultMessage: 'Flip to the outer world' },
   home: { id: 'rinspace.world.inner_home', defaultMessage: 'Go to the inner-world home' },
@@ -30,12 +35,15 @@ function innerHref(pathname: string, search: string, hash: string) {
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
-export const RinspaceWorldTopbar: React.FC<{ username?: string }> = ({
-  username,
-}) => {
+export const RinspaceWorldTopbar: React.FC<{
+  avatar?: string;
+  displayName?: string;
+  username?: string;
+}> = ({ avatar, displayName, username }) => {
   const intl = useIntl();
   const location = useLocation();
   const [query, setQuery] = useState('');
+  const brandName = intl.formatMessage(messages.brandName);
 
   useEffect(() => installWorldTransitionLifecycle(), []);
 
@@ -58,7 +66,17 @@ export const RinspaceWorldTopbar: React.FC<{ username?: string }> = ({
 
   return (
     <RinspaceTopbar
-      brandName='Rinspace'
+      brandName={brandName}
+      brandMark={(
+        <img
+          src='/assets/brand/rinspace-mark-128.png'
+          alt=''
+          width='128'
+          height='128'
+          draggable={false}
+        />
+      )}
+      brandWordmark={brandName}
       world='inner'
       currentHomeHref='/?world=inner'
       flipHref={flipHref}
@@ -89,13 +107,46 @@ export const RinspaceWorldTopbar: React.FC<{ username?: string }> = ({
               aria-label={intl.formatMessage(messages.search)}
               placeholder={intl.formatMessage(messages.searchPlaceholder)}
             />
+            <button
+              type='submit'
+              aria-label={intl.formatMessage(messages.search)}
+            >
+              <SearchIcon />
+            </button>
           </form>
         ),
-        publishing: <a href='/publish'>{intl.formatMessage(messages.publish)}</a>,
-        notifications: <a href='/notifications'>{intl.formatMessage(messages.notifications)}</a>,
+        publishing: (
+          <a
+            className='rinspace-world-topbar__action'
+            href='/publish'
+            aria-label={intl.formatMessage(messages.publish)}
+            title={intl.formatMessage(messages.publish)}
+          >
+            <AddIcon />
+          </a>
+        ),
+        notifications: (
+          <a
+            className='rinspace-world-topbar__action'
+            href='/notifications'
+            aria-label={intl.formatMessage(messages.notifications)}
+            title={intl.formatMessage(messages.notifications)}
+          >
+            <NotificationsIcon />
+          </a>
+        ),
         session: username ? (
-          <a href={`/@${encodeURIComponent(username)}?world=inner`}>
-            <span aria-hidden='true'>@{username}</span>
+          <a
+            className='rinspace-world-topbar__account'
+            href={`/@${encodeURIComponent(username)}?world=inner`}
+            aria-label={intl.formatMessage(messages.account)}
+          >
+            <span className='rinspace-world-topbar__avatar' aria-hidden='true'>
+              {avatar ? <img src={avatar} alt='' /> : username.slice(0, 1).toUpperCase()}
+            </span>
+            <span className='rinspace-world-topbar__account-name' aria-hidden='true'>
+              {displayName || username}
+            </span>
             <span className='sr-only'>{intl.formatMessage(messages.account)}</span>
           </a>
         ) : undefined,
