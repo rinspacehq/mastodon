@@ -1,0 +1,70 @@
+.rinspace-inner-runtime {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.rin-world-shell {
+  position: sticky;
+  top: 0;
+  flex: 0 0 auto;
+  background: color-mix(in srgb, var(--color-bg-primary) 94%, transparent);
+  color: var(--color-text-primary);
+  backdrop-filter: blur(16px);
+}
+
+.rinspace-world-topbar__search input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 999px;
+  padding: 0 16px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.rin-world-shell__actions > a {
+  border-radius: 999px;
+  padding: 9px 12px;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.rin-world-shell__actions > a:hover {
+  background: var(--color-bg-secondary);
+}
+
+.rinspace-inner-runtime .columns-area__panels {
+  min-height: calc(100vh - var(--rin-world-shell-height, 64px));
+  min-height: calc(100dvh - var(--rin-world-shell-height, 64px));
+}
+
+// The shared world shell owns the Rinspace brand controls. Mastodon's
+// navigation remains intact, but its second logo must never compete with them.
+.rinspace-inner-runtime .navigation-panel__logo {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .rin-world-shell__wordmark {
+    max-width: 96px;
+  }
+
+  .rinspace-world-topbar__search input {
+    width: 38px;
+    padding-inline: 10px;
+  }
+
+  .rinspace-world-topbar__search input:not(:focus) {
+    color: transparent;
+  }
+
+  .rin-world-shell__actions > a {
+    padding-inline: 8px;
+    font-size: 0.86rem;
+  }
+}

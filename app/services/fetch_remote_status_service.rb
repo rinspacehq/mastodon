@@ -2,6 +2,8 @@
 
 class FetchRemoteStatusService < BaseService
   def call(url, prefetched_body: nil, request_id: nil)
+    return if Mastodon::RinspaceLocalOnly.block_remote_operation(source: self.class.name, target: url)
+
     if prefetched_body.nil?
       resource_url, resource_options = FetchResourceService.new.call(url)
     else

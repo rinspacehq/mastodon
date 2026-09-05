@@ -15,10 +15,19 @@ class Api::BaseController < ApplicationController
 
   before_action :require_authenticated_user!, if: :disallow_unauthenticated_api_access?
   before_action :require_not_suspended!
+  before_action :require_rinspace_governed_write!
 
   vary_by 'Authorization'
 
   protect_from_forgery with: :null_session
+
+  rescue_from Rinspace::ModerationRejectedError do
+    render json: { error: 'Content requires moderation review' }, status: :unprocessable_content
+  end
+
+  rescue_from Rinspace::ModerationUnavailableError do
+    render json: { error: 'Content review is temporarily unavailable' }, status: :service_unavailable
+  end
 
   def doorkeeper_unauthorized_render_options(error: nil)
     { json: { error: error.try(:description) || 'Not authorized' } }
@@ -96,6 +105,19 @@ class Api::BaseController < ApplicationController
   end
 
   private
+
+  def require_rinspace_governed_write!
+    return unless ENV['RINSPACE_IDENTITY_STRICT'] == 'true' && !request.get? && !request.head? && !request.options?
+    return if current_user.nil?
+
+    unless Rails.configuration.x.mastodon.rinspace_community_write_enabled
+      response.headers['Retry-After'] = '300'
+      return render json: { error: 'Rinspace community writes are not enabled for this rollout stage' }, status: :service_unavailable
+    end
+
+    binding = RinspaceIdentityBinding.find_by(account_id: current_user.account_id)
+    render json: { error: 'Rinspace identity is not permitted to write' }, status: 403 unless binding&.state == 'verified'
+  end
 
   def respond_with_error(code)
     render json: { error: Rack::Utils::HTTP_STATUS_CODES[code] }, status: code

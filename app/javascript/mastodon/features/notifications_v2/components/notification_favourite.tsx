@@ -66,12 +66,6 @@ export const NotificationFavourite: React.FC<{
   unread: boolean;
 }> = ({ notification, unread }) => {
   const { statusId } = notification;
-  const statusAccount = useAppSelector(
-    (state) =>
-      state.accounts.get(state.statuses.getIn([statusId, 'account']) as string)
-        ?.acct,
-  );
-
   const isPrivateMention = useAppSelector(
     (state) => state.statuses.getIn([statusId, 'visibility']) === 'direct',
   );
@@ -87,7 +81,7 @@ export const NotificationFavourite: React.FC<{
       count={notification.notifications_count}
       labelRenderer={isPrivateMention ? privateLabelRenderer : labelRenderer}
       labelSeeMoreHref={
-        statusAccount ? `/@${statusAccount}/${statusId}/favourites` : undefined
+        statusId ? `/statuses/${statusId}/favourites` : undefined
       }
       unread={unread}
     />

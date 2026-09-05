@@ -9,6 +9,7 @@ import {
   ChatCircleTextIcon,
   DotsThreeIcon,
   HeartIcon,
+  EyeIcon,
   ShareFatIcon,
 } from '@phosphor-icons/react';
 
@@ -35,6 +36,7 @@ import type { Account } from '@/mastodon/models/account';
 import type { MenuItem } from '@/mastodon/models/dropdown_menu';
 import type { Relationship } from '@/mastodon/models/relationship';
 import type { StatusShape } from '@/mastodon/models/status';
+import { statusPath } from '@/mastodon/utils/status_path';
 import {
   PERMISSION_MANAGE_FEDERATION,
   PERMISSION_MANAGE_USERS,
@@ -76,6 +78,7 @@ const messages = defineMessages({
   block: { id: 'account.block', defaultMessage: 'Block @{name}' },
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
   share: { id: 'status.share', defaultMessage: 'Share' },
+  views: { id: 'status.views', defaultMessage: 'Views' },
   replyAll: { id: 'status.replyAll', defaultMessage: 'Reply to thread' },
   favourite: { id: 'status.favourite', defaultMessage: 'Favorite' },
   removeFavourite: {
@@ -233,6 +236,12 @@ export const StatusActionBar: React.FC<StatusActionBarProps> = ({
         {withCounters && status.favourites_count}
       </Button>
 
+      {status.views_count !== undefined && (
+        <Button size='sm' variant='ghost' title={intl.formatMessage(messages.views)} leadingIcon={EyeIcon} disabled>
+          {withCounters && status.views_count}
+        </Button>
+      )}
+
       {isPublic && (
         <IconButton
           size='sm'
@@ -383,13 +392,12 @@ function getMenuItems({
 }: MenuItemsParams) {
   const menu: MenuItem[] = [];
 
-  const statusId = status.id;
   const statusUrl = status.url ?? status.uri;
   const { isPublic, isLocal, isLoggedIn, isMine } = conditions;
 
   menu.push({
     text: intl.formatMessage(messages.open),
-    to: `/@${account?.acct}/${statusId}`,
+    to: statusPath(status),
   });
 
   if (isPublic && !isLocal) {

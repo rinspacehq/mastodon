@@ -39,6 +39,10 @@ class StatusStat < ApplicationRecord
     [attributes['quotes_count'], 0].max
   end
 
+  def views_count
+    [attributes['views_count'], 0].max
+  end
+
   private
 
   def clamp_untrusted_counts

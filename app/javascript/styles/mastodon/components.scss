@@ -3134,6 +3134,64 @@ a.account__display-name {
   }
 }
 
+.rinspace-feed-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-border-color);
+  background: var(--background-color);
+
+  button {
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--primary-text-color);
+    background: transparent;
+    cursor: pointer;
+
+    &[aria-selected='true'] {
+      color: var(--button-text-color);
+      background: var(--button-background-color);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  .rinspace-feed-tabs__privacy {
+    color: var(--secondary-text-color);
+    font-size: 12px;
+  }
+}
+
+.rinspace-feed-explanation {
+  margin: 0;
+  padding: 0 16px 10px;
+  color: var(--secondary-text-color);
+  background: var(--background-color);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.rinspace-recommendation-controls {
+  padding: 0 16px 10px;
+  color: var(--secondary-text-color);
+  background: var(--background-color);
+  font-size: 12px;
+
+  summary,
+  button {
+    cursor: pointer;
+  }
+
+  p {
+    margin: 8px 0;
+  }
+}
+
 .tabs-bar__wrapper {
   background: var(--color-bg-primary);
   backdrop-filter: $backdrop-blur-filter;

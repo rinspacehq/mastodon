@@ -11,6 +11,7 @@ class StatusesController < ApplicationController
   before_action :require_account_signature!, only: [:show, :activity], if: -> { request.format == :json && authorized_fetch_mode? }
   before_action :set_status
   before_action :redirect_to_original, only: :show
+  before_action :redirect_to_canonical_permalink, only: :show, if: :rinspace_permalink?
   before_action :verify_embed_allowed, only: :embed
 
   after_action :set_link_headers
@@ -26,8 +27,6 @@ class StatusesController < ApplicationController
     respond_to do |format|
       format.html do
         expires_in 10.seconds, public: true if current_account.nil?
-
-        redirect_to short_account_status_path(@account, @status) if account_id_param.present? && username_param.blank?
       end
 
       format.json do
@@ -51,18 +50,33 @@ class StatusesController < ApplicationController
 
   private
 
+  def account_required?
+    !rinspace_permalink?
+  end
+
+  def rinspace_permalink?
+    params[:rinspace_permalink] == true
+  end
+
   def verify_embed_allowed
     not_found if @status.hidden? || @status.reblog?
   end
 
   def set_link_headers
+    return if Mastodon::RinspaceLocalOnly.enabled?
+
     response.headers['Link'] = LinkHeader.new(
       [[ActivityPub::TagManager.instance.uri_for(@status), [%w(rel alternate), %w(type application/activity+json)]]]
     ).to_s
   end
 
   def set_status
-    @status = @account.statuses.find(params[:id])
+    if rinspace_permalink?
+      @status = Status.local.find(params[:id])
+      @account = @status.account
+    else
+      @status = @account.statuses.find(params[:id])
+    end
     authorize @status, :show?
   rescue ActiveRecord::RecordNotFound, Mastodon::NotPermittedError
     not_found
@@ -70,6 +84,13 @@ class StatusesController < ApplicationController
 
   def redirect_to_original
     redirect_to(ActivityPub::TagManager.instance.url_for(@status.reblog), allow_other_host: true) if @status.reblog?
+  end
+
+  def redirect_to_canonical_permalink
+    slug = Rinspace::StatusSlug.for(@status)
+    return if params[:slug] == slug
+
+    redirect_to canonical_rinspace_status_path(@status.id, slug), status: :found
   end
 
   def activity_serializer

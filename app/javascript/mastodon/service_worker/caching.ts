@@ -5,14 +5,25 @@ import { DAY } from '../utils/time';
 
 const CACHE_NAME_PREFIX = 'mastodon-';
 const CACHE_HEADER_TTL = 'x-timestamp';
+export const INNER_WORLD_ROOT = '/?world=inner';
+
+const CACHEABLE_LOCAL_PATHS = [
+  '/packs/',
+  '/fonts/',
+  '/system/',
+  '/avatars/',
+  '/headers/',
+  '/media_attachments/',
+  '/emoji/',
+];
 
 export async function cacheRoot() {
   const cache = await openWebCache();
-  const response = await fetch('/', {
+  const response = await fetch(INNER_WORLD_ROOT, {
     credentials: 'include',
     redirect: 'manual',
   });
-  await cache.put('/', response);
+  await cache.put(innerWorldRootUrl(), response);
 }
 
 export function handleFetch(event: FetchEvent) {
@@ -22,13 +33,23 @@ export function handleFetch(event: FetchEvent) {
     return;
   }
 
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   if (url.pathname === '/auth/sign_out') {
     event.respondWith(handleLogout(event));
-  } else if (/intl\/.*\.js$/.test(url.pathname)) {
+  } else if (/^\/intl\/.*\.js$/.test(url.pathname)) {
     event.respondWith(cacheFirst({ event, name: 'locales' }));
-  } else if (event.request.destination === 'font') {
+  } else if (
+    event.request.destination === 'font' &&
+    CACHEABLE_LOCAL_PATHS.some((prefix) => url.pathname.startsWith(prefix))
+  ) {
     event.respondWith(cacheFirst({ event, name: 'fonts' }));
-  } else if (event.request.destination === 'image') {
+  } else if (
+    event.request.destination === 'image' &&
+    CACHEABLE_LOCAL_PATHS.some((prefix) => url.pathname.startsWith(prefix))
+  ) {
     event.respondWith(cacheFirst({ event, name: 'images', ttl: DAY * 7 }));
   }
 }
@@ -140,8 +161,12 @@ async function handleLogout(event: FetchEvent) {
 
   if (response.ok || response.type === 'opaqueredirect') {
     const cache = await openWebCache();
-    await cache.delete('/');
+    await cache.delete(innerWorldRootUrl());
   }
 
   return response;
+}
+
+function innerWorldRootUrl() {
+  return new URL(INNER_WORLD_ROOT, self.location.origin);
 }

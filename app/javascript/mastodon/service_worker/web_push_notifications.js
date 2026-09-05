@@ -18,7 +18,7 @@ const notify = options =>
         icon: '/android-chrome-192x192.png',
         tag: GROUP_TAG,
         data: {
-          url: (new URL('/notifications', self.location)).href,
+          url: (new URL('/notifications?world=inner', self.location)).href,
           count: notifications.length + 1,
           preferred_locale: options.data.preferred_locale,
         },
@@ -96,9 +96,10 @@ export const handlePush = (event) => {
       options.data      = { access_token, preferred_locale, id: notification.status ? notification.status.id : notification.account.id };
 
       if (notification.status) {
-        options.data.url = `/@${notification.status.account.acct}/${notification.status.id}`;
+        const statusUrl = new URL(notification.status.url, self.location.origin);
+        options.data.url = statusUrl.origin === self.location.origin ? `${statusUrl.pathname}${statusUrl.search}` : `/p/${notification.status.id}`;
       } else {
-        options.data.url = `/@${notification.account.acct}`;
+        options.data.url = `/@${notification.account.acct}?world=inner`;
       }
 
       if (notification.status && notification.status.spoiler_text || notification.status.sensitive) {
@@ -124,7 +125,7 @@ export const handlePush = (event) => {
         tag: notification_id,
         timestamp: new Date(),
         badge: '/badge.png',
-        data: { access_token, preferred_locale, url: '/notifications' },
+        data: { access_token, preferred_locale, url: '/notifications?world=inner' },
       });
     }),
   );

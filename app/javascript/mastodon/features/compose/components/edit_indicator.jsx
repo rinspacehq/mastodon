@@ -14,6 +14,7 @@ import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { EmbeddedStatusContent } from 'mastodon/features/notifications_v2/components/embedded_status_content';
+import { statusPathFromUrl } from 'mastodon/utils/status_path';
 
 const messages = defineMessages({
   cancel: { id: 'reply_indicator.cancel', defaultMessage: 'Cancel' },
@@ -40,7 +41,7 @@ export const EditIndicator = () => {
         <div className='edit-indicator__display-name'>
           <Link to={`/@${account.get('acct')}`}>@{account.get('acct')}</Link>
           ·
-          <Link to={`/@${account.get('acct')}/${status.get('id')}`}><RelativeTimestamp timestamp={status.get('created_at')} /></Link>
+          <Link to={statusPathFromUrl(status.get('id'), status.get('url'))}><RelativeTimestamp timestamp={status.get('created_at')} /></Link>
         </div>
 
         <div className='edit-indicator__cancel'>

@@ -5,6 +5,7 @@ class Api::V1::MediaController < Api::BaseController
   before_action :require_user!
   before_action :set_media_attachment, except: [:create, :destroy]
   before_action :check_processing, except: [:create, :destroy]
+  before_action :review_rinspace_media_description!, only: [:create, :update]
 
   def show
     render json: @media_attachment, serializer: REST::MediaAttachmentSerializer, status: status_code_for_media_attachment
@@ -35,6 +36,19 @@ class Api::V1::MediaController < Api::BaseController
   end
 
   private
+
+  def review_rinspace_media_description!
+    return unless ENV['RINSPACE_IDENTITY_STRICT'] == 'true' && params[:description].present?
+
+    binding = RinspaceIdentityBinding.find_by!(account_id: current_account.id, state: 'verified')
+    Rinspace::ModerationClient.new.review_text!(
+      subject: binding.subject,
+      target_type: 'media_description',
+      target_id: params[:id].presence || request.request_id,
+      title: '',
+      text: params[:description].to_s
+    )
+  end
 
   def status_code_for_media_attachment
     @media_attachment.not_processed? ? 206 : 200

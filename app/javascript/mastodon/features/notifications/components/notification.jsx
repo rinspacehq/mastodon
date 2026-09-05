@@ -78,7 +78,7 @@ class Notification extends ImmutablePureComponent {
     const { notification } = this.props;
 
     if (notification.get('status')) {
-      this.props.history.push(`/@${notification.getIn(['status', 'account', 'acct'])}/${notification.get('status')}`);
+      this.props.history.push(`/p/${notification.get('status')}`);
     } else {
       this.handleOpenProfile();
     }

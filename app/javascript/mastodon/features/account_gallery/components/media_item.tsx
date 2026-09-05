@@ -12,6 +12,7 @@ import { formatTime } from 'mastodon/features/video';
 import { autoPlayGif, displayMedia, useBlurhash } from 'mastodon/initial_state';
 import type { Status, MediaAttachment } from 'mastodon/models/status';
 import { useAppSelector } from 'mastodon/store';
+import { statusPathFromUrl } from 'mastodon/utils/status_path';
 
 export const MediaItem: React.FC<{
   attachment: MediaAttachment;
@@ -195,7 +196,7 @@ export const MediaItem: React.FC<{
 
       <a
         className='media-gallery__item-thumbnail'
-        href={`/@${account?.acct}/${statusId}`}
+        href={statusPathFromUrl(statusId, status.get('url') as string | null)}
         onClick={handleClick}
         target='_blank'
         rel='noopener noreferrer'

@@ -10,6 +10,8 @@ class ActivityPub::FetchRemoteStatusService < BaseService
   # Should be called when uri has already been checked for locality
   def call(uri, prefetched_body: nil, on_behalf_of: nil, expected_actor_uri: nil, request_id: nil, depth: nil)
     return if domain_not_allowed?(uri)
+    return ActivityPub::TagManager.instance.uri_to_resource(uri, Status) if ActivityPub::TagManager.instance.local_uri?(uri)
+    return if Mastodon::RinspaceLocalOnly.block_remote_operation(source: self.class.name, target: uri)
 
     @depth = depth || 0
     @request_id = request_id || "#{Time.now.utc.to_i}-status-#{uri}"

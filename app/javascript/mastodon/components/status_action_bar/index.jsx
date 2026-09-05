@@ -15,9 +15,11 @@ import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
 import StarIcon from '@/material-icons/400-24px/star-fill.svg?react';
 import StarBorderIcon from '@/material-icons/400-24px/star.svg?react';
+import VisibilityIcon from '@/material-icons/400-24px/visibility.svg?react';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { PERMISSION_MANAGE_USERS, PERMISSION_MANAGE_FEDERATION } from 'mastodon/permissions';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
+import { statusPathFromUrl } from 'mastodon/utils/status_path';
 
 import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { me, quickBoosting } from '../../initial_state';
@@ -40,6 +42,7 @@ const messages = defineMessages({
   block: { id: 'account.block', defaultMessage: 'Block @{name}' },
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
   share: { id: 'status.share', defaultMessage: 'Share' },
+  views: { id: 'status.views', defaultMessage: 'Views' },
   more: { id: 'status.more', defaultMessage: 'More' },
   replyAll: { id: 'status.replyAll', defaultMessage: 'Reply to thread' },
   favourite: { id: 'status.favourite', defaultMessage: 'Favorite' },
@@ -226,7 +229,8 @@ class StatusActionBar extends ImmutablePureComponent {
   };
 
   handleOpen = () => {
-    this.props.history.push(`/@${this.props.status.getIn(['account', 'acct'])}/${this.props.status.get('id')}`);
+    const { status } = this.props;
+    this.props.history.push(statusPathFromUrl(status.get('id'), status.get('url')));
   };
 
   handleEmbed = () => {
@@ -404,6 +408,11 @@ class StatusActionBar extends ImmutablePureComponent {
         <div className='status__action-bar__button-wrapper'>
           <IconButton className='status__action-bar__button bookmark-icon' disabled={!signedIn} active={status.get('bookmarked')} title={bookmarkTitle} icon='bookmark' iconComponent={status.get('bookmarked') ? BookmarkIcon : BookmarkBorderIcon} onClick={this.handleBookmarkClick} />
         </div>
+        {status.get('views_count') !== undefined && (
+          <div className='status__action-bar__button-wrapper'>
+            <IconButton className='status__action-bar__button' disabled title={intl.formatMessage(messages.views)} icon='eye' iconComponent={VisibilityIcon} counter={withCounters ? status.get('views_count') : undefined} />
+          </div>
+        )}
         <RemoveQuoteHint className='status__action-bar__button-wrapper' canShowHint={shouldShowQuoteRemovalHint}>
           {(dismissQuoteHint) => (
             <Dropdown

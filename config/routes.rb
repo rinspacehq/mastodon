@@ -15,6 +15,15 @@ def redirect_with_vary(path)
 end
 
 Rails.application.routes.draw do
+  namespace :api do
+    namespace :rinspace do
+      namespace :v1 do
+        resources :identity_bindings, only: :create
+        resources :tag_bindings, only: :create
+        resources :follows, only: :create
+      end
+    end
+  end
   root 'home#index'
 
   mount LetterOpenerWeb::Engine, at: 'letter_opener' if Rails.env.development?
@@ -171,10 +180,13 @@ Rails.application.routes.draw do
   constraints(account_username: %r{[^@/.]+}) do
     get '/@:account_username/following', to: 'following_accounts#index'
     get '/@:account_username/followers', to: 'follower_accounts#index'
-    get '/@:account_username/:id', to: 'statuses#show', as: :short_account_status
-    get '/@:account_username/:id/embed', to: 'statuses#embed', as: :embed_short_account_status
+    get '/@:account_username/:id/embed', to: 'application#raise_not_found', constraints: { id: /\d+/ }, defaults: { unmatched_route: 'legacy-status-embed' }
+    get '/@:account_username/:id', to: 'application#raise_not_found', constraints: { id: /\d+/ }, defaults: { unmatched_route: 'legacy-status' }
     get '/@:account_username/wrapstodon/:year/:share_key', to: 'wrapstodon#show', as: :public_wrapstodon
   end
+
+  get '/p/:id', to: 'statuses#show', as: :rinspace_status, constraints: { id: /\d+/ }, defaults: { rinspace_permalink: true }
+  get '/p/:id/:slug', to: 'statuses#show', as: :canonical_rinspace_status, constraints: { id: /\d+/, slug: %r{[^/]+} }, defaults: { rinspace_permalink: true }
 
   get '/@:username_with_domain/(*any)', to: 'home#index', constraints: { username_with_domain: %r{([^/])+?} }, as: :account_with_domain, format: false
   get '/settings', to: redirect('/settings/profile')

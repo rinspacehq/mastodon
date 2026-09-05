@@ -156,6 +156,10 @@ class Status < ApplicationRecord
 
   after_create_commit :trigger_create_webhooks
   after_update_commit :trigger_update_webhooks
+  after_create_commit :sync_rinspace_recommendation
+  after_create_commit :sync_rinspace_creation_feedback
+  after_update_commit :sync_rinspace_recommendation
+  after_destroy_commit :sync_rinspace_recommendation
 
   after_create_commit  :increment_counter_caches
   after_destroy_commit :decrement_counter_caches
@@ -309,6 +313,10 @@ class Status < ApplicationRecord
 
   def quotes_count
     status_stat&.quotes_count || 0
+  end
+
+  def views_count
+    status_stat&.views_count || 0
   end
 
   # Reblogs count received from an external instance
@@ -498,5 +506,17 @@ class Status < ApplicationRecord
 
   def trigger_update_webhooks
     TriggerWebhookWorker.perform_async('status.updated', 'Status', id) if local?
+  end
+
+  def sync_rinspace_recommendation
+    Rinspace::RecommendationSyncWorker.perform_async(id) if ENV['RINSPACE_LOCAL_ONLY'] == 'true'
+  end
+
+  def sync_rinspace_creation_feedback
+    if ENV['RINSPACE_LOCAL_ONLY'] == 'true' && (reblog_of_id.present? || in_reply_to_id.present?)
+      kind = reblog_of_id.present? ? 'repost' : 'reply'
+      target_id = reblog_of_id || in_reply_to_id
+      Rinspace::RecommendationFeedbackWorker.perform_async(kind, account_id, target_id, true)
+    end
   end
 end

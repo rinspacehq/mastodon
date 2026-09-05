@@ -34,6 +34,8 @@ require_relative '../lib/paperclip/response_with_limit_adapter'
 require_relative '../lib/terrapin/multi_pipe_extensions'
 require_relative '../lib/mastodon/middleware/public_file_server'
 require_relative '../lib/mastodon/middleware/socket_cleanup'
+require_relative '../lib/mastodon/rinspace_local_only'
+require_relative '../lib/mastodon/middleware/rinspace_local_only'
 require_relative '../lib/mastodon/email_configuration_helper'
 require_relative '../lib/mastodon/feature'
 require_relative '../lib/mastodon/snowflake'
@@ -87,6 +89,7 @@ module Mastodon
 
     config.middleware.use Rack::Deflater if ENV['RACK_COMPRESS'] == 'true'
     config.middleware.use Mastodon::Middleware::PublicFileServer if Rails.env.local? || ENV['RAILS_SERVE_STATIC_FILES'] == 'true'
+    config.middleware.use Mastodon::Middleware::RinspaceLocalOnly
     config.middleware.use Rack::Attack
     config.middleware.use Mastodon::Middleware::SocketCleanup
 
@@ -101,6 +104,7 @@ module Mastodon
     config.x.captcha = config_for(:captcha)
     config.x.email = config_for(:email)
     config.x.mastodon = config_for(:mastodon)
+    raise 'RINSPACE_LOCAL_ONLY must remain true in the Rinspace fork' unless config.x.mastodon.rinspace_local_only || Rails.env.test?
     config.x.omniauth = config_for(:omniauth)
     config.x.translation = config_for(:translation)
     config.x.vapid = config_for(:vapid)

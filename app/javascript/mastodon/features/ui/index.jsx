@@ -34,6 +34,7 @@ import { initialState, forceSingleColumn, me, owner, singleUserMode, trendsEnabl
 
 import BundleColumnError from './components/bundle_column_error';
 import { NavigationBar } from './components/navigation_bar';
+import { RinspaceWorldTopbar } from './components/rinspace_world_topbar';
 import { UploadArea } from './components/upload_area';
 import { HashtagMenuController } from './components/hashtag_menu_controller';
 import { ColumnsArea } from './components/columns_area';
@@ -244,10 +245,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={['/accounts/:id/followers', '/users/:acct/followers', '/@:acct/followers']} component={Followers} content={children} />
             <WrappedRoute path={['/accounts/:id/following', '/users/:acct/following', '/@:acct/following']} component={Following} content={children} />
             <WrappedRoute path={['/@:acct/media', '/accounts/:id/media']} component={AccountGallery} content={children} />
-            <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
-            <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
-            <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />
-            <WrappedRoute path='/@:acct/:statusId/quotes' component={Quotes} content={children} />
+            <WrappedRoute path='/p/:statusId/:slug?' exact component={Status} content={children} />
 
             {/* Legacy routes, cannot be easily factored with other routes because they share a param name */}
             <WrappedRoute path='/timelines/tag/:id' component={HashtagTimeline} content={children} />
@@ -639,23 +637,27 @@ class UI extends PureComponent {
     return (
       <Hotkeys global handlers={handlers}>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
-          {!minimalShell && (
-            <SkipLinks
-              multiColumn={layout === 'multi-column'}
-              onFocusGettingStartedColumn={this.handleHotkeyGoToStart}
-            />
-          )}
+          <RinspaceWorldTopbar username={this.props.username} />
 
-          <SwitchingColumnsArea
-            identity={this.props.identity}
-            location={location}
-            singleColumn={layout === 'mobile' || layout === 'single-column'}
-            layout={layout}
-            forceOnboarding={firstLaunch && newAccount}
-            minimalShell={minimalShell}
-          >
-            {children}
-          </SwitchingColumnsArea>
+          <div className='rinspace-inner-runtime' data-rin-world-main>
+            {!minimalShell && (
+              <SkipLinks
+                multiColumn={layout === 'multi-column'}
+                onFocusGettingStartedColumn={this.handleHotkeyGoToStart}
+              />
+            )}
+
+            <SwitchingColumnsArea
+              identity={this.props.identity}
+              location={location}
+              singleColumn={layout === 'mobile' || layout === 'single-column'}
+              layout={layout}
+              forceOnboarding={firstLaunch && newAccount}
+              minimalShell={minimalShell}
+            >
+              {children}
+            </SwitchingColumnsArea>
+          </div>
 
           {!minimalShell && !isRedesignEnabled() && <NavigationBar />}
           {layout !== 'mobile' && <PictureInPicture />}

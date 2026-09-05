@@ -26,6 +26,14 @@ class Bookmark < ApplicationRecord
   end
 
   after_destroy :invalidate_cleanup_info
+  after_create_commit -> { sync_rinspace_feedback(true) }
+  after_destroy_commit -> { sync_rinspace_feedback(false) }
+
+  private
+
+  def sync_rinspace_feedback(active)
+    Rinspace::RecommendationFeedbackWorker.perform_async('bookmark', account_id, status_id, active) if ENV['RINSPACE_LOCAL_ONLY'] == 'true'
+  end
 
   def invalidate_cleanup_info
     return unless status&.account_id == account_id && account.local?

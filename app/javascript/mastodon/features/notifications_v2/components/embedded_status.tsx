@@ -17,6 +17,7 @@ import { ContentWarning } from 'mastodon/components/content_warning';
 import { DisplayName } from 'mastodon/components/display_name';
 import { Icon } from 'mastodon/components/icon';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
+import { statusPathFromUrl } from 'mastodon/utils/status_path';
 
 import { EmbeddedStatusContent } from './embedded_status_content';
 
@@ -65,7 +66,10 @@ export const EmbeddedStatus: React.FC<{ statusId: string }> = ({
       }
 
       if (deltaX + deltaY < 5 && account) {
-        const path = `/@${account.acct}/${statusId}`;
+        const path = statusPathFromUrl(
+          statusId,
+          status?.get('url') as string | null,
+        );
 
         if (button === 0 && !(ctrlKey || metaKey)) {
           history.push(path, { focusTarget: FOCUS_TARGET.POST });

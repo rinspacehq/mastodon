@@ -294,7 +294,7 @@ export function submitCompose(successCallback) {
         action: messages.open,
         dismissAfter: 10000,
         onClick: () => browserHistory.push(
-          `/@${response.data.account.username}/${response.data.id}`,
+          `/p/${response.data.id}`,
           { focusTarget: 'detailed-status' }
         ),
       }));

@@ -31,8 +31,14 @@ class Favourite < ApplicationRecord
   after_create :increment_cache_counters
   after_destroy :decrement_cache_counters
   after_destroy :invalidate_cleanup_info
+  after_create_commit -> { sync_rinspace_feedback(true) }
+  after_destroy_commit -> { sync_rinspace_feedback(false) }
 
   private
+
+  def sync_rinspace_feedback(active)
+    Rinspace::RecommendationFeedbackWorker.perform_async('like', account_id, status_id, active) if ENV['RINSPACE_LOCAL_ONLY'] == 'true'
+  end
 
   def increment_cache_counters
     status&.increment_count!(:favourites_count)

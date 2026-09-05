@@ -20,6 +20,7 @@ import type { Status } from 'mastodon/models/status';
 import { makeGetStatus } from 'mastodon/selectors';
 import type { RootState } from 'mastodon/store';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
+import { statusPathFromUrl } from 'mastodon/utils/status_path';
 
 const messages = defineMessages({
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
@@ -124,7 +125,12 @@ export const Footer: React.FC<{
 
       onClose();
 
-      history.push(`/@${account?.acct}/${status.get('id') as string}`);
+      history.push(
+        statusPathFromUrl(
+          status.get('id') as string,
+          status.get('url') as string | null,
+        ),
+      );
     },
     [history, status, account, onClose],
   );
@@ -190,7 +196,10 @@ export const Footer: React.FC<{
           icon='external-link'
           iconComponent={OpenInNewIcon}
           onClick={handleOpenClick}
-          href={`/@${account?.acct}/${status.get('id') as string}`}
+          href={statusPathFromUrl(
+            status.get('id') as string,
+            status.get('url') as string | null,
+          )}
         />
       )}
     </div>

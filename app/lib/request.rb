@@ -95,6 +95,7 @@ class Request
 
     @verb        = verb
     @url         = normalize_preserving_url_encodings(url, SAFE_PRESERVED_CHARS)
+    Mastodon::RinspaceLocalOnly.assert_outbound_allowed!(@url, source: self.class.name)
     @http_client = options.delete(:http_client)
     @allow_local = options.delete(:allow_local)
     @options     = {

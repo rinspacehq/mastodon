@@ -2,6 +2,7 @@
 
 require_relative '../../lib/mastodon/sidekiq_middleware'
 require_relative '../../lib/mastodon/worker_batch_middleware'
+require_relative '../../lib/mastodon/rinspace_local_only_sidekiq_middleware'
 
 Sidekiq.configure_server do |config|
   config.redis = REDIS_CONFIGURATION.sidekiq
@@ -72,11 +73,13 @@ Sidekiq.configure_server do |config|
   end
 
   config.server_middleware do |chain|
+    chain.add Mastodon::RinspaceLocalOnlySidekiqMiddleware
     chain.add Mastodon::SidekiqMiddleware
     chain.add SidekiqUniqueJobs::Middleware::Server
   end
 
   config.client_middleware do |chain|
+    chain.add Mastodon::RinspaceLocalOnlySidekiqMiddleware
     chain.add SidekiqUniqueJobs::Middleware::Client
     chain.add Mastodon::WorkerBatchMiddleware
   end
@@ -103,6 +106,7 @@ Sidekiq.configure_client do |config|
   config.redis = REDIS_CONFIGURATION.sidekiq
 
   config.client_middleware do |chain|
+    chain.add Mastodon::RinspaceLocalOnlySidekiqMiddleware
     chain.add SidekiqUniqueJobs::Middleware::Client
     chain.add Mastodon::WorkerBatchMiddleware
   end
