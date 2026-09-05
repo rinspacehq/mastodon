@@ -32,7 +32,7 @@
 | `RIN-002` | `rinspace-product` | 同上 | `/p/:id/:slug`、slug v1、REST/Web 元数据和客户端链接；旧帖子地址 404 | Ruby/TypeScript 共享 fixture、请求测试和路由审计 | 公开网页 URL 改变；ActivityPub 标识保持不变 | rebase 后复查帖子、引用、通知、搜索、分享和 oEmbed 链接生成器 |
 | `RIN-003` | `rinspace-product` | 同上 | 固定 `world-shell` 制品、共享顶栏、里世界布局与 adapter；Rinspace Logo 和本地化品牌文字采用表世界导航几何 | `yarn typecheck`、生产 Vite 构建、锁文件摘要校验 | 打包兼容 AGPL 的公开包并保留源码清单 | 重装 clean、不可变制品后仍须保留两个独立品牌控件，并对两套 runtime 做视觉比较 |
 | `RIN-004` | `long-lived-safety` | 同上 | 客户端路由规范化、路由清单、PWA 启动地址、Service Worker 缓存与 push 落点 | `yarn audit:rinspace-routes`；Service Worker 与路径聚焦 Vitest | 改变 PWA 导航及缓存行为 | 新增上游路由必须先进入公开契约，否则审计失败 |
-| `RIN-005` | `long-lived-safety` | 同上 | 预配 OIDC 身份、签名身份/标签/关注 API、资料与 handle 生命周期、HTTPS 精确主机头像导入 | binding、服务签名、OIDC 和领域服务聚焦测试 | 新增私有集成 API 与 `RINSPACE_PROFILE_MEDIA_HOSTS`；密钥仅留服务端 | 保留冲突 fail closed 与删除终态语义；头像白名单不得扩张成联邦出站能力 |
+| `RIN-005` | `long-lived-safety` | 同上 | 预配 OIDC 身份、签名身份/标签/关注 API、资料与 handle 生命周期、HTTPS 精确主机头像/封面导入，支持可选更新与显式清除 | binding、服务签名、OIDC 和领域服务聚焦测试 | 新增私有集成 API 与 `RINSPACE_PROFILE_MEDIA_HOSTS`；密钥仅留服务端 | 保留冲突 fail closed、删除终态与封面字段缺失兼容语义；媒体白名单不得扩张成联邦出站能力 |
 | `RIN-006` | `long-lived-safety` | 同上 | 全局受治理写入身份门禁和 Control Plane 审核 | 写入口请求测试与审核客户端测试 | 改变 mutation 行为并依赖审核服务 | 每次 rebase 重新枚举全部上游写 controller |
 | `RIN-007` | `rinspace-product` | 同上 | 本地 Gorse 候选、二次权限过滤推荐、反馈与用户控制、可发现状态补齐、冷启动时过滤后的本地最新回退 | Gorse、推荐、趋势与偏好设置测试 | 新增本地偏好与 timeline API | Gorse 只排序，授权始终由 Mastodon 决定；不得覆盖用户明确的不可发现选择 |
 | `RIN-008` | `rinspace-product` | 同上 | 聚合 `views_count`、Redis HMAC 去重、可见性序列化和客户端观察 | 请求、worker 与 TypeScript 检查 | REST Status 增加可选字段和本地写端点 | 浏览计数与推荐阅读反馈保持分离 |

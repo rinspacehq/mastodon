@@ -27,6 +27,16 @@ RSpec.describe 'Rinspace identity binding API' do
     expect(response).to have_http_status(:unauthorized)
   end
 
+  it 'forwards an explicitly empty header so an existing cover can be cleared' do
+    body = { subject: 'api-header', handle: 'apiheader', displayName: 'API Header', headerUrl: '', version: 1 }.to_json
+    headers = signed_headers('/api/rinspace/v1/identity_bindings', body, nonce: 'h' * 20)
+
+    post '/api/rinspace/v1/identity_bindings', params: body, headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(RinspaceIdentityBinding.find_by(subject: 'api-header').account.header_file_name).to be_nil
+  end
+
   def signed_headers(path, body, nonce:)
     timestamp = Time.now.to_i.to_s
     body_hash = OpenSSL::Digest::SHA256.hexdigest(body)

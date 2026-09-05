@@ -28,6 +28,31 @@ RSpec.describe Rinspace::EnsureIdentityService do
     expect do
       service.call(subject: 'uid-avatar', handle: 'avatar', display_name: '', avatar_url: 'https://example.org/avatar.png', bio: '', version: 1)
     end.to raise_error(ArgumentError, 'avatar URL is outside the local trust boundary')
+
+    expect do
+      service.call(subject: 'uid-header', handle: 'header', display_name: '', avatar_url: '', header_url: 'https://example.org/header.png', bio: '', version: 1)
+    end.to raise_error(ArgumentError, 'header URL is outside the local trust boundary')
+  end
+
+  it 'projects, preserves, and explicitly clears a shared profile header' do
+    header_url = 'https://assets.example.org/header.png'
+    previous_hosts = ENV.fetch('RINSPACE_PROFILE_MEDIA_HOSTS', nil)
+    ENV['RINSPACE_PROFILE_MEDIA_HOSTS'] = 'assets.example.org'
+    Mastodon::RinspaceLocalOnly.instance_variable_set(:@profile_media_hosts, nil)
+    stub_request(:get, header_url).to_return(request_fixture('avatar.txt'))
+
+    projected = service.call(subject: 'uid-cover', handle: 'covered', display_name: '', avatar_url: '', header_url:, bio: '', version: 1)
+    expect(projected.account.header_file_name).to be_present
+
+    preserved = service.call(subject: 'uid-cover', handle: 'covered', display_name: '', avatar_url: '', bio: '', version: 2)
+    expect(preserved.account.header_file_name).to eq(projected.account.header_file_name)
+
+    cleared = service.call(subject: 'uid-cover', handle: 'covered', display_name: '', avatar_url: '', header_url: '', bio: '', version: 3)
+    expect(cleared.account.header_file_name).to be_nil
+    expect(cleared.account.header_remote_url).to be_blank
+  ensure
+    ENV['RINSPACE_PROFILE_MEDIA_HOSTS'] = previous_hosts
+    Mastodon::RinspaceLocalOnly.instance_variable_set(:@profile_media_hosts, nil)
   end
 
   it 'renames the same account and leaves the old handle reusable' do

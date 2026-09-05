@@ -3,11 +3,13 @@
 class Rinspace::EnsureIdentityService
   Result = Data.define(:account, :version)
 
-  def call(subject:, handle:, display_name:, avatar_url:, bio:, version:, state: 'active')
+  def call(subject:, handle:, display_name:, avatar_url:, bio:, version:, state: 'active', header_url: nil)
     @subject = subject.to_s.strip
     @handle = handle.to_s.strip.downcase
     @display_name = display_name.to_s.strip
     @avatar_url = avatar_url.to_s.strip
+    @header_url_provided = !header_url.nil?
+    @header_url = header_url.to_s.strip
     @bio = bio.to_s.strip
     @version = Integer(version)
     @state = state.to_s.strip
@@ -42,9 +44,12 @@ class Rinspace::EnsureIdentityService
     raise ArgumentError, 'invalid handle' unless Account::USERNAME_ONLY_RE.match?(@handle) && @handle.length <= 30
     raise ArgumentError, 'invalid version' if @version.negative?
     raise ArgumentError, 'invalid state' unless %w[active disabled deleted].include?(@state)
-    return if @avatar_url.blank? || Mastodon::RinspaceLocalOnly.allowed_profile_media_url?(@avatar_url)
+    if @avatar_url.present? && !Mastodon::RinspaceLocalOnly.allowed_profile_media_url?(@avatar_url)
+      raise ArgumentError, 'avatar URL is outside the local trust boundary'
+    end
+    return unless @header_url_provided && @header_url.present? && !Mastodon::RinspaceLocalOnly.allowed_profile_media_url?(@header_url)
 
-    raise ArgumentError, 'avatar URL is outside the local trust boundary'
+    raise ArgumentError, 'header URL is outside the local trust boundary'
   end
 
   def create_binding!
@@ -72,6 +77,14 @@ class Rinspace::EnsureIdentityService
     account.display_name = @display_name
     account.note = @bio
     account.avatar_remote_url = @avatar_url if @avatar_url.present?
+    if @header_url_provided
+      if @header_url.present?
+        account.header_remote_url = @header_url
+      else
+        account.header = nil
+        account.header_remote_url = ''
+      end
+    end
     if account.discoverable.nil?
       account.discoverable = true
       @recommendation_resync_required = true
@@ -102,7 +115,7 @@ class Rinspace::EnsureIdentityService
   def resync_recommendation_candidates!(account)
     return unless Rails.configuration.x.mastodon.rinspace_recommendations_enabled
 
-    Status.kept.local.where(account_id: account.id).find_each do |status|
+    Status.kept.local.where(account_id: account.id).reorder(nil).find_each do |status|
       Rinspace::RecommendationSyncWorker.perform_async(status.id)
     end
   end
