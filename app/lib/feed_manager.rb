@@ -45,6 +45,8 @@ class FeedManager
   # @param [Account|List] receiver
   # @return [void|Symbol] nil, :filter, or :skip_home
   def filter(timeline_type, status, receiver)
+    return :filter if Mastodon::RinspaceLocalOnly.enabled? && !status.local?
+
     case timeline_type
     when :home
       filter_from_home(status, receiver.id, build_crutches(receiver.id, [status]), :home)

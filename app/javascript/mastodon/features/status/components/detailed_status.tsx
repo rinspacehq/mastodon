@@ -35,6 +35,7 @@ import { Video } from 'mastodon/features/video';
 import { useIdentity } from 'mastodon/identity_context';
 import type { CollectionAttachment } from 'mastodon/models/status';
 import { compareUrls } from 'mastodon/utils/compare_urls';
+import { statusPathFromUrl } from 'mastodon/utils/status_path';
 
 import Card from './card';
 
@@ -326,7 +327,7 @@ export const DetailedStatus: React.FC<{
   } else {
     reblogLink = (
       <Link
-        to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/reblogs`}
+        to={`/statuses/${status.get('id')}/reblogs`}
         className='detailed-status__link'
       >
         <FormattedMessage
@@ -350,7 +351,7 @@ export const DetailedStatus: React.FC<{
   } else if (signedIn) {
     quotesLink = (
       <Link
-        to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/quotes`}
+        to={`/statuses/${status.get('id')}/quotes`}
         className='detailed-status__link'
       >
         <FormattedMessage
@@ -388,7 +389,7 @@ export const DetailedStatus: React.FC<{
 
   const favouriteLink = (
     <Link
-      to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/favourites`}
+      to={`/statuses/${status.get('id')}/favourites`}
       className='detailed-status__link'
     >
       <FormattedMessage
@@ -404,6 +405,19 @@ export const DetailedStatus: React.FC<{
         }}
       />
     </Link>
+  );
+
+  const viewsLink = status.get('views_count') === undefined ? null : (
+    <span className='detailed-status__link'>
+      <FormattedMessage
+        id='status.views_count'
+        defaultMessage='{count, plural, one {{counter} view} other {{counter} views}}'
+        values={{
+          count: status.get('views_count'),
+          counter: <AnimatedNumber value={status.get('views_count')} />,
+        }}
+      />
+    </span>
   );
 
   const { statusContentProps, hashtagBar } = getHashtagBarForStatus(
@@ -423,6 +437,7 @@ export const DetailedStatus: React.FC<{
         className={classNames('detailed-status', {
           'status--has-quote': !!status.get('quote'),
         })}
+        data-rinspace-status-id={status.get('id')}
       >
         {status.get('visibility') === 'direct' && (
           <div className='status__prepend'>
@@ -506,7 +521,10 @@ export const DetailedStatus: React.FC<{
           <div className='detailed-status__meta__line'>
             <a
               className='detailed-status__datetime'
-              href={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}`}
+              href={statusPathFromUrl(
+                status.get('id') as string,
+                status.get('url') as string | null,
+              )}
               target='_blank'
               rel='noopener noreferrer'
             >
@@ -537,8 +555,10 @@ export const DetailedStatus: React.FC<{
             {reblogLink}
             {reblogLink && <>·</>}
             {quotesLink}
-            {quotesLink && <>·</>}
+            ·
             {favouriteLink}
+            {viewsLink && '·'}
+            {viewsLink}
           </div>
         </div>
       </div>

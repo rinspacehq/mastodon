@@ -19,6 +19,7 @@ class PublicFeed
   # @param [Integer] min_id
   # @return [Array<Status>]
   def get(limit, max_id = nil, since_id = nil, min_id = nil)
+    return [] if Mastodon::RinspaceLocalOnly.enabled? && options[:remote] && !options[:local]
     return [] if incompatible_feed_settings?
 
     scope = public_scope
@@ -70,10 +71,14 @@ class PublicFeed
   end
 
   def local_only?
+    return true if Mastodon::RinspaceLocalOnly.enabled?
+
     (options[:local] && !options[:remote]) || !user_has_access_to_feed?(remote_feed_setting)
   end
 
   def remote_only?
+    return false if Mastodon::RinspaceLocalOnly.enabled?
+
     (options[:remote] && !options[:local]) || !user_has_access_to_feed?(local_feed_setting)
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_12_154114) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_05_093000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1094,6 +1094,53 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_154114) do
     t.index ["target_account_id"], name: "index_reports_on_target_account_id"
   end
 
+  create_table "rinspace_identity_bindings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "current_handle", null: false
+    t.bigint "profile_version", default: 0, null: false
+    t.string "state", default: "verified", null: false
+    t.string "subject", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((current_handle)::text)", name: "index_rinspace_identities_on_lower_handle", unique: true
+    t.index ["account_id"], name: "index_rinspace_identity_bindings_on_account_id", unique: true
+    t.index ["subject"], name: "index_rinspace_identity_bindings_on_subject", unique: true
+    t.check_constraint "state::text = ANY (ARRAY['verified'::character varying::text, 'disabled'::character varying::text, 'deleted'::character varying::text])", name: "rinspace_identity_state"
+  end
+
+  create_table "rinspace_integration_operations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "idempotency_key", null: false
+    t.string "operation_type", null: false
+    t.string "request_hash", null: false
+    t.jsonb "result", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.index ["operation_type", "idempotency_key"], name: "index_rinspace_operations_on_type_and_key", unique: true
+  end
+
+  create_table "rinspace_service_nonces", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "nonce", null: false
+    t.string "service", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_rinspace_service_nonces_on_expires_at"
+    t.index ["service", "nonce"], name: "index_rinspace_service_nonces_on_service_and_nonce", unique: true
+  end
+
+  create_table "rinspace_tag_bindings", force: :cascade do |t|
+    t.bigint "binding_version", default: 0, null: false
+    t.string "canonical_name", null: false
+    t.datetime "created_at", null: false
+    t.bigint "rinspace_tag_id", null: false
+    t.string "state", default: "verified", null: false
+    t.bigint "tag_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rinspace_tag_id"], name: "index_rinspace_tag_bindings_on_rinspace_tag_id", unique: true
+    t.index ["tag_id"], name: "index_rinspace_tag_bindings_on_tag_id", unique: true
+    t.check_constraint "state::text = ANY (ARRAY['verified'::character varying::text, 'unbound'::character varying::text])", name: "rinspace_tag_binding_state"
+  end
+
   create_table "rule_translations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "hint", default: "", null: false
@@ -1226,7 +1273,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_154114) do
     t.bigint "untrusted_favourites_count"
     t.bigint "untrusted_reblogs_count"
     t.datetime "updated_at", precision: nil, null: false
+    t.bigint "views_count", default: 0, null: false
     t.index ["status_id"], name: "index_status_stats_on_status_id", unique: true
+    t.check_constraint "views_count >= 0", name: "status_stats_views_count_nonnegative"
   end
 
   create_table "status_trends", force: :cascade do |t|
@@ -1257,6 +1306,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_154114) do
     t.integer "quote_approval_policy", default: 0, null: false
     t.bigint "reblog_of_id"
     t.boolean "reply", default: false, null: false
+    t.string "rinspace_review_state", default: "unreviewed", null: false
     t.boolean "sensitive", default: false, null: false
     t.text "spoiler_text", default: "", null: false
     t.text "text", default: "", null: false
@@ -1274,7 +1324,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_154114) do
     t.index ["in_reply_to_account_id"], name: "index_statuses_on_in_reply_to_account_id", where: "(in_reply_to_account_id IS NOT NULL)"
     t.index ["in_reply_to_id"], name: "index_statuses_on_in_reply_to_id", where: "(in_reply_to_id IS NOT NULL)"
     t.index ["reblog_of_id", "account_id"], name: "index_statuses_on_reblog_of_id_and_account_id"
+    t.index ["rinspace_review_state", "visibility", "id"], name: "index_statuses_on_rinspace_recommendation", where: "((deleted_at IS NULL) AND (local = true))"
     t.index ["uri"], name: "index_statuses_on_uri", unique: true, opclass: :text_pattern_ops, where: "(uri IS NOT NULL)"
+    t.check_constraint "rinspace_review_state::text = ANY (ARRAY['unreviewed'::character varying, 'approved'::character varying, 'rejected'::character varying, 'removed'::character varying]::text[])", name: "statuses_rinspace_review_state"
   end
 
   create_table "statuses_tags", primary_key: ["tag_id", "status_id"], force: :cascade do |t|
@@ -1601,6 +1653,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_154114) do
   add_foreign_key "reports", "accounts", column: "target_account_id", name: "fk_eb37af34f0", on_delete: :cascade
   add_foreign_key "reports", "accounts", name: "fk_4b81f7522c", on_delete: :cascade
   add_foreign_key "reports", "oauth_applications", column: "application_id", on_delete: :nullify
+  add_foreign_key "rinspace_identity_bindings", "accounts", on_delete: :cascade
+  add_foreign_key "rinspace_tag_bindings", "tags", on_delete: :cascade
   add_foreign_key "rule_translations", "rules", on_delete: :cascade
   add_foreign_key "scheduled_statuses", "accounts", on_delete: :cascade
   add_foreign_key "session_activations", "oauth_access_tokens", column: "access_token_id", name: "fk_957e5bda89", on_delete: :cascade

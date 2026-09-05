@@ -105,9 +105,7 @@ export const Conversation: React.FC<{
     }
 
     if (lastStatus) {
-      history.push(
-        `/@${lastStatus.getIn(['account', 'acct']) as string}/${lastStatus.get('id')}`,
-      );
+      history.push(`/p/${lastStatus.get('id')}`);
     }
   }, [dispatch, history, unread, id, lastStatus]);
 

@@ -53,7 +53,7 @@ class ManifestSerializer < ActiveModel::Serializer
   end
 
   def start_url
-    '/'
+    '/?world=inner'
   end
 
   def scope

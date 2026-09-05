@@ -9,9 +9,10 @@ import type {
   LocationDescriptorObject,
   Path,
 } from 'history';
-import { createBrowserHistory } from 'history';
+import { createBrowserHistory, createPath, parsePath } from 'history';
 
 import { isDevelopment } from 'mastodon/utils/environment';
+import { innerWorldPath } from 'mastodon/utils/world_path';
 
 import { forceSingleColumn, hasMultiColumnPath } from '../initial_state';
 
@@ -73,6 +74,11 @@ function normalizePath(
   ) {
     location.pathname = `/deck${location.pathname}`;
   }
+
+  const canonicalInnerPath = parsePath(innerWorldPath(createPath(location)));
+  location.pathname = canonicalInnerPath.pathname;
+  location.search = canonicalInnerPath.search;
+  location.hash = canonicalInnerPath.hash;
 
   return location;
 }

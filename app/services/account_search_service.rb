@@ -186,9 +186,9 @@ class AccountSearchService < BaseService
       # This will not return any immediate results but has the
       # potential to fill the local database with relevant
       # accounts for the next time the search is performed.
-      Fasp::AccountSearchWorker.perform_async(@query) if options[:query_fasp]
+      Fasp::AccountSearchWorker.perform_async(@query) if options[:query_fasp] && !Mastodon::RinspaceLocalOnly.enabled?
 
-      search_service_results.compact.uniq.tap do |results|
+      search_service_results.compact.uniq.select { |result| !Mastodon::RinspaceLocalOnly.enabled? || result.local? }.tap do |results|
         span.set_attribute('search.results.count', results.size)
       end
     end
@@ -198,6 +198,7 @@ class AccountSearchService < BaseService
 
   def search_service_results
     return [] if query.blank? || limit < 1
+    return [] if Mastodon::RinspaceLocalOnly.remote_account_reference?(query)
 
     [exact_match] + search_results
   end
@@ -207,7 +208,7 @@ class AccountSearchService < BaseService
 
     return @exact_match if defined?(@exact_match)
 
-    match = if options[:resolve]
+    match = if options[:resolve] && !Mastodon::RinspaceLocalOnly.enabled?
               ResolveAccountService.new.call(query)
             elsif domain_is_local?
               Account.find_local(query_username)

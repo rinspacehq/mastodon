@@ -57,6 +57,7 @@ namespace :api, format: false do
         resource :source, only: :show
 
         resource :interaction_policy, only: :update
+        resource :view, only: :create, controller: :views
 
         post :translate, to: 'translations#create'
       end
@@ -64,6 +65,7 @@ namespace :api, format: false do
 
     namespace :timelines do
       resource :home, only: :show, controller: :home
+      resource :recommended, only: :show, controller: :recommended
       resource :public, only: :show, controller: :public
       resource :link, only: :show, controller: :link
       resources :tag, only: :show
@@ -79,6 +81,8 @@ namespace :api, format: false do
     resources :suggestions, only: [:index, :destroy]
     resources :scheduled_statuses, only: [:index, :show, :update, :destroy]
     resources :preferences, only: [:index]
+    delete '/rinspace_preferences/interests/:interest', to: 'rinspace_preferences#destroy_interest'
+    resource :rinspace_preferences, only: [:show, :update, :destroy]
     resources :donation_campaigns, only: [:index]
 
     resources :annual_reports, only: [:index, :show] do

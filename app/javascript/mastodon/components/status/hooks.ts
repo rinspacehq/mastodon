@@ -17,6 +17,7 @@ import type {
 } from '@/mastodon/models/status';
 import { selectStatusFilters } from '@/mastodon/selectors/filters';
 import { useAppSelector, useAppDispatch } from '@/mastodon/store';
+import { statusPath } from '@/mastodon/utils/status_path';
 
 import { FOCUS_TARGET } from '../navigation_focus_target';
 
@@ -102,7 +103,7 @@ export function useStatusHandlers({
         return;
       }
 
-      const path = `/@${status.account.acct}/${status.id}`;
+      const path = statusPath(status);
 
       if (newTab) {
         window.open(path, '_blank', 'noopener');

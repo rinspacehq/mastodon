@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import type { NotificationGroupReblog } from 'mastodon/models/notification_group';
-import { useAppSelector } from 'mastodon/store';
 
 import type { LabelRenderer } from './notification_group_with_status';
 import { NotificationGroupWithStatus } from './notification_group_with_status';
@@ -38,12 +37,6 @@ export const NotificationReblog: React.FC<{
   unread: boolean;
 }> = ({ notification, unread }) => {
   const { statusId } = notification;
-  const statusAccount = useAppSelector(
-    (state) =>
-      state.accounts.get(state.statuses.getIn([statusId, 'account']) as string)
-        ?.acct,
-  );
-
   return (
     <NotificationGroupWithStatus
       type='reblog'
@@ -55,7 +48,7 @@ export const NotificationReblog: React.FC<{
       count={notification.notifications_count}
       labelRenderer={labelRenderer}
       labelSeeMoreHref={
-        statusAccount ? `/@${statusAccount}/${statusId}/reblogs` : undefined
+        statusId ? `/statuses/${statusId}/reblogs` : undefined
       }
       unread={unread}
     />

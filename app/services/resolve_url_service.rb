@@ -10,6 +10,10 @@ class ResolveURLService < BaseService
     @url          = url
     @on_behalf_of = on_behalf_of
 
+    if !local_url? && Mastodon::RinspaceLocalOnly.block_remote_operation(source: self.class.name, target: @url)
+      return
+    end
+
     if local_url?
       process_local_url
     elsif !fetched_resource.nil?

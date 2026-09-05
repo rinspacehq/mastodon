@@ -30,6 +30,7 @@ import type {
 import { selectPlainAccount } from '@/mastodon/selectors/accounts';
 import { selectAccountStatus } from '@/mastodon/selectors/statuses';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
+import { statusPath } from '@/mastodon/utils/status_path';
 import type { OnElementHandler } from '@/mastodon/utils/html';
 
 import classes from './attachments.module.scss';
@@ -47,7 +48,7 @@ export const ComposeQuote: React.FC<{ id: string }> = ({ id }) => {
     return null;
   }
 
-  const statusTo = `/@${status.account.acct}/${status.id}`;
+  const statusTo = statusPath(status);
 
   return (
     <Card onDelete={handleDelete}>
@@ -255,7 +256,7 @@ const ComposeQuoteLink: React.FC<{ status: AccountStatusShape }> = ({
 
   if (quotedPost) {
     link = (
-      <Link to={`/@${quotedPost.account.acct}/${quotedPost.id}`}>
+      <Link to={statusPath(quotedPost)}>
         {quotedPost.uri}
       </Link>
     );

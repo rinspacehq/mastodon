@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import type { Account, AccountShapeFull } from '@/mastodon/models/account';
 import { selectAccountStatus } from '@/mastodon/selectors/statuses';
 import { useAppSelector } from '@/mastodon/store';
+import { statusPath } from '@/mastodon/utils/status_path';
 
 import { Avatar } from '../avatar';
 import { AvatarOverlay } from '../avatar_overlay';
@@ -68,7 +69,7 @@ export const StatusHeader: FC<StatusHeaderProps> = ({
       {contentBeforeDate}
 
       <Link
-        to={`/@${statusAccount.acct}/${status.id}`}
+        to={statusPath(status)}
         className='status__relative-time'
       >
         <span className='status__visibility-icon'>

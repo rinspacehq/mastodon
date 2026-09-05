@@ -24,9 +24,8 @@ class ActivityPub::TagManager
     when :person
       target.instance_actor? ? about_more_url(instance_actor: true) : short_account_url(target)
     when :note, :comment, :activity
-      return activity_account_status_url(target.account, target) if target.reblog?
-
-      short_account_status_url(target.account, target)
+      target = target.reblog if target.reblog?
+      canonical_rinspace_status_url(target.id, Rinspace::StatusSlug.for(target))
     when :flag
       target.uri
     when :featured_collection

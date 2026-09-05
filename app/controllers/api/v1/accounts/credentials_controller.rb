@@ -4,6 +4,7 @@ class Api::V1::Accounts::CredentialsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :profile, :read, :'read:accounts' }, except: [:update]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:update]
   before_action :require_user!
+  before_action :reject_rinspace_source_profile_update!, only: :update
 
   def show
     @account = current_account
@@ -21,6 +22,13 @@ class Api::V1::Accounts::CredentialsController < Api::BaseController
   end
 
   private
+
+  def reject_rinspace_source_profile_update!
+    return unless ENV['RINSPACE_IDENTITY_STRICT'] == 'true'
+
+    source_owned = %i[display_name note avatar avatar_description header header_description fields_attributes].any? { |key| params.key?(key) }
+    raise Mastodon::NotPermittedError if source_owned
+  end
 
   def account_params
     params.permit(

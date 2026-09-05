@@ -63,6 +63,12 @@ class UserSettings
     setting :must_be_following_dm, default: false
   end
 
+  namespace :rinspace do
+    setting :personalized_recommendations, default: true
+    setting :home_feed, default: 'recommended', in: %w(recommended following)
+    setting :recommendation_interests_json, default: '[]'
+  end
+
   def initialize(original_hash)
     @original_hash = original_hash || {}
   end

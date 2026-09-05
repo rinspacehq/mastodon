@@ -12,6 +12,7 @@ class ActivityPub::FetchRemoteActorService < BaseService
   def call(uri, prefetched_body: nil, break_on_redirect: false, only_key: false, suppress_errors: true, request_id: nil)
     return if domain_not_allowed?(uri)
     return ActivityPub::TagManager.instance.uri_to_actor(uri) if ActivityPub::TagManager.instance.local_uri?(uri)
+    return if Mastodon::RinspaceLocalOnly.block_remote_operation(source: self.class.name, target: uri)
 
     @json = begin
       if prefetched_body.nil?

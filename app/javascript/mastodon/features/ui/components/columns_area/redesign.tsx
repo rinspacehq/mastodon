@@ -5,7 +5,6 @@ import { RedesignNavigationPanel } from '@/mastodon/features/navigation_panel/re
 import { RedesignMobileNavigation } from '@/mastodon/features/navigation_panel/redesign/mobile_nav';
 import { useAppSelector } from '@/mastodon/store';
 import { Footer } from 'mastodon/features/custom_homepage/components/footer';
-import { Header } from 'mastodon/features/custom_homepage/components/header';
 
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 
@@ -27,8 +26,6 @@ export const ColumnsAreaRedesign: React.FC<{
     return (
       <div className={classes.root}>
         <div className={classes.main}>
-          <Header />
-
           <div className={classes.content}>{children}</div>
 
           <Footer />

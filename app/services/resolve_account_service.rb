@@ -20,6 +20,10 @@ class ResolveAccountService < BaseService
 
     process_options!(uri, options)
 
+    if @domain.present? && Mastodon::RinspaceLocalOnly.block_remote_operation(source: self.class.name, target: @uri)
+      return
+    end
+
     return ActivityPub::FetchRemoteAccountService.new.call(@account.uri, suppress_errors: @options[:suppress_errors], request_id: options[:request_id]) if @account&.remote? && @account.invalidated_username?
 
     # First of all we want to check if we've got the account

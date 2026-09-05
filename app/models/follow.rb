@@ -48,8 +48,14 @@ class Follow < ApplicationRecord
   after_destroy :decrement_cache_counters
   after_commit :invalidate_follow_recommendations_cache
   after_commit :invalidate_hash_cache
+  after_create_commit -> { sync_rinspace_feedback(true) }
+  after_destroy_commit -> { sync_rinspace_feedback(false) }
 
   private
+
+  def sync_rinspace_feedback(active)
+    Rinspace::RecommendationFeedbackWorker.perform_async('follow', account_id, nil, active, target_account_id) if ENV['RINSPACE_LOCAL_ONLY'] == 'true'
+  end
 
   def set_uri
     self.uri = ActivityPub::TagManager.instance.generate_uri_for(self) if uri.nil?

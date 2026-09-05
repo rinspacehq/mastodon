@@ -153,6 +153,7 @@ export const StatusRedesign: React.FC<StatusRedesignProps> = ({
       data-featured={featured ? 'true' : null}
       aria-label={screenReaderText}
       data-nosnippet={status.account.noindex || undefined}
+      data-rinspace-status-id={status.id}
     >
       {!skipPrepend && (
         <StatusPrepend

@@ -1,6 +1,7 @@
 import { defineMessages } from 'react-intl';
 
 import { browserHistory } from 'mastodon/components/router';
+import { statusPathFromUrl } from 'mastodon/utils/status_path';
 
 import api from '../api';
 
@@ -358,11 +359,10 @@ export const undoStatusTranslation = (id, pollId) => ({
 export const navigateToStatus = (statusId) => {
   return (_dispatch, getState) => {
     const state = getState();
-    const accountId = state.statuses.getIn([statusId, 'account']);
-    const acct = state.accounts.getIn([accountId, 'acct']);
+    const statusUrl = state.statuses.getIn([statusId, 'url']);
 
-    if (acct) {
-      browserHistory.push(`/@${acct}/${statusId}`);
+    if (state.statuses.has(statusId)) {
+      browserHistory.push(statusPathFromUrl(statusId, statusUrl));
     }
   };
 };

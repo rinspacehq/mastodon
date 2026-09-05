@@ -4,7 +4,6 @@ import classNames from 'classnames';
 
 import { LoadingIndicator } from '@/mastodon/components/loading_indicator';
 import { Footer } from '@/mastodon/features/custom_homepage/components/footer';
-import { Header } from '@/mastodon/features/custom_homepage/components/header';
 import { CollapsibleNavigationPanel } from '@/mastodon/features/navigation_panel';
 import { useBreakpoint } from '@/mastodon/features/ui/hooks/useBreakpoint';
 import { useColumnsContext } from '@/mastodon/features/ui/util/columns_context';
@@ -61,8 +60,6 @@ const ColumnsAreaLegacy: React.FC<ColumnsAreaProps> = ({
     return (
       <div className='columns-area__panels'>
         <div className='columns-area__panels__main'>
-          <Header />
-
           <div className='tabs-bar__wrapper'>
             <TabsBarPortal />
           </div>

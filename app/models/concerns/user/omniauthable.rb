@@ -20,6 +20,8 @@ module User::Omniauthable
 
   class_methods do
     def find_for_omniauth(auth, signed_in_resource = nil)
+      return find_for_rinspace_omniauth!(auth, signed_in_resource) if ENV['RINSPACE_IDENTITY_STRICT'] == 'true'
+
       # EOLE-SSO Patch
       auth.uid = (auth.uid[0][:uid] || auth.uid[0][:user]) if auth.uid.is_a? Hashie::Array
       identity = Identity.find_for_omniauth(auth)
@@ -41,6 +43,22 @@ module User::Omniauthable
     end
 
     private
+
+    def find_for_rinspace_omniauth!(auth, signed_in_resource)
+      raise ActiveRecord::RecordNotFound unless auth.provider.to_s == 'openid_connect'
+
+      subject = auth.uid.to_s.strip
+      raise ActiveRecord::RecordNotFound if subject.blank?
+
+      identity = Identity.find_by!(provider: 'openid_connect', uid: subject)
+      binding = RinspaceIdentityBinding.find_by!(subject:, account_id: identity.user.account_id, state: 'verified')
+      raise ActiveRecord::RecordNotFound if identity.user.disabled? || (signed_in_resource && signed_in_resource.id != identity.user_id)
+
+      claimed_handle = (auth.info.nickname || auth.info.preferred_username).to_s.strip.downcase
+      raise ActiveRecord::RecordNotFound if claimed_handle.present? && claimed_handle != binding.current_handle
+
+      identity.user
+    end
 
     def reattach_for_auth(auth)
       # If allowed, check if a user exists with the provided email address,

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "shell": {
+    "name": "@rinspace/world-shell",
+    "version": "0.1.0",
+    "file": "vendor/rinspace/rinspace-world-shell-0.1.0.tgz",
+    "sha256": "eb3d14ef0af22a39fe0d94c7b4c243f1877360130d46b90c3e305d2e1a74ab42"
+  },
+  "contractVersion": "1.0.0",
+  "source": {
+    "commit": "c886ee7b1b58f20f5979d9eeb34e14a774bf5e90",
+    "dirty": false
+  }
+}

@@ -54,7 +54,7 @@ RSpec.describe ActivityPub::TagManager do
 
       it 'returns a string starting with web domain and with the expected path' do
         expect(subject.url_for(status))
-          .to eq("#{host_prefix}/@#{status.account.username}/#{status.id}")
+          .to eq("#{host_prefix}/p/#{status.id}/lorem-ipsum-dolor-sit-amet")
       end
 
       context 'when using a numeric ID based scheme' do
@@ -62,7 +62,7 @@ RSpec.describe ActivityPub::TagManager do
 
         it 'returns a string starting with web domain and with the expected path' do
           expect(subject.url_for(status))
-            .to eq("#{host_prefix}/@#{status.account.username}/#{status.id}")
+            .to eq("#{host_prefix}/p/#{status.id}/lorem-ipsum-dolor-sit-amet")
         end
       end
     end

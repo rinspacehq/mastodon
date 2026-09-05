@@ -342,9 +342,7 @@ export const Search: React.FC<{
                 if (result.payload.accounts[0]) {
                   history.push(`/@${result.payload.accounts[0].acct}`);
                 } else if (result.payload.statuses[0]) {
-                  history.push(
-                    `/@${result.payload.statuses[0].account.acct}/${result.payload.statuses[0].id}`,
-                  );
+                  history.push(`/p/${result.payload.statuses[0].id}`);
                 } else if (result.payload.collections[0]) {
                   history.push(
                     getCollectionPath(result.payload.collections[0].id),

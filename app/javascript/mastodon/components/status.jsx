@@ -15,6 +15,7 @@ import { FilterWarning } from 'mastodon/components/filter_warning';
 import { Icon }  from 'mastodon/components/icon';
 import { PictureInPicturePlaceholder } from 'mastodon/components/picture_in_picture_placeholder';
 import { withOptionalRouter, WithOptionalRouterPropTypes } from 'mastodon/utils/react_router';
+import { statusPathFromUrl } from 'mastodon/utils/status_path';
 
 import Card from '../features/status/components/card';
 // We use the component (and not the container) since we do not want
@@ -306,7 +307,7 @@ class Status extends ImmutablePureComponent {
       return;
     }
 
-    const path = `/@${status.getIn(['account', 'acct'])}/${status.get('id')}`;
+    const path = statusPathFromUrl(status.get('id'), status.get('url'));
 
     if (newTab) {
       window.open(path, '_blank', 'noopener');
@@ -465,7 +466,7 @@ class Status extends ImmutablePureComponent {
     if (hidden) {
       return (
         <Hotkeys handlers={handlers} focusable={!unfocusable}>
-          <div ref={this.handleRef} className={classNames('status__wrapper', { focusable: !this.props.muted })} tabIndex={unfocusable ? null : 0}>
+          <div ref={this.handleRef} className={classNames('status__wrapper', { focusable: !this.props.muted })} tabIndex={unfocusable ? null : 0} data-rinspace-status-id={status.get('id')}>
             <span>{status.getIn(['account', 'display_name']) || status.getIn(['account', 'username'])}</span>
             {status.get('spoiler_text').length > 0 && (<span>{status.get('spoiler_text')}</span>)}
             {expanded && <span>{status.get('content')}</span>}
@@ -592,7 +593,7 @@ class Status extends ImmutablePureComponent {
 
     return (
       <Hotkeys handlers={handlers} focusable={!unfocusable}>
-        <div className={classNames('status__wrapper', `status__wrapper-${status.get('visibility')}`, { 'status__wrapper-reply': !!status.get('in_reply_to_id'), 'status__wrapper--in-thread': !!rootId, unread, focusable: !this.props.muted })} tabIndex={this.props.muted || unfocusable ? null : 0} data-featured={featured ? 'true' : null} aria-label={textForScreenReader({intl, status, rebloggedByText, isQuote: isQuotedPost})} ref={this.handleRef} data-nosnippet={status.getIn(['account', 'noindex'], true) || undefined}>
+        <div className={classNames('status__wrapper', `status__wrapper-${status.get('visibility')}`, { 'status__wrapper-reply': !!status.get('in_reply_to_id'), 'status__wrapper--in-thread': !!rootId, unread, focusable: !this.props.muted })} tabIndex={this.props.muted || unfocusable ? null : 0} data-featured={featured ? 'true' : null} aria-label={textForScreenReader({intl, status, rebloggedByText, isQuote: isQuotedPost})} ref={this.handleRef} data-nosnippet={status.getIn(['account', 'noindex'], true) || undefined} data-rinspace-status-id={status.get('id')}>
           {!skipPrepend && prepend}
 
           <div

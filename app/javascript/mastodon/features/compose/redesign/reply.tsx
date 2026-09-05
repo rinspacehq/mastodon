@@ -7,6 +7,7 @@ import { RelativeTimestamp } from '@/mastodon/components/relative_timestamp';
 import { useHandlersForStatus } from '@/mastodon/components/status/hooks';
 import { selectAccountStatus } from '@/mastodon/selectors/statuses';
 import { useAppSelector } from '@/mastodon/store';
+import { statusPath } from '@/mastodon/utils/status_path';
 
 import classes from './styles.module.scss';
 
@@ -35,7 +36,7 @@ export const ComposeReply: React.FC = () => {
         />
         <span className={classes.replyTime}>
           &middot;&nbsp;
-          <Link to={`/@${status.account.acct}/${status.id}`}>
+          <Link to={statusPath(status)}>
             <RelativeTimestamp timestamp={status.created_at} />
           </Link>
         </span>

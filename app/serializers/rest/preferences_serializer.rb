@@ -9,6 +9,8 @@ class REST::PreferencesSerializer < ActiveModel::Serializer
   attribute :reading_default_sensitive_media, key: 'reading:expand:media'
   attribute :reading_default_sensitive_text, key: 'reading:expand:spoilers'
   attribute :reading_autoplay_gifs, key: 'reading:autoplay:gifs'
+  attribute :rinspace_personalized_recommendations, key: 'rinspace:recommendations:personalized'
+  attribute :rinspace_home_feed, key: 'rinspace:home:feed'
 
   def posting_default_privacy
     object.user.setting_default_privacy
@@ -36,5 +38,13 @@ class REST::PreferencesSerializer < ActiveModel::Serializer
 
   def reading_autoplay_gifs
     object.user.setting_auto_play_gif
+  end
+
+  def rinspace_personalized_recommendations
+    object.user.settings['rinspace.personalized_recommendations']
+  end
+
+  def rinspace_home_feed
+    object.user.settings['rinspace.home_feed']
   end
 end

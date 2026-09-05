@@ -15,6 +15,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   attribute :muted, if: :current_user?
   attribute :bookmarked, if: :current_user?
   attribute :pinned, if: :pinnable?
+  attribute :views_count, if: :show_views_count?
   has_many :filtered, serializer: REST::FilterResultSerializer, if: :current_user?
 
   attribute :content, unless: :source_requested?
@@ -157,6 +158,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
       current_user.account_id == object.account_id &&
       !object.reblog? &&
       StatusRelationshipsPresenter::PINNABLE_VISIBILITIES.include?(object.visibility)
+  end
+
+  def show_views_count?
+    !object.direct_visibility?
   end
 
   def source_requested?

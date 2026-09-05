@@ -84,6 +84,7 @@ export interface StatusShape {
   reblogged: boolean;
   reblogs_count: number;
   replies_count: number;
+  views_count?: number;
   visibility: StatusVisibility;
 }
 export type AccountStatusShape = Omit<StatusShape, 'account'> & {

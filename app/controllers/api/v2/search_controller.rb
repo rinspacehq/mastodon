@@ -39,6 +39,7 @@ class Api::V2::SearchController < Api::BaseController
   end
 
   def handle_fasp_requests
+    return if Mastodon::RinspaceLocalOnly.enabled?
     return unless Mastodon::Feature.fasp_enabled?
     return if params[:q].blank?
 

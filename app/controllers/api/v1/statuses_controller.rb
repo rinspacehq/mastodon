@@ -12,6 +12,7 @@ class Api::V1::StatusesController < Api::BaseController
   before_action :set_thread, only:           [:create]
   before_action :set_quoted_status, only:    [:create]
   before_action :check_statuses_limit, only: [:index]
+  before_action :review_rinspace_status_content!, only: [:create, :update]
 
   override_rate_limit_headers :create, family: :statuses
   override_rate_limit_headers :update, family: :statuses
@@ -46,6 +47,7 @@ class Api::V1::StatusesController < Api::BaseController
       idempotency: request.headers['Idempotency-Key'],
       with_rate_limit: true
     )
+    @status.update!(rinspace_review_state: 'approved') if ENV['RINSPACE_IDENTITY_STRICT'] == 'true' && @status.is_a?(Status)
 
     render json: @status, serializer: serializer_for_status
   rescue PostStatusService::UnexpectedMentionsError => e
@@ -69,6 +71,7 @@ class Api::V1::StatusesController < Api::BaseController
     update_options[:quote_approval_policy] = quote_approval_policy if status_params[:quote_approval_policy].present?
 
     UpdateStatusService.new.call(@status, current_account.id, update_options)
+    @status.update!(rinspace_review_state: 'approved') if ENV['RINSPACE_IDENTITY_STRICT'] == 'true'
 
     render json: @status, serializer: REST::StatusSerializer
   end
@@ -82,6 +85,7 @@ class Api::V1::StatusesController < Api::BaseController
     json = render_to_body json: @status, serializer: REST::StatusSerializer, source_requested: true
 
     @status.discard_with_reblogs
+    @status.update_column(:rinspace_review_state, 'removed') if ENV['RINSPACE_IDENTITY_STRICT'] == 'true'
     StatusPin.find_by(status: @status)&.destroy
     @status.account.statuses_count = @status.account.statuses_count - 1
 
@@ -92,12 +96,28 @@ class Api::V1::StatusesController < Api::BaseController
 
   private
 
+  def review_rinspace_status_content!
+    return unless ENV['RINSPACE_IDENTITY_STRICT'] == 'true'
+
+    binding = RinspaceIdentityBinding.find_by!(account_id: current_account.id, state: 'verified')
+    content = [status_params[:spoiler_text], status_params[:status], *Array(status_params.dig(:poll, :options))].compact.join("\n")
+    Rinspace::ModerationClient.new.review_text!(
+      subject: binding.subject,
+      target_type: action_name == 'update' ? 'status_edit' : 'status',
+      target_id: params[:id].presence || request.request_id,
+      title: status_params[:spoiler_text].to_s,
+      text: content
+    )
+  end
+
   def set_statuses
     @statuses = Status.permitted_statuses_from_ids(status_ids, current_account)
+    @statuses.select!(&:local?) if Mastodon::RinspaceLocalOnly.enabled?
   end
 
   def set_status
     @status = Status.find(params[:id])
+    raise ActiveRecord::RecordNotFound if Mastodon::RinspaceLocalOnly.enabled? && !@status.local?
     authorize @status, :show?
   rescue ActiveRecord::RecordNotFound, Mastodon::NotPermittedError
     not_found

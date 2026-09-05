@@ -23,6 +23,11 @@ class ActivityPub::DeliveryWorker
   HEADERS = { 'Content-Type' => 'application/activity+json' }.freeze
 
   def perform(json, source_account_id, inbox_url, options = {})
+    if Mastodon::RinspaceLocalOnly.enabled?
+      Mastodon::RinspaceLocalOnly.instrument(:delivery, source: self.class.name, target: inbox_url)
+      return
+    end
+
     @options        = options.with_indifferent_access
 
     return unless @options[:bypass_availability] || DeliveryFailureTracker.available?(inbox_url)

@@ -1,6 +1,11 @@
 import { DAY } from '../utils/time';
 
-import { expireCachedItems, handleFetch } from './caching';
+import {
+  cacheRoot,
+  expireCachedItems,
+  handleFetch,
+  INNER_WORLD_ROOT,
+} from './caching';
 
 const now = 1_700_000_000_000;
 
@@ -90,7 +95,7 @@ describe('handleFetch', () => {
 
   test('serves cached images without hitting the network while the TTL is valid', async () => {
     const imageCache = new MockCache();
-    const request = createRequest('/test.png', 'image');
+    const request = createRequest('/media_attachments/test.png', 'image');
     const cachedResponse = createResponse(now - DAY);
 
     imageCache.store.set(request.url, { request, response: cachedResponse });
@@ -112,7 +117,7 @@ describe('handleFetch', () => {
 
   test('fetches stale cached images from the network and stores a refreshed response', async () => {
     const imageCache = new MockCache();
-    const request = createRequest('/stale.png', 'image');
+    const request = createRequest('/media_attachments/stale.png', 'image');
     const networkResponse = new Response('fresh', {
       headers: { 'content-type': 'image/png' },
       status: 200,
@@ -146,7 +151,7 @@ describe('handleFetch', () => {
 
   test('does not cache opaque image responses with status zero', async () => {
     const imageCache = new MockCache();
-    const request = createRequest('/opaque.png', 'image');
+    const request = createRequest('/media_attachments/opaque.png', 'image');
     const opaqueResponse = Response.error();
     const putSpy = vi.spyOn(imageCache, 'put');
 
@@ -219,7 +224,9 @@ describe('handleFetch', () => {
     handleFetch(event);
 
     await expect(respondWith()).resolves.toBeInstanceOf(Response);
-    expect(deleteSpy).toHaveBeenCalledWith('/');
+    expect(deleteSpy).toHaveBeenCalledWith(
+      new URL(INNER_WORLD_ROOT, self.location.origin),
+    );
   });
 
   test('does not clear the root cache after a failed logout request', async () => {
@@ -269,7 +276,9 @@ describe('handleFetch', () => {
     handleFetch(event);
 
     await expect(respondWith()).resolves.toBe(opaqueRedirectResponse);
-    expect(deleteSpy).toHaveBeenCalledWith('/');
+    expect(deleteSpy).toHaveBeenCalledWith(
+      new URL(INNER_WORLD_ROOT, self.location.origin),
+    );
   });
 
   test('ignores requests that are not handled by the service worker cache', () => {
@@ -281,6 +290,41 @@ describe('handleFetch', () => {
 
     expect(respondWithMock).not.toHaveBeenCalled();
     expect(respondWith()).toBeUndefined();
+  });
+
+  test('does not cache cross-origin media', () => {
+    const request = new Request('https://remote.example/media.png');
+    Object.defineProperty(request, 'destination', { value: 'image' });
+    const { event, respondWith, respondWithMock } = createFetchEvent(request);
+
+    handleFetch(event);
+
+    expect(respondWithMock).not.toHaveBeenCalled();
+    expect(respondWith()).toBeUndefined();
+  });
+});
+
+describe('cacheRoot', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  test('stores only the explicit inner-world root', async () => {
+    const webCache = new MockCache();
+    const putSpy = vi.spyOn(webCache, 'put');
+    vi.stubGlobal('caches', { open: vi.fn().mockResolvedValue(webCache) });
+    const response = new Response('inner');
+    const fetch = vi.fn().mockResolvedValue(response);
+    vi.stubGlobal('fetch', fetch);
+
+    await cacheRoot();
+
+    expect(fetch).toHaveBeenCalledWith(INNER_WORLD_ROOT, {
+      credentials: 'include',
+      redirect: 'manual',
+    });
+    expect(putSpy).toHaveBeenCalledWith(
+      new URL(INNER_WORLD_ROOT, self.location.origin),
+      response,
+    );
   });
 });
 
@@ -363,7 +407,7 @@ function createResponse(timestamp?: number) {
 }
 
 function createRequest(pathname: string, destination = '') {
-  const request = new Request(`https://example.com${pathname}`);
+  const request = new Request(new URL(pathname, self.location.origin));
 
   Object.defineProperty(request, 'destination', {
     value: destination,

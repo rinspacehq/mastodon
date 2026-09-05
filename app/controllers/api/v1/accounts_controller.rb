@@ -85,10 +85,12 @@ class Api::V1::AccountsController < Api::BaseController
 
   def set_account
     @account = Account.without_requested_deletion.find(params[:id])
+    raise ActiveRecord::RecordNotFound if Mastodon::RinspaceLocalOnly.enabled? && @account.remote?
   end
 
   def set_accounts
     @accounts = Account.where(id: account_ids).without_unapproved.without_requested_deletion
+    @accounts = @accounts.local if Mastodon::RinspaceLocalOnly.enabled?
   end
 
   def check_account_approval
