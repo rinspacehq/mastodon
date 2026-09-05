@@ -5,8 +5,8 @@ const INNER_WORLD = 'inner';
 
 /**
  * Canonicalize a Mastodon-side navigation without guessing route ownership.
- * Only dual-sided resources gain an explicit world selector; inner-only routes
- * such as `/p/:id` remain path-owned.
+ * Every Mastodon product page gains an explicit world selector except for the
+ * stable `/p/:id[/slug]` permalink family. Service URLs remain untouched.
  */
 export function innerWorldPath(value: string) {
   const url = new URL(value, window.location.origin);
@@ -16,7 +16,7 @@ export function innerWorldPath(value: string) {
     `${url.pathname}${url.search}${url.hash}`,
   );
 
-  return resolution.route?.kind === 'dual'
+  return resolution.world === INNER_WORLD
     ? resolution.canonicalHref
     : value;
 }

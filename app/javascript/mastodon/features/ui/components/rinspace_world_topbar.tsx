@@ -118,7 +118,7 @@ export const RinspaceWorldTopbar: React.FC<{
         publishing: (
           <a
             className='rinspace-world-topbar__action'
-            href='/publish'
+            href={innerHref('/publish', '', '')}
             aria-label={intl.formatMessage(messages.publish)}
             title={intl.formatMessage(messages.publish)}
           >
@@ -128,7 +128,7 @@ export const RinspaceWorldTopbar: React.FC<{
         notifications: (
           <a
             className='rinspace-world-topbar__action'
-            href='/notifications'
+            href={innerHref('/notifications', '', '')}
             aria-label={intl.formatMessage(messages.notifications)}
             title={intl.formatMessage(messages.notifications)}
           >
@@ -138,14 +138,14 @@ export const RinspaceWorldTopbar: React.FC<{
         session: username ? (
           <a
             className='rinspace-world-topbar__account'
-            href={`/@${encodeURIComponent(username)}?world=inner`}
+            href={innerHref(`/@${encodeURIComponent(username)}`, '', '')}
             aria-label={intl.formatMessage(messages.account)}
           >
             <span className='rinspace-world-topbar__avatar' aria-hidden='true'>
               {avatar ? <img src={avatar} alt='' /> : username.slice(0, 1).toUpperCase()}
             </span>
             <span className='rinspace-world-topbar__account-name' aria-hidden='true'>
-              {displayName || username}
+              {displayName?.trim() ? displayName : username}
             </span>
             <span className='sr-only'>{intl.formatMessage(messages.account)}</span>
           </a>

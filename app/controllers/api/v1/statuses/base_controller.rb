@@ -9,7 +9,7 @@ class Api::V1::Statuses::BaseController < Api::BaseController
 
   def set_status
     @status = Status.find(params[:status_id])
-    raise ActiveRecord::RecordNotFound if Mastodon::RinspaceLocalOnly.enabled? && @status.remote?
+    raise ActiveRecord::RecordNotFound if Mastodon::RinspaceLocalOnly.enabled? && !@status.local?
     authorize @status, :show?
   rescue ActiveRecord::RecordNotFound, Mastodon::NotPermittedError
     not_found
