@@ -15,7 +15,7 @@ const notify = options =>
         title: formatMessage('notifications.group', options.data.preferred_locale, { count: notifications.length + 1 }),
         body: notifications.sort((n1, n2) => n1.timestamp < n2.timestamp).map(notification => notification.title).join('\n'),
         badge: '/badge.png',
-        icon: '/android-chrome-192x192.png',
+        icon: '/favicon-192x192.png',
         tag: GROUP_TAG,
         data: {
           url: (new URL('/notifications?world=inner', self.location)).href,
