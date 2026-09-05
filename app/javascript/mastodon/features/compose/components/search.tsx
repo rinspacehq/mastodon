@@ -64,14 +64,27 @@ const labelForRecentSearch = (search: RecentSearch) => {
 const ClearButton: React.FC<{
   onClick: () => void;
   hasValue: boolean;
-}> = ({ onClick, hasValue }) => {
+  onOpen?: () => void;
+  openLabel?: string;
+}> = ({ onClick, hasValue, onOpen, openLabel }) => {
   const intl = useIntl();
 
   return (
     <div
       className={classNames('search__icon-wrapper', { 'has-value': hasValue })}
     >
-      <Icon id='search' icon={SearchIcon} className='search__icon' />
+      {onOpen ? (
+        <button
+          type='button'
+          className='search__icon search__icon--open-button icon-search'
+          onClick={onOpen}
+          aria-label={openLabel}
+        >
+          <Icon id='search' icon={SearchIcon} />
+        </button>
+      ) : (
+        <Icon id='search' icon={SearchIcon} className='search__icon' />
+      )}
       <button
         type='button'
         onClick={onClick}
@@ -99,7 +112,8 @@ interface SearchOption {
 export const Search: React.FC<{
   singleColumn: boolean;
   initialValue?: string;
-}> = ({ singleColumn, initialValue }) => {
+  topbar?: boolean;
+}> = ({ singleColumn, initialValue, topbar = false }) => {
   const intl = useIntl();
   const recent = useAppSelector((state) => state.search.recent);
   const { signedIn } = useIdentity();
@@ -109,6 +123,7 @@ export const Search: React.FC<{
   const [value, setValue] = useState(initialValue ?? '');
   const hasValue = value.length > 0;
   const [expanded, setExpanded] = useState(false);
+  const [topbarSearchOpen, setTopbarSearchOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState(-1);
   const [quickActions, setQuickActions] = useState<SearchOption[]>([]);
   const focusOnNavigation = useFocusOnNavigation(FOCUS_TARGET.SEARCH);
@@ -116,6 +131,7 @@ export const Search: React.FC<{
   const unfocus = useCallback(() => {
     document.querySelector('.ui')?.parentElement?.focus();
     setExpanded(false);
+    setTopbarSearchOpen(false);
   }, []);
 
   const insertText = useCallback((text: string) => {
@@ -451,6 +467,7 @@ export const Search: React.FC<{
           e.preventDefault();
           searchInputRef.current?.focus();
           setExpanded(false);
+          setTopbarSearchOpen(false);
 
           break;
         case 'ArrowDown':
@@ -503,6 +520,7 @@ export const Search: React.FC<{
 
   const handleInputFocus = useCallback(() => {
     setExpanded(true);
+    if (topbar) setTopbarSearchOpen(true);
     setSelectedOption(-1);
 
     if (searchInputRef.current && !singleColumn) {
@@ -515,7 +533,14 @@ export const Search: React.FC<{
         searchInputRef.current.scrollIntoView();
       }
     }
-  }, [setExpanded, setSelectedOption, singleColumn]);
+  }, [setExpanded, setSelectedOption, singleColumn, topbar]);
+
+  const handleTopbarSearchOpen = useCallback(() => {
+    if (topbar) {
+      setTopbarSearchOpen(true);
+      searchInputRef.current?.focus();
+    }
+  }, [topbar]);
 
   const handleInputBlur = useCallback(() => {
     setSelectedOption(-1);
@@ -541,6 +566,7 @@ export const Search: React.FC<{
           (form === event.target || form.contains(event.target as Node));
         if (!isClickInsideForm) {
           setExpanded(false);
+          setTopbarSearchOpen(false);
         }
       }
       document.addEventListener('focusin', closeOnLeave);
@@ -560,7 +586,11 @@ export const Search: React.FC<{
     <form
       role='search'
       ref={formRef}
-      className={classNames('search', { active: expanded })}
+      className={classNames('search', {
+        active: expanded,
+        'rinspace-topbar-search': topbar,
+        'mobile-search-open': topbar && topbarSearchOpen,
+      })}
     >
       <input
         ref={useMergedRefs(
@@ -583,7 +613,12 @@ export const Search: React.FC<{
         onBlur={handleInputBlur}
       />
 
-      <ClearButton hasValue={hasValue} onClick={handleClear} />
+      <ClearButton
+        hasValue={hasValue}
+        onClick={handleClear}
+        onOpen={topbar ? handleTopbarSearchOpen : undefined}
+        openLabel={intl.formatMessage(messages.placeholder)}
+      />
 
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <div

@@ -1,11 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
-import { useLocation } from 'react-router-dom';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
-import SearchIcon from '@/material-icons/400-24px/search.svg?react';
+import { useLocation } from 'react-router-dom';
 
 import {
   RinspaceTopbar,
@@ -15,18 +12,41 @@ import {
   resolveWorld,
 } from '@rinspace/world-shell';
 import type { WorldNavigationRequest } from '@rinspace/world-shell';
+
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
+import { Search } from 'mastodon/features/compose/components/search';
+import { useIdentity } from 'mastodon/identity_context';
+import { sso_redirect } from 'mastodon/initial_state';
+import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
+import { useAppSelector } from 'mastodon/store';
+
 import '@rinspace/world-shell/styles.css';
 
 const messages = defineMessages({
   brandName: { id: 'rinspace.world.brand_name', defaultMessage: 'Rinspace' },
-  navigation: { id: 'rinspace.world.navigation', defaultMessage: 'Rinspace inner-world navigation' },
-  flip: { id: 'rinspace.world.flip_to_outer', defaultMessage: 'Flip to the outer world' },
-  home: { id: 'rinspace.world.inner_home', defaultMessage: 'Go to the inner-world home' },
-  search: { id: 'rinspace.world.search', defaultMessage: 'Search the inner world' },
-  searchPlaceholder: { id: 'rinspace.world.search_placeholder', defaultMessage: 'Search people, posts, and tags' },
+  navigation: {
+    id: 'rinspace.world.navigation',
+    defaultMessage: 'Rinspace inner-world navigation',
+  },
+  flip: {
+    id: 'rinspace.world.flip_to_outer',
+    defaultMessage: 'Flip to the outer world',
+  },
+  home: {
+    id: 'rinspace.world.inner_home',
+    defaultMessage: 'Go to the inner-world home',
+  },
   publish: { id: 'rinspace.world.publish', defaultMessage: 'Publish' },
-  notifications: { id: 'rinspace.world.notifications', defaultMessage: 'Notifications' },
+  notifications: {
+    id: 'rinspace.world.notifications',
+    defaultMessage: 'Notifications',
+  },
   account: { id: 'rinspace.world.account', defaultMessage: 'Your profile' },
+  signInOrRegister: {
+    id: 'rinspace.world.sign_in_or_register',
+    defaultMessage: 'Sign in / Register',
+  },
 });
 
 function innerHref(pathname: string, search: string, hash: string) {
@@ -42,7 +62,10 @@ export const RinspaceWorldTopbar: React.FC<{
 }> = ({ avatar, displayName, username }) => {
   const intl = useIntl();
   const location = useLocation();
-  const [query, setQuery] = useState('');
+  const { signedIn } = useIdentity();
+  const unreadNotifications = useAppSelector(
+    selectUnreadNotificationGroupsCount,
+  );
   const brandName = intl.formatMessage(messages.brandName);
 
   useEffect(() => installWorldTransitionLifecycle(), []);
@@ -57,17 +80,11 @@ export const RinspaceWorldTopbar: React.FC<{
     if (reason === 'flip') prepareWorldFlipNavigation(href);
     return false;
   }, []);
-  const submitSearch = useCallback((event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
-    if (!query.trim()) event.preventDefault();
-  }, [query]);
-  const changeSearch = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.currentTarget.value);
-  }, []);
 
   return (
     <RinspaceTopbar
       brandName={brandName}
-      brandMark={(
+      brandMark={
         <img
           src='/assets/brand/rinspace-mark-128.png'
           alt=''
@@ -75,7 +92,7 @@ export const RinspaceWorldTopbar: React.FC<{
           height='128'
           draggable={false}
         />
-      )}
+      }
       brandWordmark={brandName}
       world='inner'
       currentHomeHref='/?world=inner'
@@ -91,65 +108,65 @@ export const RinspaceWorldTopbar: React.FC<{
         },
       }}
       slots={{
-        search: (
-          <form
-            className='rinspace-world-topbar__search'
-            action='/search'
-            method='get'
-            onSubmit={submitSearch}
-          >
-            <input type='hidden' name='world' value='inner' />
-            <input
-              name='q'
-              type='search'
-              value={query}
-              onChange={changeSearch}
-              aria-label={intl.formatMessage(messages.search)}
-              placeholder={intl.formatMessage(messages.searchPlaceholder)}
-            />
-            <button
-              type='submit'
-              aria-label={intl.formatMessage(messages.search)}
-            >
-              <SearchIcon />
-            </button>
-          </form>
-        ),
-        publishing: (
+        search: <Search singleColumn topbar />,
+        publishing: signedIn ? (
           <a
-            className='rinspace-world-topbar__action'
+            className='rin-world-shell__action'
             href={innerHref('/publish', '', '')}
             aria-label={intl.formatMessage(messages.publish)}
             title={intl.formatMessage(messages.publish)}
           >
             <AddIcon />
           </a>
-        ),
-        notifications: (
+        ) : undefined,
+        notifications: signedIn ? (
           <a
-            className='rinspace-world-topbar__action'
+            className='rin-world-shell__action'
             href={innerHref('/notifications', '', '')}
             aria-label={intl.formatMessage(messages.notifications)}
             title={intl.formatMessage(messages.notifications)}
           >
             <NotificationsIcon />
-          </a>
-        ),
-        session: username ? (
-          <a
-            className='rinspace-world-topbar__account'
-            href={innerHref(`/@${encodeURIComponent(username)}`, '', '')}
-            aria-label={intl.formatMessage(messages.account)}
-          >
-            <span className='rinspace-world-topbar__avatar' aria-hidden='true'>
-              {avatar ? <img src={avatar} alt='' /> : username.slice(0, 1).toUpperCase()}
-            </span>
-            <span className='rinspace-world-topbar__account-name' aria-hidden='true'>
-              {displayName?.trim() ? displayName : username}
-            </span>
-            <span className='sr-only'>{intl.formatMessage(messages.account)}</span>
+            {unreadNotifications > 0 ? (
+              <span className='rin-world-shell__badge'>
+                {unreadNotifications > 99 ? '99+' : unreadNotifications}
+              </span>
+            ) : null}
           </a>
         ) : undefined,
+        session:
+          signedIn && username ? (
+            <a
+              className='rin-world-shell__account'
+              href={innerHref(`/@${encodeURIComponent(username)}`, '', '')}
+              aria-label={intl.formatMessage(messages.account)}
+            >
+              <span className='rin-world-shell__avatar' aria-hidden='true'>
+                {avatar ? (
+                  <img src={avatar} alt='' />
+                ) : (
+                  username.slice(0, 1).toUpperCase()
+                )}
+              </span>
+              <span
+                className='rin-world-shell__account-name'
+                aria-hidden='true'
+              >
+                {displayName?.trim() ? displayName : username}
+              </span>
+              <span className='sr-only'>
+                {intl.formatMessage(messages.account)}
+              </span>
+            </a>
+          ) : signedIn ? undefined : (
+            <a
+              className='rin-world-shell__sign-in'
+              href={sso_redirect ?? '/auth/sign_in'}
+              data-method={sso_redirect ? 'post' : undefined}
+            >
+              {intl.formatMessage(messages.signInOrRegister)}
+            </a>
+          ),
       }}
     />
   );

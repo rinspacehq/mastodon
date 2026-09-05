@@ -1,6 +1,5 @@
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import classNames from 'classnames';
 import { NavLink, Switch, Route } from 'react-router-dom';
 
 import { Helmet } from '@unhead/react/helmet';
@@ -11,12 +10,10 @@ import { ColumnHeader } from '@/mastodon/components/column_header';
 import { isRedesignEnabled } from '@/mastodon/utils/environment';
 import TrendingUpIcon from '@/material-icons/400-24px/trending_up.svg?react';
 import { SymbolLogo } from 'mastodon/components/logo';
-import { Search } from 'mastodon/features/compose/components/search';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
 
 import Links from './links';
-import redesignClasses from './redesign.module.scss';
 import Statuses from './statuses';
 import Suggestions from './suggestions';
 import Tags from './tags';
@@ -50,15 +47,6 @@ const Explore: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           scrollTopOnClick
         />
       )}
-
-      <div
-        className={classNames(
-          'explore__search-header',
-          isRedesignEnabled() && redesignClasses.searchHeader,
-        )}
-      >
-        <Search singleColumn />
-      </div>
 
       <div className='account__section-headline'>
         <NavLink exact to='/explore'>
