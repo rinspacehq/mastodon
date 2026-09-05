@@ -1,0 +1,52 @@
+# syntax=docker/dockerfile:1.18
+
+# Build a Rinspace Mastodon patch release from the exact production image.
+# This keeps the already-validated Ruby gems and native media libraries while
+# rebuilding application assets and copying the complete source tree.
+ARG BASE_IMAGE=rinspace-mastodon:release-f1134ca85
+ARG NODE_IMAGE=node:24-trixie-slim
+
+FROM ${NODE_IMAGE} AS node
+
+FROM ${BASE_IMAGE} AS precompiler
+
+ARG TARGETPLATFORM
+
+USER root
+WORKDIR /opt/mastodon
+
+COPY . /opt/mastodon/
+COPY --from=node /usr/local/bin /usr/local/bin
+COPY --from=node /usr/local/lib /usr/local/lib
+
+RUN \
+  --mount=type=cache,id=rinspace-corepack-cache-${TARGETPLATFORM},target=/usr/local/share/.cache/corepack,sharing=locked \
+  --mount=type=cache,id=rinspace-yarn-cache-${TARGETPLATFORM},target=/usr/local/share/.cache/yarn,sharing=locked \
+  rm -f /usr/local/bin/yarn*; \
+  npm install --global corepack; \
+  yarn workspaces focus --production @mastodon/mastodon
+
+RUN \
+  RINSPACE_ASSETS_PRECOMPILE=true SECRET_KEY_BASE_DUMMY=1 \
+  bundle exec rails assets:precompile; \
+  rm -rf /opt/mastodon/tmp/*
+
+FROM ${BASE_IMAGE}
+
+ARG SOURCE_COMMIT
+ENV SOURCE_COMMIT=${SOURCE_COMMIT}
+
+USER root
+WORKDIR /opt/mastodon
+
+COPY . /opt/mastodon/
+COPY --from=precompiler /opt/mastodon/public/packs /opt/mastodon/public/packs
+COPY --from=precompiler /opt/mastodon/public/assets /opt/mastodon/public/assets
+
+RUN \
+  bundle exec bootsnap precompile --gemfile app/ lib/ config/; \
+  mkdir -p /opt/mastodon/public/system /opt/mastodon/tmp; \
+  chown mastodon:mastodon /opt/mastodon/public/system; \
+  chown -R mastodon:mastodon /opt/mastodon/tmp
+
+USER mastodon
