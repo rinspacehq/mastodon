@@ -2818,7 +2818,7 @@ __metadata:
     "@phosphor-icons/react": "npm:2.1.10"
     "@react-spring/web": "npm:10.1.2"
     "@reduxjs/toolkit": "npm:2.12.0"
-    "@rinspace/world-shell": "file:vendor/rinspace/rinspace-world-shell-0.1.6.tgz"
+    "@rinspace/world-shell": "file:vendor/rinspace/rinspace-world-shell-0.1.7.tgz"
     "@rolldown/plugin-babel": "npm:0.2.3"
     "@storybook/addon-a11y": "npm:10.3.3"
     "@storybook/addon-docs": "npm:10.3.3"
@@ -3623,12 +3623,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rinspace/world-shell@file:vendor/rinspace/rinspace-world-shell-0.1.6.tgz::locator=%40mastodon%2Fmastodon%40workspace%3A.":
-  version: 0.1.6
-  resolution: "@rinspace/world-shell@file:vendor/rinspace/rinspace-world-shell-0.1.6.tgz#vendor/rinspace/rinspace-world-shell-0.1.6.tgz::hash=5ea667&locator=%40mastodon%2Fmastodon%40workspace%3A."
+"@rinspace/world-shell@file:vendor/rinspace/rinspace-world-shell-0.1.7.tgz::locator=%40mastodon%2Fmastodon%40workspace%3A.":
+  version: 0.1.7
+  resolution: "@rinspace/world-shell@file:vendor/rinspace/rinspace-world-shell-0.1.7.tgz#vendor/rinspace/rinspace-world-shell-0.1.7.tgz::hash=f7ac34&locator=%40mastodon%2Fmastodon%40workspace%3A."
   peerDependencies:
     react: ^19.0.0
-  checksum: 10c0/237cffd407c5f24d109e630ace304c678208a58993eca67663126244bddd784e4a9701852335ff3a115b2e4cd9f2beec9e672383f9f9efa75c6adee7c66a8b09
+  checksum: 10c0/6b76121ab03ea8df0f8b8f16e8edbb467a8c9c95736b2d0e69725a7170feb61e809431ac284c100b4005fab3e1e77fdc6cebbd5d471c6765f51b7f9fb566a993
   languageName: node
   linkType: hard
 
