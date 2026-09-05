@@ -213,6 +213,7 @@ Rails.application.routes.draw do
     member { get :player }
   end
 
+  get '/tags', to: redirect('/explore/tags'), as: :rinspace_tags
   resources :tags,   only: [:show]
   resources :emojis, only: [:show]
   resources :invites, only: [:index, :create, :destroy]
