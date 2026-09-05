@@ -6,6 +6,7 @@
 }
 
 .rin-world-shell {
+  box-sizing: border-box;
   position: sticky;
   top: 0;
   flex: 0 0 auto;
@@ -17,6 +18,7 @@
 }
 
 .rin-world-shell__nav {
+  box-sizing: border-box;
   grid-template-columns: minmax(160px, 1fr) minmax(240px, 420px) minmax(160px, 1fr);
   gap: 16px;
   width: 100%;
