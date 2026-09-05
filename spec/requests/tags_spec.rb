@@ -3,6 +3,15 @@
 require 'rails_helper'
 
 RSpec.describe 'Tags' do
+  describe 'GET /tags' do
+    it 'opens the local tag discovery surface' do
+      get '/tags'
+
+      expect(response).to redirect_to('/explore/tags')
+      expect(response).to have_http_status(301)
+    end
+  end
+
   describe 'GET /tags/:id' do
     context 'when tag exists' do
       let(:tag) { Fabricate :tag }
