@@ -16,10 +16,10 @@ function option(name) {
 const releaseDirectory = path.resolve(option('--release'));
 const manifestPath = path.join(releaseDirectory, 'world-release-manifest.json');
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-const archive = Object.keys(manifest.artifacts).find((name) => name.endsWith('.tgz'));
+const archive = `rinspace-world-shell-${manifest.shellVersion}.tgz`;
 
-if (!archive) throw new Error('world-shell archive is absent from the release manifest');
-if (manifest.shellVersion !== '0.1.0') throw new Error(`unsupported world-shell ${manifest.shellVersion}`);
+if (!manifest.artifacts?.[archive]) throw new Error('world-shell archive is absent from the release manifest');
+if (!/^0\.1\.\d+$/.test(manifest.shellVersion)) throw new Error(`unsupported world-shell ${manifest.shellVersion}`);
 if (manifest.contractVersion !== '1.0.0') throw new Error(`unsupported world contract ${manifest.contractVersion}`);
 if (manifest.source.dirty && !process.argv.includes('--allow-dirty')) {
   throw new Error('formal Mastodon consumption refuses a dirty world release');
@@ -36,6 +36,12 @@ const vendorDirectory = path.join(repositoryRoot, 'vendor/rinspace');
 const destination = path.join(vendorDirectory, archive);
 fs.mkdirSync(vendorDirectory, { recursive: true });
 fs.copyFileSync(source, destination);
+
+const packagePath = path.join(repositoryRoot, 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+packageJson.dependencies['@rinspace/world-shell'] = `file:vendor/rinspace/${archive}`;
+fs.writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
+
 fs.writeFileSync(
   path.join(repositoryRoot, 'config/rinspace-world-release.lock.json'),
   `${JSON.stringify({
@@ -46,4 +52,9 @@ fs.writeFileSync(
   }, null, 2)}\n`,
 );
 
-process.stdout.write(`${JSON.stringify({ archive: destination, sha256: actualSha256, source: manifest.source }, null, 2)}\n`);
+process.stdout.write(`${JSON.stringify({
+  archive: destination,
+  dependency: packageJson.dependencies['@rinspace/world-shell'],
+  sha256: actualSha256,
+  source: manifest.source,
+}, null, 2)}\n`);

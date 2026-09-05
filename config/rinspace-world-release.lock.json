@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "shell": {
     "name": "@rinspace/world-shell",
-    "version": "0.1.0",
-    "file": "vendor/rinspace/rinspace-world-shell-0.1.0.tgz",
-    "sha256": "eb3d14ef0af22a39fe0d94c7b4c243f1877360130d46b90c3e305d2e1a74ab42"
+    "version": "0.1.4",
+    "file": "vendor/rinspace/rinspace-world-shell-0.1.4.tgz",
+    "sha256": "22fb42c996654a11a1fd28c9a173588b55e9de16ba9fe4da9ccf6ca7d9ed10d9"
   },
   "contractVersion": "1.0.0",
   "source": {
-    "commit": "c886ee7b1b58f20f5979d9eeb34e14a774bf5e90",
+    "commit": "8b929649fec2457170eba02da89c9097e2908ac3",
     "dirty": false
   }
 }
