@@ -19,9 +19,14 @@ missing = required.select { |name| ENV[name].to_s.blank? }
 abort "Missing mandatory Rinspace identity settings: #{missing.join(', ')}" if missing.any?
 abort 'Rinspace control-plane HMAC key must contain at least 32 bytes' if ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY'].bytesize < 32
 
-required_true = %w[OIDC_ENABLED OIDC_DISCOVERY OIDC_USE_PKCE OIDC_SEND_NONCE OMNIAUTH_ONLY ONE_CLICK_SSO_LOGIN]
+required_true = %w[OIDC_ENABLED OIDC_USE_PKCE OIDC_SEND_NONCE OMNIAUTH_ONLY ONE_CLICK_SSO_LOGIN]
 not_enabled = required_true.reject { |name| ENV[name] == 'true' }
 abort "Strict Rinspace OIDC settings must be true: #{not_enabled.join(', ')}" if not_enabled.any?
+unless ENV['OIDC_DISCOVERY'] == 'true'
+  explicit_endpoints = %w[OIDC_AUTH_ENDPOINT OIDC_TOKEN_ENDPOINT OIDC_USER_INFO_ENDPOINT OIDC_JWKS_URI]
+  missing_endpoints = explicit_endpoints.select { |name| ENV[name].to_s.blank? }
+  abort "OIDC discovery is disabled but explicit endpoints are missing: #{missing_endpoints.join(', ')}" if missing_endpoints.any?
+end
 abort 'OIDC and control-plane credentials must be purpose-specific' if ENV['OIDC_CLIENT_SECRET'] == ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY']
 if community_write
   abort 'Rinspace moderation HMAC key must contain at least 32 bytes' if ENV['RINSPACE_MODERATION_HMAC_KEY'].bytesize < 32
