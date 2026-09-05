@@ -8,7 +8,7 @@
 
 | 字段 | 值 |
 | --- | --- |
-| Fork 仓库 | `lunifans/mastodon` |
+| Fork 仓库 | `rinspacehq/mastodon` |
 | 上游仓库 | `mastodon/mastodon` |
 | Fork 提交 | `0a32b4a831838ef1f363a915c2e71e2a1b52cf0d` |
 | 核查时上游 `main` | `0a32b4a831838ef1f363a915c2e71e2a1b52cf0d` |

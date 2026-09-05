@@ -8,7 +8,7 @@ This document is the upgrade boundary between upstream Mastodon and the public R
 
 | Field | Value |
 | --- | --- |
-| Fork repository | `lunifans/mastodon` |
+| Fork repository | `rinspacehq/mastodon` |
 | Upstream repository | `mastodon/mastodon` |
 | Fork commit | `0a32b4a831838ef1f363a915c2e71e2a1b52cf0d` |
 | Upstream `main` at inspection | `0a32b4a831838ef1f363a915c2e71e2a1b52cf0d` |
