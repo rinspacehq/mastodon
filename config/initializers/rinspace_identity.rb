@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-return if Rails.env.test?
+return if Rails.env.test? || ENV['RINSPACE_ASSETS_PRECOMPILE'] == 'true'
 
 if ENV['RINSPACE_IDENTITY_STRICT'] != 'true'
   abort 'RINSPACE_IDENTITY_STRICT=true is mandatory for the Rinspace Mastodon runtime'
