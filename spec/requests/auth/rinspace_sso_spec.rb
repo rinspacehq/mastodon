@@ -57,6 +57,8 @@ RSpec.describe 'Rinspace SSO preparation' do
     ClimateControl.modify RINSPACE_CLOUDBASE_ENV_ID: 'rin-test' do
       get '/?world=inner'
       expect(response.headers['Content-Security-Policy']).to include("form-action 'self'")
+      expect(response.headers['Content-Security-Policy']).to include('connect-src')
+      expect(response.headers['Content-Security-Policy']).to include('https://rin-test.api.tcloudbasegateway.com')
 
       get '/settings/preferences/appearance?world=inner'
       expect(response).to redirect_to('/auth/sign_in')

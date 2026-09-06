@@ -13,6 +13,14 @@ class ContentSecurityPolicy
     [assets_host, cdn_host_value, paperclip_root_url].concat(extra_media_hosts).compact
   end
 
+  def rinspace_auth_host
+    env_id = ENV.fetch('RINSPACE_CLOUDBASE_ENV_ID', nil)
+    return if env_id.blank?
+    raise ArgumentError, 'invalid RINSPACE_CLOUDBASE_ENV_ID' unless env_id.match?(/\A[a-z0-9-]+\z/)
+
+    "https://#{env_id}.api.tcloudbasegateway.com"
+  end
+
   # In the admin area we might need signed URLs that use this domain
   def admin_media_hosts
     [s3_endpoint_url].compact

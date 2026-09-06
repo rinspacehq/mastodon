@@ -21,6 +21,10 @@ module WebAppControllerConcern
       else
         p.form_action :none
       end
+
+      if policy.rinspace_auth_host.present?
+        p.connect_src(*p.directives.fetch('connect-src'), policy.rinspace_auth_host)
+      end
     end
   end
 
