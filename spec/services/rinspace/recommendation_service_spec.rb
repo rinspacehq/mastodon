@@ -34,4 +34,19 @@ RSpec.describe Rinspace::RecommendationService do
 
     expect(described_class.new.call(account: viewer, subject: 'uid-viewer', limit: 20).map(&:id)).to include(allowed.id)
   end
+
+  it 'fills a short personalized result with distinct eligible local statuses' do
+    viewer = Fabricate(:account)
+    author = Fabricate(:account, discoverable: true)
+    ranked = Fabricate(:status, account: author, visibility: :public, rinspace_review_state: 'approved')
+    fallback = Fabricate(:status, account: author, visibility: :public, rinspace_review_state: 'approved')
+    stub_request(:get, /gorse\.internal\/api\/recommend/).to_return(
+      status: 200,
+      body: ["mastodon-status:#{ranked.id}"].to_json
+    )
+
+    result = described_class.new.call(account: viewer, subject: 'uid-viewer', limit: 2)
+
+    expect(result.map(&:id)).to eq([ranked.id, fallback.id])
+  end
 end

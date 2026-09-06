@@ -83,8 +83,6 @@ module Mastodon
     end
 
     def allowed_profile_media_url?(value)
-      return true unless enabled?
-
       uri = Addressable::URI.parse(value.to_s)
       allowed_profile_media_uri?(uri)
     rescue Addressable::URI::InvalidURIError

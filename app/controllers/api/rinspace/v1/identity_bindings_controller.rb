@@ -5,7 +5,8 @@ class Api::Rinspace::V1::IdentityBindingsController < Api::Rinspace::V1::BaseCon
     permitted = identity_params
     result = Rinspace::EnsureIdentityService.new.call(
       subject: permitted[:subject], handle: permitted[:handle], display_name: permitted[:displayName],
-      avatar_url: permitted[:avatarUrl] || '', header_url: permitted.key?(:headerUrl) ? permitted[:headerUrl] : nil,
+      avatar_url: permitted.key?(:avatarUrl) ? permitted[:avatarUrl] : nil,
+      header_url: permitted.key?(:headerUrl) ? permitted[:headerUrl] : nil,
       bio: permitted[:bio] || '', version: permitted[:version],
       state: permitted[:state] || 'active'
     )

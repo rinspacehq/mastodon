@@ -73,7 +73,7 @@ const ClearButton: React.FC<{
     <div
       className={classNames('search__icon-wrapper', { 'has-value': hasValue })}
     >
-      {onOpen ? (
+      {onOpen && !hasValue ? (
         <button
           type='button'
           className='search__icon search__icon--open-button icon-search'
@@ -82,22 +82,24 @@ const ClearButton: React.FC<{
         >
           <Icon id='search' icon={SearchIcon} />
         </button>
-      ) : (
+      ) : !onOpen ? (
         <Icon id='search' icon={SearchIcon} className='search__icon' />
+      ) : null}
+      {(!onOpen || hasValue) && (
+        <button
+          type='button'
+          onClick={onClick}
+          className='search__icon search__icon--clear-button'
+          tabIndex={hasValue ? undefined : -1}
+          aria-hidden={!hasValue}
+        >
+          <Icon
+            id='times-circle'
+            icon={CancelIcon}
+            aria-label={intl.formatMessage(messages.clearSearch)}
+          />
+        </button>
       )}
-      <button
-        type='button'
-        onClick={onClick}
-        className='search__icon search__icon--clear-button'
-        tabIndex={hasValue ? undefined : -1}
-        aria-hidden={!hasValue}
-      >
-        <Icon
-          id='times-circle'
-          icon={CancelIcon}
-          aria-label={intl.formatMessage(messages.clearSearch)}
-        />
-      </button>
     </div>
   );
 };

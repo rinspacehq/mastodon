@@ -9,6 +9,10 @@ describe('innerWorldPath', () => {
     ['/tags/books?tab=recent', '/tags/books?tab=recent&world=inner'],
     ['/settings/profile', '/settings/profile?world=inner'],
     ['/notifications', '/notifications?world=inner'],
+    ['/search?q=reverse+engineering', '/search?q=reverse+engineering&world=inner'],
+    ['/relationships', '/relationships?world=inner'],
+    ['/statuses_cleanup', '/statuses_cleanup?world=inner'],
+    ['/terms-of-service', '/terms-of-service?world=inner'],
   ])('keeps dual resource %s in the inner world', (input, expected) => {
     expect(innerWorldPath(input)).toBe(expected);
   });

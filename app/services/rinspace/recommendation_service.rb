@@ -5,18 +5,23 @@ class Rinspace::RecommendationService
 
   def call(account:, subject:, limit:, max_id: nil, personalized: true)
     limit = limit.to_i.clamp(1, 40)
+    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     ids = if personalized
             Rinspace::GorseClient.new.recommend(user_id: subject, limit: limit * CANDIDATE_MULTIPLIER, offset: 0)
           else
             []
           end
     ids.select! { |id| id < max_id.to_i } if max_id.present?
-    statuses = eligible_statuses(ids, account)
-    return statuses.first(limit) if statuses.any?
+    ranked = eligible_statuses(ids, account).first(limit)
+    fallback = fallback_statuses(account, limit - ranked.length, max_id, exclude_ids: ranked.map(&:id))
+    result = ranked + fallback
+    log_result(candidate_count: ids.length, ranked_count: ranked.length, fallback_count: fallback.length, result_count: result.length, personalized: personalized, started_at: started_at)
 
-    fallback_statuses(account, limit, max_id)
+    result
   rescue Rinspace::GorseClient::UnavailableError
-    fallback_statuses(account, limit, max_id)
+    result = fallback_statuses(account, limit, max_id)
+    log_result(candidate_count: 0, ranked_count: 0, fallback_count: result.length, result_count: result.length, personalized: personalized, started_at: started_at, fallback_reason: 'gorse_unavailable')
+    result
   end
 
   private
@@ -27,11 +32,28 @@ class Rinspace::RecommendationService
     Status.permitted_statuses_from_ids(ids, account, stable: true).select { |status| eligible?(status) }
   end
 
-  def fallback_statuses(account, limit, max_id)
+  def fallback_statuses(account, limit, max_id, exclude_ids: [])
+    return [] if limit <= 0
+
     scope = recommendation_scope
     scope = scope.where(id: ...max_id.to_i) if max_id.present?
+    scope = scope.where.not(id: exclude_ids) if exclude_ids.any?
     ids = scope.limit(limit * CANDIDATE_MULTIPLIER).pluck(:id)
     Status.permitted_statuses_from_ids(ids, account, stable: true).select { |status| eligible?(status) }.first(limit)
+  end
+
+  def log_result(candidate_count:, ranked_count:, fallback_count:, result_count:, personalized:, started_at:, fallback_reason: nil)
+    duration_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).round(1)
+    Rails.logger.info(
+      event: 'rinspace_recommendation_result',
+      personalized: personalized,
+      candidate_count: candidate_count,
+      ranked_count: ranked_count,
+      fallback_count: fallback_count,
+      fallback_reason: fallback_reason || (fallback_count.positive? ? 'insufficient_ranked_results' : 'none'),
+      result_count: result_count,
+      duration_ms: duration_ms
+    )
   end
 
   def recommendation_scope

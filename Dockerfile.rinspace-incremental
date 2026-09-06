@@ -3,7 +3,7 @@
 # Build a Rinspace Mastodon patch release from the exact production image.
 # This keeps the already-validated Ruby gems and native media libraries while
 # rebuilding application assets and copying the complete source tree.
-ARG BASE_IMAGE=rinspace-mastodon:release-f1134ca85
+ARG BASE_IMAGE=rinspace-mastodon:release-43b042592
 ARG NODE_IMAGE=node:24-trixie-slim
 
 FROM ${NODE_IMAGE} AS node
@@ -12,6 +12,7 @@ FROM ${BASE_IMAGE} AS precompiler
 
 ARG TARGETPLATFORM
 ENV NODE_USE_ENV_PROXY=1
+ENV YARN_HTTP_TIMEOUT=120000
 
 USER root
 WORKDIR /opt/mastodon
@@ -45,6 +46,7 @@ COPY --from=precompiler /opt/mastodon/public/packs /opt/mastodon/public/packs
 COPY --from=precompiler /opt/mastodon/public/assets /opt/mastodon/public/assets
 
 RUN \
+  rm -rf /opt/mastodon/tmp/cache/bootsnap*; \
   bundle exec bootsnap precompile --gemfile app/ lib/ config/; \
   mkdir -p /opt/mastodon/public/system /opt/mastodon/tmp; \
   chown mastodon:mastodon /opt/mastodon/public/system; \

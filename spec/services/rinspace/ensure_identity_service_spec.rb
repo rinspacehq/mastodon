@@ -55,6 +55,27 @@ RSpec.describe Rinspace::EnsureIdentityService do
     Mastodon::RinspaceLocalOnly.instance_variable_set(:@profile_media_hosts, nil)
   end
 
+  it 'projects, preserves, and explicitly clears a shared profile avatar' do
+    avatar_url = 'https://assets.example.org/avatar.png'
+    previous_hosts = ENV.fetch('RINSPACE_PROFILE_MEDIA_HOSTS', nil)
+    ENV['RINSPACE_PROFILE_MEDIA_HOSTS'] = 'assets.example.org'
+    Mastodon::RinspaceLocalOnly.instance_variable_set(:@profile_media_hosts, nil)
+    stub_request(:get, avatar_url).to_return(request_fixture('avatar.txt'))
+
+    projected = service.call(subject: 'uid-avatar-clear', handle: 'avatarclear', display_name: '', avatar_url:, bio: '', version: 1)
+    expect(projected.account.avatar_file_name).to be_present
+
+    preserved = service.call(subject: 'uid-avatar-clear', handle: 'avatarclear', display_name: '', avatar_url: nil, bio: '', version: 2)
+    expect(preserved.account.avatar_file_name).to eq(projected.account.avatar_file_name)
+
+    cleared = service.call(subject: 'uid-avatar-clear', handle: 'avatarclear', display_name: '', avatar_url: '', bio: '', version: 3)
+    expect(cleared.account.avatar_file_name).to be_nil
+    expect(cleared.account.avatar_remote_url).to be_blank
+  ensure
+    ENV['RINSPACE_PROFILE_MEDIA_HOSTS'] = previous_hosts
+    Mastodon::RinspaceLocalOnly.instance_variable_set(:@profile_media_hosts, nil)
+  end
+
   it 'renames the same account and leaves the old handle reusable' do
     original = service.call(subject: 'uid-2', handle: 'before', display_name: 'Before', avatar_url: '', bio: '', version: 1)
     renamed = service.call(subject: 'uid-2', handle: 'after', display_name: 'After', avatar_url: '', bio: '', version: 2)
@@ -71,6 +92,14 @@ RSpec.describe Rinspace::EnsureIdentityService do
       service.call(subject: 'uid-4', handle: 'taken', display_name: '', avatar_url: '', bio: '', version: 1)
     end.to raise_error(ActiveRecord::RecordNotUnique)
     expect(Identity.find_by(provider: 'openid_connect', uid: 'uid-4')).to be_nil
+  end
+
+  it 'rejects an invalid legacy handle instead of creating a second account' do
+    expect do
+      service.call(subject: 'uid-invalid-handle', handle: 'a' * 31, display_name: '', avatar_url: nil, bio: '', version: 1)
+    end.to raise_error(ArgumentError, 'invalid handle')
+
+    expect(Identity.find_by(provider: 'openid_connect', uid: 'uid-invalid-handle')).to be_nil
   end
 
   it 'disables a bound user without deleting identity evidence' do

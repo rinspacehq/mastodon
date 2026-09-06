@@ -78,6 +78,36 @@ RSpec.describe Vite::Manifest do
         end
       end
     end
+
+    context 'when generated chunks have cyclic ESM imports' do
+      let(:manifest_file) do
+        Tempfile.new.tap do |file|
+          file.write({
+            'entrypoints/application.ts' => {
+              'file' => 'application.js',
+              'name' => 'application',
+              'isEntry' => true,
+              'imports' => ['_cycle-a.js'],
+            },
+            '_cycle-a.js' => {
+              'file' => 'cycle-a.js',
+              'imports' => ['_cycle-b.js'],
+            },
+            '_cycle-b.js' => {
+              'file' => 'cycle-b.js',
+              'imports' => ['_cycle-a.js'],
+            },
+          }.to_json)
+          file.rewind
+        end
+      end
+
+      it 'loads each related chunk once without recursive overflow' do
+        entry = subject.fetch('entrypoints/application.ts')
+
+        expect(subject.imports_for(entry).pluck(:file)).to contain_exactly('cycle-a.js', 'cycle-b.js')
+      end
+    end
   end
 
   describe 'fetch!' do

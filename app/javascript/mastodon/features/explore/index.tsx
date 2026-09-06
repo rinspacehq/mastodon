@@ -9,8 +9,6 @@ import { ColumnHeader as LegacyColumnHeader } from '@/mastodon/components/column
 import { ColumnHeader } from '@/mastodon/components/column_header';
 import { isRedesignEnabled } from '@/mastodon/utils/environment';
 import TrendingUpIcon from '@/material-icons/400-24px/trending_up.svg?react';
-import { SymbolLogo } from 'mastodon/components/logo';
-import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
 
 import Links from './links';
@@ -26,8 +24,6 @@ const messages = defineMessages({
 const Explore: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   const { signedIn } = useIdentity();
   const intl = useIntl();
-  const logoRequired = useBreakpoint('full');
-
   return (
     <Column
       bindToDocument={!multiColumn}
@@ -41,7 +37,7 @@ const Explore: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       ) : (
         <LegacyColumnHeader
           icon={'explore'}
-          iconComponent={logoRequired ? SymbolLogo : TrendingUpIcon}
+          iconComponent={TrendingUpIcon}
           title={intl.formatMessage(messages.title)}
           multiColumn={multiColumn}
           scrollTopOnClick

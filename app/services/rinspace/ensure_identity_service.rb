@@ -7,6 +7,7 @@ class Rinspace::EnsureIdentityService
     @subject = subject.to_s.strip
     @handle = handle.to_s.strip.downcase
     @display_name = display_name.to_s.strip
+    @avatar_url_provided = !avatar_url.nil?
     @avatar_url = avatar_url.to_s.strip
     @header_url_provided = !header_url.nil?
     @header_url = header_url.to_s.strip
@@ -44,7 +45,7 @@ class Rinspace::EnsureIdentityService
     raise ArgumentError, 'invalid handle' unless Account::USERNAME_ONLY_RE.match?(@handle) && @handle.length <= 30
     raise ArgumentError, 'invalid version' if @version.negative?
     raise ArgumentError, 'invalid state' unless %w[active disabled deleted].include?(@state)
-    if @avatar_url.present? && !Mastodon::RinspaceLocalOnly.allowed_profile_media_url?(@avatar_url)
+    if @avatar_url_provided && @avatar_url.present? && !Mastodon::RinspaceLocalOnly.allowed_profile_media_url?(@avatar_url)
       raise ArgumentError, 'avatar URL is outside the local trust boundary'
     end
     return unless @header_url_provided && @header_url.present? && !Mastodon::RinspaceLocalOnly.allowed_profile_media_url?(@header_url)
@@ -76,7 +77,14 @@ class Rinspace::EnsureIdentityService
     end
     account.display_name = @display_name
     account.note = @bio
-    account.avatar_remote_url = @avatar_url if @avatar_url.present?
+    if @avatar_url_provided
+      if @avatar_url.present?
+        account.avatar_remote_url = @avatar_url
+      else
+        account.avatar = nil
+        account.avatar_remote_url = ''
+      end
+    end
     if @header_url_provided
       if @header_url.present?
         account.header_remote_url = @header_url

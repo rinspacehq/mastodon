@@ -2,15 +2,19 @@ import { IntlProvider } from 'react-intl';
 
 import { MemoryRouter } from 'react-router-dom';
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RinspaceWorldTopbar } from './rinspace_world_topbar';
 
 const adapterState = vi.hoisted(() => ({
   signedIn: false,
+  permissions: 0,
   unreadNotifications: 0,
+  rinspaceSession: null as null | { access_token: string },
 }));
+
+const startSso = vi.hoisted(() => vi.fn());
 
 vi.mock('mastodon/features/compose/components/search', () => ({
   Search: ({ topbar }: { topbar?: boolean }) => (
@@ -20,12 +24,23 @@ vi.mock('mastodon/features/compose/components/search', () => ({
   ),
 }));
 
+vi.mock('mastodon/hooks/useTheme', () => ({ useTheme: () => 'light' }));
+
 vi.mock('mastodon/identity_context', () => ({
-  useIdentity: () => ({ signedIn: adapterState.signedIn }),
+  useIdentity: () => ({
+    signedIn: adapterState.signedIn,
+    permissions: adapterState.permissions,
+  }),
 }));
 
-vi.mock('mastodon/initial_state', () => ({
-  sso_redirect: '/auth/auth/openid_connect',
+vi.mock('mastodon/services/rinspace_auth', () => ({
+  completeRinspacePhoneOtp: vi.fn(),
+  getFreshRinspaceSession: () => Promise.resolve(adapterState.rinspaceSession),
+  isMainlandPhone: (phone: string) => /^1\d{10}$/.test(phone),
+  normalizeMainlandPhone: (phone: string) => phone,
+  RinspaceAuthError: class extends Error {},
+  sendRinspacePhoneOtp: vi.fn(),
+  startRinspaceSso: startSso,
 }));
 
 vi.mock('mastodon/selectors/notifications', () => ({
@@ -36,10 +51,10 @@ vi.mock('mastodon/store', () => ({
   useAppSelector: () => adapterState.unreadNotifications,
 }));
 
-function renderTopbar() {
+function renderTopbar(entry = '/explore?world=inner#latest') {
   return render(
     <IntlProvider locale='en'>
-      <MemoryRouter initialEntries={['/?world=inner']}>
+      <MemoryRouter initialEntries={[entry]}>
         <RinspaceWorldTopbar
           avatar='/avatar.png'
           displayName='Rin Reader'
@@ -53,37 +68,147 @@ function renderTopbar() {
 describe('RinspaceWorldTopbar', () => {
   beforeEach(() => {
     adapterState.signedIn = false;
+    adapterState.permissions = 0;
     adapterState.unreadNotifications = 0;
+    adapterState.rinspaceSession = null;
+    startSso.mockClear();
+    window.localStorage.clear();
   });
 
-  it('uses Mastodon search and the real SSO entry for signed-out visitors', () => {
+  it('keeps the outer presentation controls and opens sign-in in place', async () => {
     renderTopbar();
 
     expect(screen.getByRole('search').dataset.topbar).toBe('true');
     expect(
-      screen
-        .getByRole('link', { name: 'Sign in / Register' })
-        .getAttribute('href'),
-    ).toBe('/auth/auth/openid_connect');
-    expect(screen.queryByRole('link', { name: 'Publish' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Notifications' })).toBeNull();
+      screen.getByRole('button', { name: 'Switch to dark theme' }),
+    ).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Explore' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in / Register' }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText('Phone number')).toBeTruthy();
   });
 
-  it('binds publishing, unread notifications, and profile to Mastodon routes', () => {
+  it('uses an existing outer session and preserves the exact inner return URL', async () => {
+    adapterState.rinspaceSession = { access_token: 'access' };
+    renderTopbar('/search?q=reverse%20engineering&world=inner#results');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
+
+    await waitFor(() => {
+      expect(startSso).toHaveBeenCalledWith(
+        '/search?q=reverse+engineering&world=inner#results',
+      );
+    });
+  });
+
+  it('opens the inner-world login dialog from the no-JavaScript recovery URL', async () => {
+    renderTopbar('/?world=inner#login');
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in / Register' }),
+    ).toBeTruthy();
+  });
+
+  it('removes the recovery marker but preserves the original URL after sign-in', async () => {
+    adapterState.rinspaceSession = { access_token: 'access' };
+    renderTopbar(
+      '/search?q=reverse+engineering&world=inner&rinspace_login=1#results',
+    );
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in / Register' }),
+    ).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close sign-in window' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
+
+    await waitFor(() => {
+      expect(startSso).toHaveBeenCalledWith(
+        '/search?q=reverse+engineering&world=inner#results',
+      );
+    });
+  });
+
+  it('opens recovery in the public shell and submits the protected inner target', async () => {
+    adapterState.rinspaceSession = { access_token: 'access' };
+    renderTopbar(
+      '/?world=inner&rinspace_login=1&rinspace_return_to=%2Fsettings%2Fpreferences%2Fappearance%3Fworld%3Dinner',
+    );
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in / Register' }),
+    ).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close sign-in window' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
+
+    await waitFor(() => {
+      expect(startSso).toHaveBeenCalledWith(
+        '/settings/preferences/appearance?world=inner',
+      );
+    });
+  });
+
+  it('closes the login dialog with Escape and restores trigger focus', async () => {
+    renderTopbar();
+    const trigger = screen.getByRole('button', { name: 'Sign in / Register' });
+    trigger.focus();
+    fireEvent.click(trigger);
+    await screen.findByRole('dialog', { name: 'Sign in / Register' });
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Sign in / Register' }),
+      ).toBeNull();
+      expect(document.activeElement).toBe(trigger);
+    });
+  });
+
+  it('binds the complete signed-in control order to Mastodon routes', () => {
     adapterState.signedIn = true;
     adapterState.unreadNotifications = 7;
-
     renderTopbar();
 
+    const navigation = screen.getByRole('navigation');
+    const controls = Array.from(navigation.children).map((element) =>
+      (element.matches('details')
+        ? element.querySelector('summary')
+        : element
+      )?.getAttribute('aria-label'),
+    );
+    expect(controls).toEqual([
+      'Switch to dark theme',
+      'Explore',
+      'Publish',
+      'Notifications',
+      'Account menu',
+    ]);
+    expect(
+      screen.getByRole('link', { name: 'Explore' }).getAttribute('href'),
+    ).toBe('/explore?world=inner');
     expect(
       screen.getByRole('link', { name: 'Publish' }).getAttribute('href'),
     ).toBe('/publish?world=inner');
     expect(
       screen.getByRole('link', { name: 'Notifications' }).getAttribute('href'),
     ).toBe('/notifications?world=inner');
-    expect(screen.getByText('7')).toBeTruthy();
     expect(
-      screen.getByRole('link', { name: 'Your profile' }).getAttribute('href'),
-    ).toBe('/@reader?world=inner');
+      screen.getByRole('menuitem', { name: 'Preferences' }).getAttribute('href'),
+    ).toBe('/settings/preferences/appearance?world=inner');
+    expect(screen.getByText('7')).toBeTruthy();
+  });
+
+  it('adds administration only for a role that can view the dashboard', () => {
+    adapterState.signedIn = true;
+    adapterState.permissions = 0x0000000000000008;
+    renderTopbar();
+
+    expect(
+      screen.getByRole('link', { name: 'Administration' }).getAttribute('href'),
+    ).toBe('/admin?world=inner');
   });
 });

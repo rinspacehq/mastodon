@@ -39,6 +39,8 @@ class InstancePresenter < ActiveModelSerializers::Model
   end
 
   def title
+    return I18n.t('rinspace.brand_name') if Mastodon::RinspaceLocalOnly.enabled?
+
     Setting.site_title
   end
 

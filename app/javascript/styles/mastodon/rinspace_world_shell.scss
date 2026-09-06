@@ -1,3 +1,542 @@
+// Presentation snapshot from private rinspace/ui/src/styles/topbar-shell.css at
+// commit 3aedfb63. Mastodon selectors are namespaced; source hashes are recorded
+// in the private two-worlds specification.
+:root {
+  --font-body: 'IBM Plex Sans', 'Rinspace Noto Sans SC', 'Noto Sans SC',
+    'PingFang SC', sans-serif;
+  --rin-canvas: #f8fafc;
+  --rin-surface: #fff;
+  --rin-surface-subtle: #eef2f5;
+  --rin-ink: #2c3e50;
+  --rin-ink-muted: #64748b;
+  --rin-accent: #2b577a;
+  --rin-border: #cbd5df;
+  --rin-radius-md: 8px;
+  --rin-font-editorial: 'Rinspace Newsreader', 'Newsreader',
+    'Rinspace Noto Serif SC', 'Noto Serif SC', Georgia, serif;
+  --rin-font-mono: 'IBM Plex Mono', 'Rinspace Code', ui-monospace, monospace;
+
+  // Keep upstream token consumers on the Rinspace palette as well. Most UI
+  // uses the semantic brand tokens below, but this prevents a raw indigo token
+  // from reintroducing Mastodon purple in a deferred surface.
+  --color-indigo-50: #edf4f8;
+  --color-indigo-100: #dce8f0;
+  --color-indigo-200: #b7cedd;
+  --color-indigo-300: #9fc2dc;
+  --color-indigo-400: #81a9c7;
+  --color-indigo-500: #668eac;
+  --color-indigo-600: #456f8e;
+  --color-indigo-700: #2b577a;
+  --color-indigo-800: #244963;
+  --color-indigo-900: #20394b;
+  --color-indigo-950: #172a38;
+
+  // Override Mastodon's indigo brand layer with the same Rinspace blue-grey
+  // vocabulary used by the private outer UI. Semantic warning/error colors
+  // remain Mastodon-owned.
+  --color-text-brand: #2b577a;
+  --color-text-brand-soft: #456b87;
+  --color-text-brand-on-inverted: #8db0ca;
+  --color-bg-brand-base: #2b577a;
+  --color-bg-brand-base-hover: #244963;
+  --color-bg-brand-soft: #dce8f0;
+  --color-bg-brand-softest: #edf4f8;
+  --color-border-brand: #2b577a;
+  --color-border-brand-soft: #b7cedd;
+}
+
+:root[data-color-scheme='dark'] {
+  --rin-canvas: #111820;
+  --rin-surface: #18222d;
+  --rin-surface-subtle: #22303d;
+  --rin-ink: #e5edf3;
+  --rin-ink-muted: #9fb0bf;
+  --rin-accent: #81a9c7;
+  --rin-border: #354757;
+  --color-text-brand: #9fc2dc;
+  --color-text-brand-soft: #b4ccdd;
+  --color-text-brand-on-inverted: #2b577a;
+  --color-bg-brand-base: #456f8e;
+  --color-bg-brand-base-hover: #5686a8;
+  --color-bg-brand-soft: #20394b;
+  --color-bg-brand-softest: #172a38;
+  --color-border-brand: #81a9c7;
+  --color-border-brand-soft: #354f63;
+}
+
+.ui > .topbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(240px, 420px) minmax(
+      160px,
+      1fr
+    );
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  block-size: 64px;
+  min-block-size: 64px;
+  padding: 0 28px;
+  border-block-end: 1px solid var(--rin-border);
+  background: color-mix(in srgb, var(--rin-canvas) 90%, transparent);
+  color: var(--rin-ink);
+  backdrop-filter: blur(18px);
+}
+
+.ui > .topbar :where(.brand, .account-nav) {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ui > .topbar .brand {
+  min-inline-size: 0;
+  justify-self: start;
+  color: var(--rin-ink);
+  font-family: var(--rin-font-editorial);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.ui > .topbar .brand-word {
+  display: inline-flex;
+  block-size: 1.75em;
+  align-items: center;
+  overflow: visible;
+  color: inherit;
+  line-height: 1.2;
+  text-decoration: none;
+  transform: translateY(2px);
+}
+
+.ui > .topbar .brand-word-motion,
+.ui > .topbar .brand-word-motion > span {
+  display: inline-flex !important;
+  block-size: 1.2em;
+  align-items: center;
+  overflow: visible;
+}
+
+.ui > .topbar .brand-mark {
+  display: grid;
+  inline-size: 38px;
+  block-size: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: currentcolor;
+  text-decoration: none;
+  transform-style: preserve-3d;
+}
+
+.ui > .topbar .brand-mark > img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  object-fit: contain;
+  user-select: none;
+}
+
+.ui > .topbar .brand-mark-fallback {
+  display: grid;
+  inline-size: 100%;
+  block-size: 100%;
+  place-items: center;
+  border: 2px solid currentcolor;
+  border-radius: 999px;
+  font-family: var(--rin-font-editorial);
+  font-size: 1.1rem;
+}
+
+:root[data-color-scheme='dark'] .ui > .topbar .brand-mark > img {
+  filter: invert(1);
+}
+
+.ui > .topbar .rinspace-topbar-search {
+  position: relative;
+  display: inline-flex;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 34px;
+  align-items: center;
+  justify-self: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 3px 0 10px;
+  border: 1px solid var(--rin-border);
+  border-radius: var(--rin-radius-md);
+  background: color-mix(in srgb, var(--rin-surface) 78%, transparent);
+}
+
+.ui > .topbar .rinspace-topbar-search .search__input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 30px;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--rin-ink);
+  font-family: var(--rin-font-mono);
+  font-size: 0.78rem;
+}
+
+.ui > .topbar .rinspace-topbar-search .search__icon-wrapper {
+  position: relative;
+  display: grid;
+  inline-size: 28px;
+  block-size: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  inset: auto;
+  margin: 0;
+  pointer-events: auto;
+}
+
+.ui > .topbar .rinspace-topbar-search .search__icon {
+  inset: auto;
+}
+
+.ui > .topbar .rinspace-topbar-search .search__icon--open-button,
+.ui > .topbar .rinspace-topbar-search .search__icon--clear-button {
+  display: grid;
+  inline-size: 28px;
+  block-size: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rin-accent);
+  color: #fff;
+}
+
+.ui > .topbar .rinspace-topbar-search .search__icon--clear-button {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ui
+  > .topbar
+  .rinspace-topbar-search
+  .search__icon-wrapper.has-value
+  .search__icon--clear-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ui > .topbar .rinspace-topbar-search .search__popout {
+  inset-block-start: calc(100% + 8px);
+  inset-inline: 0;
+  inline-size: 100%;
+  max-inline-size: none;
+}
+
+.ui > .topbar .account-nav {
+  min-inline-size: 0;
+  justify-self: end;
+}
+
+.ui > .topbar :where(.topbar-pill, .notification-pill) {
+  position: relative;
+  display: inline-grid;
+  inline-size: 34px;
+  block-size: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid var(--rin-border);
+  border-radius: 999px;
+  background: var(--rin-surface);
+  color: var(--rin-ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ui > .topbar .rin-animate-icon-button > span {
+  display: inline-grid;
+  place-items: center;
+}
+
+.ui > .topbar :where(.topbar-pill, .notification-pill):hover,
+.ui > .topbar :where(.topbar-pill, .notification-pill):focus-visible {
+  border-color: var(--rin-accent);
+  color: var(--rin-accent);
+}
+
+.ui > .topbar .notification-pill > span {
+  position: absolute;
+  inset-block-start: -6px;
+  inset-inline-end: -7px;
+  display: grid;
+  min-inline-size: 18px;
+  block-size: 18px;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 1px solid var(--rin-canvas);
+  border-radius: 999px;
+  background: var(--rin-accent);
+  color: #fff;
+  font-family: var(--rin-font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.ui > .topbar .topbar-auth-button {
+  border: 0;
+  background: transparent;
+  color: var(--rin-ink);
+  font-family: var(--rin-font-mono);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--rin-accent) 32%, transparent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ui > .topbar .topbar-auth-button:hover {
+  color: var(--rin-accent);
+}
+
+.ui > .topbar .account-menu {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.ui > .topbar .account-menu-trigger {
+  display: inline-flex;
+  max-inline-size: 168px;
+  block-size: 34px;
+  min-block-size: 34px;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 3px 8px 3px 4px;
+  border: 1px solid var(--rin-border);
+  border-radius: 999px;
+  background: var(--rin-surface);
+  color: var(--rin-ink);
+  font-family: var(--rin-font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ui > .topbar .account-menu-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.ui > .topbar .avatar-name {
+  display: inline-flex;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  align-items: center;
+  gap: 7px;
+}
+
+.ui > .topbar .avatar-name-mark {
+  display: inline-grid;
+  inline-size: 22px;
+  block-size: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--rin-border);
+  border-radius: 999px;
+  background: var(--rin-accent);
+  color: #fff;
+  font-family: var(--rin-font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.ui > .topbar .avatar-name-mark > img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.ui > .topbar .avatar-name-text {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui > .topbar .rin-account-menu {
+  position: absolute;
+  inset-block-start: calc(100% + 8px);
+  inset-inline-end: 0;
+  z-index: 180;
+  display: grid;
+  inline-size: max-content;
+  min-inline-size: 180px;
+  padding: 6px;
+  border: 1px solid var(--rin-border);
+  border-radius: var(--rin-radius-md);
+  background: var(--rin-surface);
+  box-shadow: 0 18px 44px rgb(15 23 42 / 16%);
+}
+
+.ui > .topbar .rin-account-menu :where(a, button) {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--rin-ink);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ui > .topbar .rin-account-menu :where(a, button):hover,
+.ui > .topbar .rin-account-menu :where(a, button):focus-visible {
+  background: var(--rin-surface-subtle);
+}
+
+.rin-auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 16px;
+  background: rgb(15 23 42 / 42%);
+  backdrop-filter: blur(4px);
+}
+
+.rin-auth-dialog {
+  inline-size: min(460px, 100%);
+  box-sizing: border-box;
+  padding: 22px;
+  border: 1px solid var(--rin-border);
+  border-radius: 12px;
+  background: var(--rin-surface);
+  box-shadow: 0 24px 64px rgb(15 23 42 / 22%);
+  color: var(--rin-ink);
+}
+
+.rin-auth-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 18px;
+}
+
+.rin-auth-dialog__head h2 {
+  margin: 0;
+  font-family: var(--rin-font-editorial);
+  font-size: 1.35rem;
+}
+
+.rin-auth-dialog__head button {
+  inline-size: 34px;
+  block-size: 34px;
+  padding: 0;
+  border: 1px solid var(--rin-border);
+  border-radius: 999px;
+  background: var(--rin-surface);
+  color: var(--rin-ink);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.rin-auth-dialog__form {
+  display: grid;
+  gap: 14px;
+}
+
+.rin-auth-dialog__form label {
+  display: grid;
+  gap: 7px;
+  color: var(--rin-ink);
+  font-family: var(--rin-font-mono);
+  font-size: 0.78rem;
+}
+
+.rin-auth-dialog__form input {
+  min-block-size: 42px;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border: 1px solid var(--rin-border);
+  border-radius: var(--rin-radius-md);
+  outline: 0;
+  background: var(--rin-canvas);
+  color: var(--rin-ink);
+  font: inherit;
+}
+
+.rin-auth-dialog__form input:focus-visible {
+  border-color: var(--rin-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rin-accent) 20%, transparent);
+}
+
+.rin-auth-dialog__error,
+.rin-auth-dialog__status {
+  min-block-size: 20px;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.rin-auth-dialog__error {
+  color: #9d2f25;
+}
+
+.rin-auth-dialog__status {
+  color: var(--rin-accent);
+}
+
+.rin-auth-dialog__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-block-start: 4px;
+}
+
+.rin-auth-dialog__actions button {
+  min-block-size: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--rin-accent);
+  border-radius: var(--rin-radius-md);
+  background: var(--rin-accent);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rin-auth-dialog__actions .rin-auth-dialog__link {
+  border-color: transparent;
+  background: transparent;
+  color: var(--rin-ink);
+}
+
+.rin-auth-dialog button:disabled,
+.topbar-auth-button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
 .rinspace-inner-runtime {
   display: flex;
   min-height: 0;
@@ -10,15 +549,137 @@
   min-height: calc(100dvh - 64px);
 }
 
-// The shared world shell owns the Rinspace brand controls. Mastodon's
-// navigation remains intact, but its second logo must never compete with them.
-.rinspace-inner-runtime .navigation-panel__logo {
-  display: none;
+// The Rinspace topbar owns mobile/global navigation. Keep the desktop content
+// rail available, but remove its duplicate brand, search and compose controls.
+.rinspace-inner-runtime .navigation-panel__logo,
+.rinspace-inner-runtime .navigation-panel > .search,
+.rinspace-inner-runtime .navigation-panel__compose-button,
+.ui > .ui__navigation-bar {
+  display: none !important;
 }
 
 @media (width <= 620px) {
+  .ui > .topbar {
+    grid-template-columns: minmax(0, 1fr) 38px auto;
+    justify-items: stretch;
+    gap: 8px;
+    block-size: 54px;
+    min-block-size: 54px;
+    overflow: visible;
+    padding: 8px max(10px, env(safe-area-inset-right)) 8px
+      max(10px, env(safe-area-inset-left));
+  }
+
+  .ui > .topbar .brand {
+    max-inline-size: 100%;
+    gap: 6px;
+    font-size: 1.08rem;
+  }
+
+  .ui > .topbar .brand-mark {
+    inline-size: 34px;
+    block-size: 34px;
+    flex-basis: 34px;
+  }
+
+  .ui > .topbar .brand-word {
+    overflow: hidden;
+    font-size: 0.9rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ui > .topbar .rinspace-topbar-search {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    inline-size: 36px;
+    min-block-size: 36px;
+    padding: 0;
+    border-radius: 999px;
+  }
+
+  .ui > .topbar .rinspace-topbar-search .search__input {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ui > .topbar .rinspace-topbar-search .search__icon-wrapper,
+  .ui > .topbar .rinspace-topbar-search .search__icon--open-button,
+  .ui > .topbar .rinspace-topbar-search .search__icon--clear-button {
+    inline-size: 34px;
+    block-size: 34px;
+  }
+
+  .ui > .topbar .rinspace-topbar-search.mobile-search-open {
+    position: fixed;
+    inset-block-start: 62px;
+    inset-inline: 10px;
+    z-index: 165;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    inline-size: calc(100vw - 20px);
+    max-inline-size: none;
+    min-block-size: 44px;
+    padding: 4px;
+    border-radius: var(--rin-radius-md);
+  }
+
+  .ui > .topbar .rinspace-topbar-search.mobile-search-open .search__input {
+    position: static;
+    inline-size: 100%;
+    block-size: auto;
+    min-block-size: 34px;
+    padding: 0 6px;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .ui > .topbar .rinspace-topbar-search.mobile-search-open .search__popout {
+    inset-block-start: calc(100% + 8px);
+    max-block-size: min(58vh, 420px);
+    overflow-y: auto;
+  }
+
+  .ui > .topbar .account-nav {
+    grid-column: 3;
+    grid-row: 1;
+    max-inline-size: none;
+    gap: 8px;
+    overflow: visible;
+  }
+
+  .ui > .topbar .account-menu-trigger {
+    max-inline-size: 58px;
+    padding-inline-end: 7px;
+  }
+
+  .ui > .topbar .account-menu-trigger .avatar-name-text {
+    display: none;
+  }
+
   .rinspace-inner-runtime .columns-area__panels {
     min-height: calc(100vh - 54px);
     min-height: calc(100dvh - 54px);
+  }
+}
+
+@media (width <= 360px) {
+  .ui > .topbar {
+    grid-template-columns: minmax(0, 1fr) 34px auto;
+    gap: 4px;
+    padding-inline-start: max(6px, env(safe-area-inset-left));
+    padding-inline-end: max(6px, env(safe-area-inset-right));
+  }
+
+  .ui > .topbar .account-nav {
+    gap: 4px;
+  }
+
+  .ui > .topbar[data-session-state='authenticated'] .brand-word {
+    display: none;
   }
 }

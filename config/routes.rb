@@ -78,6 +78,8 @@ Rails.application.routes.draw do
   get '/invite/:invite_code', constraints: ->(req) { req.format == :json }, to: 'api/v1/invites#show'
 
   devise_scope :user do
+    post '/auth/rinspace', to: 'auth/rinspace_sso#create', as: :rinspace_sso
+    get '/auth/rinspace/recover', to: 'auth/rinspace_sso#recover', as: :recover_rinspace_sso
     get '/invite/:invite_code', to: 'auth/registrations#new', as: :public_invite
 
     resource :unsubscribe, only: [:show, :create], controller: :unsubscriptions

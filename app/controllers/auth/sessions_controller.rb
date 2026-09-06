@@ -15,6 +15,7 @@ class Auth::SessionsController < Devise::SessionsController
   around_action :preserve_stored_location, only: :destroy, if: :continue_after?
 
   prepend_before_action :check_suspicious!, only: [:create]
+  prepend_before_action :redirect_to_rinspace_login, only: [:new]
 
   include Auth::TwoFactorAuthenticationConcern
 
@@ -84,6 +85,12 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   private
+
+  def redirect_to_rinspace_login
+    return if ENV['RINSPACE_CLOUDBASE_ENV_ID'].blank?
+
+    redirect_to '/auth/rinspace/recover'
+  end
 
   def preserve_stored_location
     original_stored_location = stored_location_for(:user)
