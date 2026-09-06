@@ -364,6 +364,7 @@
   border-radius: 999px;
   background: var(--rin-surface);
   color: var(--rin-ink);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 3.5%);
   text-decoration: none;
   cursor: pointer;
 }
@@ -375,7 +376,7 @@
 
 .ui > .topbar :where(.topbar-pill, .notification-pill):hover,
 .ui > .topbar :where(.topbar-pill, .notification-pill):focus-visible {
-  border-color: var(--rin-accent);
+  background: var(--rin-surface-subtle);
   color: var(--rin-accent);
 }
 

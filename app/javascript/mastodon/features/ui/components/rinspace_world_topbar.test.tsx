@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RinspaceWorldTopbar } from './rinspace_world_topbar';
+import { innerHref, RinspaceWorldTopbar } from './rinspace_world_topbar';
 
 const adapterState = vi.hoisted(() => ({
   signedIn: false,
@@ -233,9 +233,8 @@ describe('RinspaceWorldTopbar', () => {
     expect(
       screen.getByRole('link', { name: 'Explore' }).getAttribute('href'),
     ).toBe('/explore?world=inner');
-    expect(
-      screen.getByRole('link', { name: 'Publish' }).getAttribute('href'),
-    ).toBe('/publish?world=inner');
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeTruthy();
+    expect(innerHref('/publish', '', '')).toBe('/publish?world=inner');
     expect(
       screen.getByRole('link', { name: 'Notifications' }).getAttribute('href'),
     ).toBe('/notifications?world=inner');

@@ -9,27 +9,18 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useLocation } from 'react-router-dom';
 
-import {
-  Bell,
-  BellRing,
-  ChevronDown,
-  Kanban,
-  LogOut,
-  Plus,
-  Search as SearchIcon,
-  Settings,
-  Sparkles,
-  User,
-} from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
-
 import rinspaceMark from '@/images/rinspace-mark-128.png';
 import {
   RinspacePhoneAuthDialog,
+  RinspaceTopbarActionBar,
   RinspaceTopbarControls,
   RinspaceTopbarFrame,
 } from '@/rinspace_shared/RinspaceTopbarFrame';
 import { AnimateButton } from 'mastodon/components/rinspace_animate/button';
+import { LogOut as AnimateLogOut } from 'mastodon/components/rinspace_animate/icons/log-out';
+import { Search as AnimateSearch } from 'mastodon/components/rinspace_animate/icons/search';
+import { Settings as AnimateSettings } from 'mastodon/components/rinspace_animate/icons/settings';
+import { User as AnimateUser } from 'mastodon/components/rinspace_animate/icons/user';
 import { AnimateThemeToggler } from 'mastodon/components/rinspace_animate/theme_toggler';
 import { useTheme } from 'mastodon/hooks/useTheme';
 import { useIdentity } from 'mastodon/identity_context';
@@ -384,7 +375,7 @@ const RinspaceInnerSearch: React.FC = () => {
         title={intl.formatMessage(messages.searchLabel)}
         aria-label={intl.formatMessage(messages.searchLabel)}
       >
-        <SearchIcon size={16} />
+        <AnimateSearch animateOnHover size={16} />
       </AnimateButton>
       {open && trimmed.length >= 2 ? (
         <div className='topbar-search-preview' aria-live='polite'>
@@ -423,7 +414,7 @@ const RinspaceInnerSearch: React.FC = () => {
   );
 };
 
-function innerHref(pathname: string, search: string, hash: string) {
+export function innerHref(pathname: string, search: string, hash: string) {
   const url = new URL(`${pathname}${search}${hash}`, window.location.origin);
   if (!url.pathname.startsWith('/p/')) url.searchParams.set('world', 'inner');
   return `${url.pathname}${url.search}${url.hash}`;
@@ -600,7 +591,6 @@ export const RinspaceWorldTopbar: React.FC<{
   username?: string;
 }> = ({ avatar, displayName, username }) => {
   const intl = useIntl();
-  const reducedMotion = useReducedMotion();
   const location = useLocation();
   const theme = useTheme();
   const { signedIn, permissions } = useIdentity();
@@ -666,6 +656,16 @@ export const RinspaceWorldTopbar: React.FC<{
   const accountName = displayName?.trim()
     ? displayName.trim()
     : (username ?? '');
+  const themeControl = (
+    <AnimateThemeToggler
+      className='topbar-pill'
+      label={intl.formatMessage(
+        theme === 'light' ? messages.themeDark : messages.themeLight,
+      )}
+      resolved={theme}
+      onToggle={toggleTheme}
+    />
+  );
 
   return (
     <>
@@ -682,69 +682,37 @@ export const RinspaceWorldTopbar: React.FC<{
           navigationLabel={intl.formatMessage(messages.navigation)}
           search={<RinspaceInnerSearch />}
         >
-          <AnimateThemeToggler
-            className='topbar-pill'
-            label={intl.formatMessage(
-              theme === 'light' ? messages.themeDark : messages.themeLight,
-            )}
-            resolved={theme}
-            onToggle={toggleTheme}
-          />
+          {signedIn ? null : themeControl}
 
           {signedIn ? (
-            <>
-              <motion.a
-                className='topbar-pill'
-                href={innerHref('/explore', '', '')}
-                aria-label={intl.formatMessage(messages.explore)}
-                title={intl.formatMessage(messages.explore)}
-                whileHover={reducedMotion ? undefined : { y: -1 }}
-                whileTap={reducedMotion ? undefined : { scale: 0.94 }}
-              >
-                <Sparkles size={18} />
-              </motion.a>
-              <motion.a
-                className='topbar-pill'
-                href={innerHref('/publish', '', '')}
-                aria-label={intl.formatMessage(messages.publish)}
-                title={intl.formatMessage(messages.publish)}
-                whileHover={reducedMotion ? undefined : { y: -1 }}
-                whileTap={reducedMotion ? undefined : { scale: 0.94 }}
-              >
-                <Plus size={16} />
-              </motion.a>
-              <motion.a
-                className='notification-pill'
-                href={innerHref('/notifications', '', '')}
-                aria-label={intl.formatMessage(messages.notifications)}
-                title={intl.formatMessage(messages.notifications)}
-                whileHover={reducedMotion ? undefined : { y: -1 }}
-                whileTap={reducedMotion ? undefined : { scale: 0.94 }}
-              >
-                {unreadNotifications > 0 ? (
-                  <BellRing size={16} />
-                ) : (
-                  <Bell size={16} />
-                )}
-                {unreadNotifications > 0 ? (
-                  <span>
-                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                  </span>
-                ) : null}
-              </motion.a>
-              {canAdmin ? (
-                <motion.a
-                  className='notification-pill'
-                  href={innerHref('/admin', '', '')}
-                  aria-label={intl.formatMessage(messages.administration)}
-                  title={intl.formatMessage(messages.administration)}
-                  whileHover={reducedMotion ? undefined : { y: -1 }}
-                  whileTap={reducedMotion ? undefined : { scale: 0.94 }}
-                >
-                  <Kanban size={16} />
-                </motion.a>
-              ) : null}
-              {username ? (
+            <RinspaceTopbarActionBar
+              themeControl={themeControl}
+              primary={{
+                href: innerHref('/explore', '', ''),
+                label: intl.formatMessage(messages.explore),
+              }}
+              publishing={{
+                label: intl.formatMessage(messages.publish),
+                onSelect: () => {
+                  window.location.href = innerHref('/publish', '', '');
+                },
+              }}
+              notifications={{
+                href: innerHref('/notifications', '', ''),
+                label: intl.formatMessage(messages.notifications),
+                count: unreadNotifications,
+              }}
+              administration={
+                canAdmin
+                  ? {
+                      href: innerHref('/admin', '', ''),
+                      label: intl.formatMessage(messages.administration),
+                    }
+                  : undefined
+              }
+              nativeTitles
+              renderAccount={(chevron) =>
+                username ? (
                 <details className='account-menu'>
                   <summary
                     className='account-menu-trigger'
@@ -760,7 +728,7 @@ export const RinspaceWorldTopbar: React.FC<{
                       </span>
                       <span className='avatar-name-text'>{accountName}</span>
                     </span>
-                    <ChevronDown size={16} aria-hidden='true' />
+                    {chevron}
                   </summary>
                   <div className='rin-account-menu' role='menu'>
                     <a
@@ -771,7 +739,7 @@ export const RinspaceWorldTopbar: React.FC<{
                         '',
                       )}
                     >
-                      <User size={16} />
+                      <AnimateUser animateOnHover size={16} />
                       {intl.formatMessage(messages.account)}
                     </a>
                     <a
@@ -782,7 +750,7 @@ export const RinspaceWorldTopbar: React.FC<{
                         '',
                       )}
                     >
-                      <Settings size={16} />
+                      <AnimateSettings animateOnHover size={16} />
                       {intl.formatMessage(messages.preferences)}
                     </a>
                     <button
@@ -790,13 +758,14 @@ export const RinspaceWorldTopbar: React.FC<{
                       role='menuitem'
                       onClick={submitSignOut}
                     >
-                      <LogOut size={16} />
+                      <AnimateLogOut animateOnHover size={16} />
                       {intl.formatMessage(messages.signOut)}
                     </button>
                   </div>
                 </details>
-              ) : null}
-            </>
+                ) : null
+              }
+            />
           ) : (
             <AnimateButton
               ref={loginTrigger}

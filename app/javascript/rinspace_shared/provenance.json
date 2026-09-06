@@ -2,9 +2,101 @@
   "schemaVersion": 1,
   "sourceRepository": "rinspacehq/rinspace",
   "sourcePath": "ui/src/components/shared/RinspaceTopbarFrame.tsx",
-  "sourceCommit": "214515cfd4691607bb745996ba30997d6cc81522",
-  "sha256": "7e9ceed8d6d3bb9dec1fca3999d8eacefc050ec7f42285052d60eca00407e037",
+  "sourceCommit": "848857974ccd9559c8a04e4d527226e72aa42a03",
+  "sha256": "44180d41464ba728bd785a7efe751af3021fb3946800952c90b78a5a663fc6a6",
   "brandAssetSourcePath": "ui/public/assets/brand/rinspace-mark-128.png",
   "brandAssetSha256": "0b10b304a5f1a1d0861ab5d8e8b0d900fdded9f9404e769d4c01858d9cf44375",
+  "generatedArtifacts": [
+    {
+      "sourcePath": "ui/src/components/animate-ui/animate-icon.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/animate_icon.tsx",
+      "sha256": "a79a1e9c02a833b785160757abbcb5346d2ccc39049a7a185771148543439d1a"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/animate-icon-slot.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/animate_icon_slot.tsx",
+      "sha256": "42c0637e2824227681518e2ac5ebf24415f5cee4a2877a58de02c3d1b17b8271"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/use-is-in-view.ts",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/use_is_in_view.ts",
+      "sha256": "07ce249e702b41fbff04a5865963820a5fffb0a8b031dcc60f297f0e9e02dcfa"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/button.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/button.tsx",
+      "sha256": "9017e2c8edad124b1b259a7fe760ea608a8c8bdc1e887c49a8c1cd4841d52127"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icon-button.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icon_button.tsx",
+      "sha256": "aaaeba44012b3ad2fba082cca085905450eddc674f9c4006a3afe03747615b12"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/theme-toggler.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/theme_toggler.tsx",
+      "sha256": "c354c87d4e38a1c75b529c917d1ed77b36e57c2cab8d17ff93da91acd6b72fac"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/bell.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/bell.tsx",
+      "sha256": "b9080d2376cbbedf515fef3978a32e7a9ef009c2ac8fad02ae3ec6542bf800c8"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/bell-ring.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/bell-ring.tsx",
+      "sha256": "cac3e398ff012a6eca87467a8f22d89ccecfa0855e6f9c9834779f1f0251e2c3"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/chevron-down.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/chevron-down.tsx",
+      "sha256": "680479679f92208510566927b33c50c408bda937b4009c39a8514774d51a1abf"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/kanban.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/kanban.tsx",
+      "sha256": "d422aaff1967487af3f8746f8219a4111b82d836e0e065c6cde2eb9631c85bb6"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/log-out.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/log-out.tsx",
+      "sha256": "8132d261098c7fe4aea79e668d6a7a5d3e2a64dad81875b3dbfd6fd4cc586f65"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/plus.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/plus.tsx",
+      "sha256": "7e31a357095948c4856f0551e08f98e88bb99d3748b2f17d1debe4c195f8b664"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/search.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/search.tsx",
+      "sha256": "69790089b6c3c7835bc48192d12fd0c9cdfba554ee667640e356c1d2011a3419"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/settings.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/settings.tsx",
+      "sha256": "57e025a2e43390625ddc7e727c97dbfaccd04a4d1b61c1e1609a6bc97da6e20f"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/sparkles.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/sparkles.tsx",
+      "sha256": "403e09eb948e583486c60cca58f0f6da976679d2d693cc93b41db48b8c50237d"
+    },
+    {
+      "sourcePath": "ui/src/components/animate-ui/icons/user.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/user.tsx",
+      "sha256": "6968523cfb8bb571f5fc675a135825c987148e3fff3c3d2a5468da0b1d0624b5"
+    },
+    {
+      "sourcePath": "ui/src/components/shared/topbarClassNames.ts",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/cn.ts",
+      "sha256": "52bef1fbc9253fb5c235f1543964e5b6124e92f1c3b8bf69758adbbe495f72a0"
+    },
+    {
+      "sourcePath": "ui/src/rinspace_topbar_runtime.ts",
+      "targetPath": "app/javascript/rinspace_topbar_runtime.ts",
+      "sha256": "23cd0b61fdaf70dc931e60ab2b8aa4b046195ba835999e89e6d795e7b9350f31"
+    }
+  ],
   "generated": true
 }

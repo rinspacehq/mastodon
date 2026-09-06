@@ -1,45 +1,28 @@
-import { useEffect, useImperativeHandle, useRef, useState } from 'react';
-import type { Ref } from 'react';
+/* eslint-disable -- generated from the private, linted Animate UI source */
+import { useRef, useImperativeHandle, type Ref } from 'react';
+import { useInView, type UseInViewOptions } from 'motion/react';
 
 /**
- * Small app-owned boundary used by the pinned Animate UI text primitive. It
- * avoids creating an observer when in-view animation was not requested and
- * keeps the component usable in SSR and deterministic tests.
+ * Adapted from the pinned Animate UI hook `hooks/use-is-in-view`.
+ * Returns a ref plus an in-view boolean that respects `inView`/`inViewOnce`/margin.
  */
 export interface UseIsInViewOptions {
   inView?: boolean;
   inViewOnce?: boolean;
-  inViewMargin?: string;
+  inViewMargin?: UseInViewOptions['margin'];
 }
 
 export function useIsInView<T extends HTMLElement = HTMLElement>(
   ref: Ref<T>,
   options: UseIsInViewOptions = {},
 ) {
-  const { inView = false, inViewOnce = false, inViewMargin = '0px' } = options;
+  const { inView, inViewOnce = false, inViewMargin = '0px' } = options;
   const localRef = useRef<T>(null);
-  const [observed, setObserved] = useState(false);
   useImperativeHandle(ref, () => localRef.current as T);
-
-  useEffect(() => {
-    const node = localRef.current;
-    if (!inView || !node || typeof IntersectionObserver === 'undefined') {
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        setObserved(true);
-        if (inViewOnce) observer.disconnect();
-      },
-      { rootMargin: inViewMargin },
-    );
-    observer.observe(node);
-    return () => {
-      observer.disconnect();
-    };
-  }, [inView, inViewMargin, inViewOnce]);
-
-  return { ref: localRef, isInView: !inView || observed };
+  const inViewResult = useInView(localRef, {
+    once: inViewOnce,
+    margin: inViewMargin,
+  });
+  const isInView = !inView || inViewResult;
+  return { ref: localRef, isInView };
 }

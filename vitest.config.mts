@@ -49,7 +49,7 @@ const legacyTests: TestProjectInlineConfiguration = {
       'tmp/**',
     ],
     globals: true,
-    setupFiles: ['fake-indexeddb/auto'],
+    setupFiles: ['fake-indexeddb/auto', './test_setup.ts'],
   },
 };
 

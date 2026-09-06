@@ -4,6 +4,16 @@ import type { MouseEventHandler, ReactNode, SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "motion/react";
 
+import {
+  AnimateBell,
+  AnimateBellRing,
+  AnimateButton,
+  AnimateChevronDown,
+  AnimateKanban,
+  AnimatePlus,
+  AnimateSparkles,
+} from "@/rinspace_topbar_runtime";
+
 export interface RinspaceTopbarFrameProps {
   sessionState: "anonymous" | "restoring" | "authenticated";
   logoSrc: string;
@@ -21,6 +31,27 @@ export interface RinspaceTopbarControlsProps {
   search: ReactNode;
   navigationLabel: string;
   children: ReactNode;
+}
+
+export interface RinspaceTopbarAction {
+  href: string;
+  label: string;
+  onNavigate?: MouseEventHandler<HTMLAnchorElement>;
+}
+
+export interface RinspaceTopbarActionBarProps {
+  themeControl: ReactNode;
+  primary: RinspaceTopbarAction;
+  publishing: {
+    label: string;
+    onSelect: () => void;
+  };
+  notifications: RinspaceTopbarAction & { count: number };
+  administration?: RinspaceTopbarAction;
+  renderPublishing?: (trigger: ReactNode, label: string) => ReactNode;
+  renderAccount: (chevron: ReactNode) => ReactNode;
+  decorate?: (control: ReactNode, label: string) => ReactNode;
+  nativeTitles?: boolean;
 }
 
 /**
@@ -99,6 +130,88 @@ export function RinspaceTopbarControls({
       <nav className="account-nav" aria-label={navigationLabel}>
         {children}
       </nav>
+    </>
+  );
+}
+
+/**
+ * The shared authenticated action row. Runtimes inject destinations and menu
+ * contents, while this component alone owns action order, button markup,
+ * icons, sizes and Animate UI behavior.
+ */
+export function RinspaceTopbarActionBar({
+  themeControl,
+  primary,
+  publishing,
+  notifications,
+  administration,
+  renderPublishing = (trigger) => trigger,
+  renderAccount,
+  decorate = (control) => control,
+  nativeTitles = false,
+}: RinspaceTopbarActionBarProps) {
+  const title = (label: string) => (nativeTitles ? label : undefined);
+
+  return (
+    <>
+      {themeControl}
+      {decorate(
+        <a
+          className="topbar-pill"
+          href={primary.href}
+          aria-label={primary.label}
+          title={title(primary.label)}
+          onClick={primary.onNavigate}
+        >
+          <AnimateSparkles animateOnHover size={18} />
+        </a>,
+        primary.label,
+      )}
+      {renderPublishing(
+        <AnimateButton
+          unstyled
+          type="button"
+          className="topbar-pill"
+          aria-label={publishing.label}
+          title={title(publishing.label)}
+          onClick={publishing.onSelect}
+        >
+          <AnimatePlus animateOnHover size={16} />
+        </AnimateButton>,
+        publishing.label,
+      )}
+      {decorate(
+        <a
+          className="notification-pill"
+          href={notifications.href}
+          aria-label={notifications.label}
+          title={title(notifications.label)}
+          onClick={notifications.onNavigate}
+        >
+          {notifications.count > 0 ? (
+            <AnimateBellRing animateOnHover size={16} />
+          ) : (
+            <AnimateBell animateOnHover size={16} />
+          )}
+          {notifications.count > 0 ? <span>{notifications.count}</span> : null}
+        </a>,
+        notifications.label,
+      )}
+      {administration
+        ? decorate(
+            <a
+              className="notification-pill"
+              href={administration.href}
+              aria-label={administration.label}
+              title={title(administration.label)}
+              onClick={administration.onNavigate}
+            >
+              <AnimateKanban animateOnHover size={16} />
+            </a>,
+            administration.label,
+          )
+        : null}
+      {renderAccount(<AnimateChevronDown animateOnHover size={16} />)}
     </>
   );
 }
