@@ -18,6 +18,10 @@ import {
   sso_redirect,
 } from 'mastodon/initial_state';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
+import {
+  rinspaceLoginHref,
+  rinspaceLoginMethod,
+} from 'mastodon/utils/rinspace_login';
 
 const messages = defineMessages({
   loginPrompt: {
@@ -119,7 +123,7 @@ const sendToFrame = (
   intent: string,
 ): void => {
   if (valueToDomain(value.trim()) === localDomain) {
-    window.location.href = '/auth/sign_in';
+    window.location.href = rinspaceLoginHref(sso_redirect);
     return;
   }
 
@@ -443,7 +447,11 @@ const InteractionModal: React.FC<{
 
   if (sso_redirect) {
     signupButton = (
-      <a href={sso_redirect} data-method='post' className='link-button'>
+      <a
+        href={rinspaceLoginHref(sso_redirect)}
+        data-method={rinspaceLoginMethod(sso_redirect)}
+        className='link-button'
+      >
         <FormattedMessage
           id='sign_in_banner.create_account'
           defaultMessage='Create account'

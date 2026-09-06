@@ -3,7 +3,7 @@ import { IntlProvider } from 'react-intl';
 import { MemoryRouter } from 'react-router-dom';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RinspaceWorldTopbar } from './rinspace_world_topbar';
 
@@ -15,14 +15,6 @@ const adapterState = vi.hoisted(() => ({
 }));
 
 const startSso = vi.hoisted(() => vi.fn());
-
-vi.mock('mastodon/features/compose/components/search', () => ({
-  Search: ({ topbar }: { topbar?: boolean }) => (
-    <form role='search' data-topbar={String(topbar)}>
-      <input aria-label='Search' />
-    </form>
-  ),
-}));
 
 vi.mock('mastodon/hooks/useTheme', () => ({ useTheme: () => 'light' }));
 
@@ -75,10 +67,19 @@ describe('RinspaceWorldTopbar', () => {
     window.localStorage.clear();
   });
 
-  it('keeps the outer presentation controls and opens sign-in in place', async () => {
-    renderTopbar();
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
-    expect(screen.getByRole('search').dataset.topbar).toBe('true');
+  it('keeps the outer presentation controls and opens sign-in in place', async () => {
+    const { container } = renderTopbar();
+
+    expect(screen.getByRole('search').classList.contains('topbar-search')).toBe(
+      true,
+    );
+    expect(
+      container.querySelector<HTMLImageElement>('.brand-mark img')?.src,
+    ).toContain('/images/rinspace-mark-128.png');
     expect(
       screen.getByRole('button', { name: 'Switch to dark theme' }),
     ).toBeTruthy();
@@ -90,6 +91,44 @@ describe('RinspaceWorldTopbar', () => {
       await screen.findByRole('dialog', { name: 'Sign in / Register' }),
     ).toBeTruthy();
     expect(screen.getByLabelText('Phone number')).toBeTruthy();
+  });
+
+  it('searches the real Mastodon endpoint and keeps result routes in the inner world', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          accounts: [
+            { id: '1', acct: 'reverse', display_name: 'Reverse Engineer' },
+          ],
+          statuses: [],
+          hashtags: [{ name: 'reverseengineering' }],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    renderTopbar();
+
+    const search = screen.getByRole('textbox', { name: 'Search' });
+    fireEvent.focus(search);
+    fireEvent.change(search, {
+      target: { value: 'reverse engineering' },
+    });
+
+    expect(await screen.findByText('Reverse Engineer')).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v2/search?q=reverse+engineering&resolve=false&limit=4',
+      expect.objectContaining({ credentials: 'same-origin' }),
+    );
+    expect(
+      screen
+        .getByRole('link', { name: /Reverse Engineer/ })
+        .getAttribute('href'),
+    ).toBe('/@reverse?world=inner');
+    expect(
+      screen
+        .getByRole('link', { name: /#reverseengineering/ })
+        .getAttribute('href'),
+    ).toBe('/tags/reverseengineering?world=inner');
   });
 
   it('uses an existing outer session and preserves the exact inner return URL', async () => {
@@ -122,7 +161,9 @@ describe('RinspaceWorldTopbar', () => {
       await screen.findByRole('dialog', { name: 'Sign in / Register' }),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close sign-in window' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Close sign-in window' }),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
 
     await waitFor(() => {
@@ -141,7 +182,9 @@ describe('RinspaceWorldTopbar', () => {
       await screen.findByRole('dialog', { name: 'Sign in / Register' }),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close sign-in window' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Close sign-in window' }),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
 
     await waitFor(() => {
@@ -197,7 +240,9 @@ describe('RinspaceWorldTopbar', () => {
       screen.getByRole('link', { name: 'Notifications' }).getAttribute('href'),
     ).toBe('/notifications?world=inner');
     expect(
-      screen.getByRole('menuitem', { name: 'Preferences' }).getAttribute('href'),
+      screen
+        .getByRole('menuitem', { name: 'Preferences' })
+        .getAttribute('href'),
     ).toBe('/settings/preferences/appearance?world=inner');
     expect(screen.getByText('7')).toBeTruthy();
   });

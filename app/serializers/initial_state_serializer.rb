@@ -151,6 +151,8 @@ class InitialStateSerializer < ActiveModel::Serializer
   end
 
   def sso_redirect
+    return '/auth/rinspace/recover' if ENV['RINSPACE_CLOUDBASE_ENV_ID'].present?
+
     "/auth/auth/#{Devise.omniauth_providers[0]}" if ENV['ONE_CLICK_SSO_LOGIN'] == 'true' && ENV['OMNIAUTH_ONLY'] == 'true' && Devise.omniauth_providers.length == 1
   end
 

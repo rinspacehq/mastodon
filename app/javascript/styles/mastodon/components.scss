@@ -6132,9 +6132,10 @@ a.status-card {
   inset-inline-start: 0;
   inset-inline-end: 0;
   bottom: 0;
-  opacity: 0.9;
-  background: var(--color-bg-overlay);
+  opacity: 1;
+  background: var(--rin-dialog-overlay, var(--color-bg-overlay));
   transition: background 0.5s;
+  backdrop-filter: blur(4px);
 }
 
 .modal-root__container {
@@ -6161,6 +6162,11 @@ a.status-card {
 
   > * {
     margin: auto;
+  }
+
+  &[data-rinspace-dialog-mode='standard'] > .modal-root__modal {
+    border-radius: 16px;
+    box-shadow: 0 24px 70px rgb(11 18 24 / 28%);
   }
 }
 

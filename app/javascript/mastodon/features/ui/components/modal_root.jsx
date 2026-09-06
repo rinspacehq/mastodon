@@ -119,6 +119,18 @@ function accountEditModal(type) {
 
 export default class ModalRoot extends PureComponent {
 
+  static immersiveModalTypes = new Set([
+    'MEDIA',
+    'VIDEO',
+    'AUDIO',
+    'IMAGE',
+    'FOCAL_POINT',
+    'ACCOUNT_EDIT_IMAGE_ALT',
+    'ACCOUNT_EDIT_IMAGE_UPLOAD',
+    'ACCOUNT_EDIT_FIELDS_REORDER',
+    'COMPOSER_REARRANGE',
+  ]);
+
   static propTypes = {
     type: PropTypes.string,
     props: PropTypes.object,
@@ -162,7 +174,12 @@ export default class ModalRoot extends PureComponent {
     const visible = !!type;
 
     return (
-      <Base backgroundColor={backgroundColor} onClose={this.handleClose} ignoreFocus={ignoreFocus}>
+      <Base
+        backgroundColor={backgroundColor}
+        onClose={this.handleClose}
+        ignoreFocus={ignoreFocus}
+        motionPreset={ModalRoot.immersiveModalTypes.has(type) ? 'immersive' : 'standard'}
+      >
         {visible && (
           <>
             <Bundle key={type} fetchComponent={MODAL_COMPONENTS[type]} loading={this.renderLoading} error={this.renderError} renderDelay={200}>

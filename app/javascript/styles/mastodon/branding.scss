@@ -3,3 +3,19 @@
 .logo {
   color: var(--color-text-primary);
 }
+
+.rinspace-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+  color: var(--color-text-primary);
+  font-weight: 700;
+  white-space: nowrap;
+
+  img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+  }
+}

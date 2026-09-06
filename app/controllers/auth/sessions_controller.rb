@@ -15,7 +15,7 @@ class Auth::SessionsController < Devise::SessionsController
   around_action :preserve_stored_location, only: :destroy, if: :continue_after?
 
   prepend_before_action :check_suspicious!, only: [:create]
-  prepend_before_action :redirect_to_rinspace_login, only: [:new]
+  prepend_before_action :redirect_to_rinspace_login, only: [:new, :create]
 
   include Auth::TwoFactorAuthenticationConcern
 

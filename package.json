@@ -15,6 +15,7 @@
     "build:production": "cross-env RAILS_ENV=production NODE_ENV=production vite build --mode production",
     "audit:rinspace-routes": "node scripts/audit-rinspace-routes.mjs",
     "audit:rinspace-bundle": "node scripts/audit-rinspace-bundle.mjs",
+    "audit:rinspace-shared-topbar": "node scripts/audit-rinspace-shared-topbar.mjs",
     "fix:js": "eslint . --cache --fix",
     "fix:css": "stylelint --fix \"**/*.{css,scss}\"",
     "fix": "yarn fix:js && yarn fix:css",

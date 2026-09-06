@@ -11,6 +11,7 @@
   --rin-ink-muted: #64748b;
   --rin-accent: #2b577a;
   --rin-border: #cbd5df;
+  --rin-dialog-overlay: rgb(11 18 24 / 62%);
   --rin-radius-md: 8px;
   --rin-font-editorial: 'Rinspace Newsreader', 'Newsreader',
     'Rinspace Noto Serif SC', 'Noto Serif SC', Georgia, serif;
@@ -111,9 +112,8 @@
   transform: translateY(2px);
 }
 
-.ui > .topbar .brand-word-motion,
-.ui > .topbar .brand-word-motion > span {
-  display: inline-flex !important;
+.ui > .topbar .brand-word-text {
+  display: inline-flex;
   block-size: 1.2em;
   align-items: center;
   overflow: visible;
@@ -234,6 +234,116 @@
   inset-inline: 0;
   inline-size: 100%;
   max-inline-size: none;
+}
+
+// The shared frame deliberately uses the outer-world search DOM. Only this
+// adapter's request and result mapping are Mastodon-owned.
+.ui > .topbar .topbar-search {
+  position: relative;
+  display: inline-flex;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 34px;
+  align-items: center;
+  justify-self: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 3px 0 10px;
+  border: 1px solid var(--rin-border);
+  border-radius: var(--rin-radius-md);
+  background: color-mix(in srgb, var(--rin-surface) 78%, transparent);
+}
+
+.ui > .topbar .topbar-search > input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 30px;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--rin-ink);
+  font-family: var(--rin-font-mono);
+  font-size: 0.78rem;
+}
+
+.ui > .topbar .topbar-search > button {
+  display: grid;
+  inline-size: 28px;
+  block-size: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rin-accent);
+  color: #fff;
+}
+
+.ui > .topbar .topbar-search-preview {
+  position: absolute;
+  inset-block-start: calc(100% + 10px);
+  inset-inline: 0;
+  z-index: 180;
+  display: grid;
+  inline-size: 100%;
+  gap: 8px;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid var(--rin-border);
+  border-radius: var(--rin-radius-md);
+  background: var(--rin-surface);
+  box-shadow: 0 22px 46px rgb(15 23 42 / 16%);
+}
+
+.ui > .topbar .topbar-search-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--rin-ink-muted);
+  font-family: var(--rin-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ui > .topbar .topbar-search-preview-note {
+  margin: 0;
+  color: var(--rin-ink-muted);
+  font-family: var(--rin-font-mono);
+  font-size: 0.74rem;
+}
+
+.ui > .topbar .topbar-search-result {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  padding: 8px 0;
+  border-block-start: 1px solid var(--rin-border);
+  color: var(--rin-ink);
+  text-decoration: none;
+}
+
+.ui > .topbar .topbar-search-result span,
+.ui > .topbar .topbar-search-result em {
+  color: var(--rin-ink-muted);
+  font-family: var(--rin-font-mono);
+  font-size: 0.68rem;
+  font-style: normal;
+}
+
+.ui > .topbar .topbar-search-result strong {
+  min-inline-size: 0;
+  overflow: hidden;
+  color: var(--rin-ink);
+  font-family: var(--rin-font-editorial);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ui > .topbar .account-nav {
@@ -424,14 +534,21 @@
 }
 
 .rin-auth-dialog {
-  inline-size: min(460px, 100%);
+  position: fixed;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  z-index: 1001;
+  display: grid;
+  inline-size: min(420px, calc(100% - 32px));
   box-sizing: border-box;
+  gap: 18px;
   padding: 22px;
   border: 1px solid var(--rin-border);
-  border-radius: 12px;
+  border-radius: var(--rin-radius-md);
   background: var(--rin-surface);
   box-shadow: 0 24px 64px rgb(15 23 42 / 22%);
   color: var(--rin-ink);
+  translate: -50% -50%;
 }
 
 .rin-auth-dialog__head {
@@ -589,7 +706,8 @@
     white-space: nowrap;
   }
 
-  .ui > .topbar .rinspace-topbar-search {
+  .ui > .topbar .rinspace-topbar-search,
+  .ui > .topbar .topbar-search {
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
@@ -599,7 +717,8 @@
     border-radius: 999px;
   }
 
-  .ui > .topbar .rinspace-topbar-search .search__input {
+  .ui > .topbar .rinspace-topbar-search .search__input,
+  .ui > .topbar .topbar-search > input {
     position: absolute;
     inline-size: 1px;
     block-size: 1px;
@@ -614,7 +733,8 @@
     block-size: 34px;
   }
 
-  .ui > .topbar .rinspace-topbar-search.mobile-search-open {
+  .ui > .topbar .rinspace-topbar-search.mobile-search-open,
+  .ui > .topbar .topbar-search.mobile-search-open {
     position: fixed;
     inset-block-start: 62px;
     inset-inline: 10px;
@@ -628,7 +748,8 @@
     border-radius: var(--rin-radius-md);
   }
 
-  .ui > .topbar .rinspace-topbar-search.mobile-search-open .search__input {
+  .ui > .topbar .rinspace-topbar-search.mobile-search-open .search__input,
+  .ui > .topbar .topbar-search.mobile-search-open > input {
     position: static;
     inline-size: 100%;
     block-size: auto;
@@ -639,6 +760,17 @@
   }
 
   .ui > .topbar .rinspace-topbar-search.mobile-search-open .search__popout {
+    inset-block-start: calc(100% + 8px);
+    max-block-size: min(58vh, 420px);
+    overflow-y: auto;
+  }
+
+  .ui > .topbar .topbar-search > button {
+    inline-size: 34px;
+    block-size: 34px;
+  }
+
+  .ui > .topbar .topbar-search.mobile-search-open .topbar-search-preview {
     inset-block-start: calc(100% + 8px);
     max-block-size: min(58vh, 420px);
     overflow-y: auto;

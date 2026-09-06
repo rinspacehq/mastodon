@@ -6,6 +6,7 @@ import 'wicg-inert';
 import { multiply } from 'color-blend';
 import { createBrowserHistory } from 'history';
 
+import { AnimateDialogLayer } from 'mastodon/components/rinspace_animate/dialog';
 import { WithOptionalRouterPropTypes, withOptionalRouter } from 'mastodon/utils/react_router';
 import { IGNORE_FOCUS_ON_OPEN } from '../reducers/modal';
 
@@ -26,6 +27,7 @@ class ModalRoot extends PureComponent {
       PropTypes.bool,
       PropTypes.string, // 'on-open', see IGNORE_FOCUS_ON_OPEN
     ]),
+    motionPreset: PropTypes.oneOf(['standard', 'immersive']),
     ...WithOptionalRouterPropTypes,
   };
 
@@ -139,7 +141,7 @@ class ModalRoot extends PureComponent {
   };
 
   render () {
-    const { children, onClose } = this.props;
+    const { children, motionPreset = 'standard', onClose } = this.props;
     const visible = !!children;
 
     if (!visible) {
@@ -159,10 +161,13 @@ class ModalRoot extends PureComponent {
 
     return (
       <div className='modal-root' ref={this.setRef}>
-        <div style={{ pointerEvents: visible ? 'auto' : 'none' }}>
-          <div role='presentation' className='modal-root__overlay' onClick={onClose} style={{ backgroundColor }} />
-          <div role='dialog' className='modal-root__container'>{children}</div>
-        </div>
+        <AnimateDialogLayer
+          backgroundColor={backgroundColor}
+          mode={motionPreset}
+          onOverlayClick={onClose}
+        >
+          {children}
+        </AnimateDialogLayer>
       </div>
     );
   }

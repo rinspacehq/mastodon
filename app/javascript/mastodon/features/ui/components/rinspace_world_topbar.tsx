@@ -1,31 +1,38 @@
-/* eslint-disable react/jsx-no-bind */
+/* eslint-disable react/jsx-no-bind, jsx-a11y/no-noninteractive-element-interactions */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { SyntheticEvent } from 'react';
-import { createPortal } from 'react-dom';
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  SyntheticEvent,
+} from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { useLocation } from 'react-router-dom';
 
 import {
-  BellIcon,
-  CaretDownIcon,
-  CompassIcon,
-  GaugeIcon,
-  GearIcon,
-  PlusIcon,
-  SignOutIcon,
-  UserIcon,
-} from '@phosphor-icons/react';
+  Bell,
+  BellRing,
+  ChevronDown,
+  Kanban,
+  LogOut,
+  Plus,
+  Search as SearchIcon,
+  Settings,
+  Sparkles,
+  User,
+} from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 
+import rinspaceMark from '@/images/rinspace-mark-128.png';
+import {
+  RinspacePhoneAuthDialog,
+  RinspaceTopbarControls,
+  RinspaceTopbarFrame,
+} from '@/rinspace_shared/RinspaceTopbarFrame';
 import { AnimateButton } from 'mastodon/components/rinspace_animate/button';
-import { SplittingText } from 'mastodon/components/rinspace_animate/splitting_text';
 import { AnimateThemeToggler } from 'mastodon/components/rinspace_animate/theme_toggler';
-import { Search } from 'mastodon/features/compose/components/search';
 import { useTheme } from 'mastodon/hooks/useTheme';
 import { useIdentity } from 'mastodon/identity_context';
-import { customAppIcon } from 'mastodon/initial_state';
 import { canViewAdminDashboard } from 'mastodon/permissions';
 import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
 import {
@@ -39,12 +46,6 @@ import {
 } from 'mastodon/services/rinspace_auth';
 import type { RinspaceOtpChallenge } from 'mastodon/services/rinspace_auth';
 import { useAppSelector } from 'mastodon/store';
-
-/**
- * Presentation snapshot copied from private rinspace/ui at 3aedfb63.
- * Source files and SHA-256 values are recorded in the private product spec.
- * Only Mastodon state, routing, internationalization and auth are adapted.
- */
 
 const messages = defineMessages({
   brandName: { id: 'rinspace.world.brand_name', defaultMessage: 'Rinspace' },
@@ -91,6 +92,39 @@ const messages = defineMessages({
   signInOrRegister: {
     id: 'rinspace.world.sign_in_or_register',
     defaultMessage: 'Sign in / Register',
+  },
+  searchPlaceholder: {
+    id: 'rinspace.world.search_placeholder',
+    defaultMessage: 'Search people, posts, or tags',
+  },
+  searchLabel: { id: 'rinspace.world.search', defaultMessage: 'Search' },
+  searchIndex: {
+    id: 'rinspace.world.search_index',
+    defaultMessage: 'Inner-world results',
+  },
+  searchLoading: {
+    id: 'rinspace.world.search_loading',
+    defaultMessage: 'Searching…',
+  },
+  searchEmpty: {
+    id: 'rinspace.world.search_empty',
+    defaultMessage: 'No matching people, posts, or tags',
+  },
+  searchFailed: {
+    id: 'rinspace.world.search_failed',
+    defaultMessage: 'Search is temporarily unavailable. Try again.',
+  },
+  searchPeople: {
+    id: 'rinspace.world.search_people',
+    defaultMessage: 'People',
+  },
+  searchPosts: {
+    id: 'rinspace.world.search_posts',
+    defaultMessage: 'Posts',
+  },
+  searchTags: {
+    id: 'rinspace.world.search_tags',
+    defaultMessage: 'Tags',
   },
   authTitle: {
     id: 'rinspace.auth.title',
@@ -159,6 +193,235 @@ const messages = defineMessages({
     defaultMessage: 'Sign-in was not completed. Please try again.',
   },
 });
+
+interface SearchAccount {
+  id: string;
+  acct: string;
+  display_name: string;
+}
+
+interface SearchStatus {
+  id: string;
+  content: string;
+  account: SearchAccount;
+}
+
+interface SearchTag {
+  name: string;
+}
+
+interface SearchResponse {
+  accounts?: SearchAccount[];
+  statuses?: SearchStatus[];
+  hashtags?: SearchTag[];
+}
+
+type SearchResult =
+  | {
+      key: string;
+      kind: 'account';
+      title: string;
+      detail: string;
+      href: string;
+    }
+  | { key: string; kind: 'status'; title: string; detail: string; href: string }
+  | { key: string; kind: 'tag'; title: string; detail: string; href: string };
+
+function plainStatus(value: string) {
+  return value
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+}
+
+function toSearchResults(payload: SearchResponse): SearchResult[] {
+  return [
+    ...(payload.accounts ?? []).map((account) => ({
+      key: `account-${account.id}`,
+      kind: 'account' as const,
+      title: account.display_name || account.acct,
+      detail: `@${account.acct}`,
+      href: innerHref(`/@${encodeURIComponent(account.acct)}`, '', ''),
+    })),
+    ...(payload.statuses ?? []).map((status) => ({
+      key: `status-${status.id}`,
+      kind: 'status' as const,
+      title: plainStatus(status.content) || `@${status.account.acct}`,
+      detail: `@${status.account.acct}`,
+      href: `/p/${encodeURIComponent(status.id)}`,
+    })),
+    ...(payload.hashtags ?? []).map((tag) => ({
+      key: `tag-${tag.name}`,
+      kind: 'tag' as const,
+      title: `#${tag.name}`,
+      detail: '',
+      href: innerHref(`/tags/${encodeURIComponent(tag.name)}`, '', ''),
+    })),
+  ].slice(0, 6);
+}
+
+const RinspaceInnerSearch: React.FC = () => {
+  const intl = useIntl();
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const form = useRef<HTMLFormElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const trimmed = query.trim();
+  const resultKind = {
+    account: intl.formatMessage(messages.searchPeople),
+    status: intl.formatMessage(messages.searchPosts),
+    tag: intl.formatMessage(messages.searchTags),
+  };
+
+  useEffect(() => {
+    if (trimmed.length < 2) {
+      return undefined;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      setError(false);
+      const params = new URLSearchParams({
+        q: trimmed,
+        resolve: 'false',
+        limit: '4',
+      });
+      void fetch(`/api/v2/search?${params.toString()}`, {
+        credentials: 'same-origin',
+        signal: controller.signal,
+      })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`search_${response.status}`);
+          return (await response.json()) as SearchResponse;
+        })
+        .then((payload) => {
+          setResults(toSearchResults(payload));
+        })
+        .catch((reason: unknown) => {
+          if (
+            !(reason instanceof DOMException && reason.name === 'AbortError')
+          ) {
+            setResults([]);
+            setError(true);
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setLoading(false);
+        });
+    }, 240);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [trimmed]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !form.current?.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', close, true);
+    return () => {
+      document.removeEventListener('pointerdown', close, true);
+    };
+  }, [open]);
+
+  const submit = (event: SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!trimmed) {
+      input.current?.focus();
+      setOpen(true);
+      return;
+    }
+    window.location.assign(
+      innerHref('/search', `?q=${encodeURIComponent(trimmed)}`, ''),
+    );
+  };
+
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Escape') {
+      setOpen(false);
+      input.current?.blur();
+    }
+  };
+
+  return (
+    <form
+      ref={form}
+      className={open ? 'topbar-search mobile-search-open' : 'topbar-search'}
+      role='search'
+      onSubmit={submit}
+      onKeyDown={onKeyDown}
+    >
+      <input
+        ref={input}
+        value={query}
+        maxLength={60}
+        placeholder={intl.formatMessage(messages.searchPlaceholder)}
+        aria-label={intl.formatMessage(messages.searchLabel)}
+        onFocus={() => {
+          setOpen(true);
+        }}
+        onChange={(event) => {
+          setQuery(event.currentTarget.value);
+        }}
+      />
+      <AnimateButton
+        unstyled
+        type='submit'
+        title={intl.formatMessage(messages.searchLabel)}
+        aria-label={intl.formatMessage(messages.searchLabel)}
+      >
+        <SearchIcon size={16} />
+      </AnimateButton>
+      {open && trimmed.length >= 2 ? (
+        <div className='topbar-search-preview' aria-live='polite'>
+          <div className='topbar-search-preview-head'>
+            <span>{intl.formatMessage(messages.searchIndex)}</span>
+            <span>
+              {loading
+                ? intl.formatMessage(messages.searchLoading)
+                : results.length}
+            </span>
+          </div>
+          {error ? (
+            <p className='topbar-search-preview-note'>
+              {intl.formatMessage(messages.searchFailed)}
+            </p>
+          ) : null}
+          {!error && !loading && results.length === 0 ? (
+            <p className='topbar-search-preview-note'>
+              {intl.formatMessage(messages.searchEmpty)}
+            </p>
+          ) : null}
+          {results.map((result) => (
+            <a
+              className='topbar-search-result'
+              href={result.href}
+              key={result.key}
+            >
+              <span>{resultKind[result.kind]}</span>
+              <strong>{result.title}</strong>
+              <em>{result.detail}</em>
+            </a>
+          ))}
+        </div>
+      ) : null}
+    </form>
+  );
+};
 
 function innerHref(pathname: string, search: string, hash: string) {
   const url = new URL(`${pathname}${search}${hash}`, window.location.origin);
@@ -234,56 +497,12 @@ const RinspaceLoginDialog: React.FC<LoginDialogProps> = ({
   onClose,
 }) => {
   const intl = useIntl();
-  const reducedMotion = useReducedMotion();
-  const dialog = useRef<HTMLElement>(null);
-  const phoneInput = useRef<HTMLInputElement>(null);
-  const busyRef = useRef(false);
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [challenge, setChallenge] = useState<RinspaceOtpChallenge | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(initialError);
   const [status, setStatus] = useState('');
-
-  useEffect(() => {
-    busyRef.current = busy;
-  }, [busy]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const active = document.activeElement as HTMLElement | null;
-    const focusFrame = window.requestAnimationFrame(() =>
-      phoneInput.current?.focus(),
-    );
-    const handleDialogKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !busyRef.current) {
-        onClose();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const focusable = Array.from(
-        dialog.current?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), input:not(:disabled), [href], [tabindex]:not([tabindex="-1"])',
-        ) ?? [],
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable.at(-1);
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-      }
-    };
-    document.addEventListener('keydown', handleDialogKey);
-    return () => {
-      window.cancelAnimationFrame(focusFrame);
-      document.removeEventListener('keydown', handleDialogKey);
-      active?.focus();
-    };
-  }, [onClose, open]);
 
   const friendlyError = useCallback(
     (reason: unknown) => {
@@ -340,111 +559,38 @@ const RinspaceLoginDialog: React.FC<LoginDialogProps> = ({
     void submit(event);
   };
 
-  if (!open) return null;
-  return createPortal(
-    <motion.div
-      className='rin-auth-overlay'
-      initial={reducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !busy) onClose();
+  return (
+    <RinspacePhoneAuthDialog
+      open={open}
+      busy={busy}
+      phone={phone}
+      code={code}
+      challenge={Boolean(challenge)}
+      error={error}
+      status={status}
+      labels={{
+        title: intl.formatMessage(messages.authTitle),
+        close: intl.formatMessage(messages.authClose),
+        phone: intl.formatMessage(messages.authPhone),
+        phonePlaceholder: intl.formatMessage(messages.authPhonePlaceholder),
+        code: intl.formatMessage(messages.authCode),
+        codePlaceholder: intl.formatMessage(messages.authCodePlaceholder),
+        changePhone: intl.formatMessage(messages.authChangePhone),
+        processing: intl.formatMessage(messages.authProcessing),
+        complete: intl.formatMessage(messages.authComplete),
+        sendCode: intl.formatMessage(messages.authSend),
       }}
-    >
-      <motion.section
-        ref={dialog}
-        className='rin-auth-dialog'
-        role='dialog'
-        aria-modal='true'
-        aria-labelledby='rin-auth-dialog-title'
-        initial={reducedMotion ? false : { opacity: 0, y: 10, scale: 0.985 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: reducedMotion ? 0 : 0.18 }}
-      >
-        <div className='rin-auth-dialog__head'>
-          <h2 id='rin-auth-dialog-title'>
-            {intl.formatMessage(messages.authTitle)}
-          </h2>
-          <AnimateButton
-            unstyled
-            type='button'
-            aria-label={intl.formatMessage(messages.authClose)}
-            disabled={busy}
-            onClick={onClose}
-          >
-            ×
-          </AnimateButton>
-        </div>
-        <form className='rin-auth-dialog__form' onSubmit={handleSubmit}>
-          <label>
-            <span>{intl.formatMessage(messages.authPhone)}</span>
-            <input
-              ref={phoneInput}
-              type='tel'
-              inputMode='tel'
-              autoComplete='tel'
-              value={phone}
-              disabled={Boolean(challenge) || busy}
-              placeholder={intl.formatMessage(messages.authPhonePlaceholder)}
-              onChange={(event) => {
-                setPhone(event.currentTarget.value);
-              }}
-            />
-          </label>
-          {challenge ? (
-            <label>
-              <span>{intl.formatMessage(messages.authCode)}</span>
-              <input
-                type='text'
-                inputMode='numeric'
-                autoComplete='one-time-code'
-                value={code}
-                disabled={busy}
-                placeholder={intl.formatMessage(messages.authCodePlaceholder)}
-                onChange={(event) => {
-                  setCode(event.currentTarget.value);
-                }}
-              />
-            </label>
-          ) : null}
-          {error ? (
-            <p className='rin-auth-dialog__error' role='alert'>
-              {error}
-            </p>
-          ) : null}
-          {status ? (
-            <p className='rin-auth-dialog__status' role='status'>
-              {status}
-            </p>
-          ) : null}
-          <div className='rin-auth-dialog__actions'>
-            {challenge ? (
-              <AnimateButton
-                unstyled
-                type='button'
-                className='rin-auth-dialog__link'
-                disabled={busy}
-                onClick={() => {
-                  setChallenge(null);
-                  setCode('');
-                  setStatus('');
-                  setError('');
-                }}
-              >
-                {intl.formatMessage(messages.authChangePhone)}
-              </AnimateButton>
-            ) : null}
-            <AnimateButton unstyled type='submit' disabled={busy}>
-              {busy
-                ? intl.formatMessage(messages.authProcessing)
-                : intl.formatMessage(
-                    challenge ? messages.authComplete : messages.authSend,
-                  )}
-            </AnimateButton>
-          </div>
-        </form>
-      </motion.section>
-    </motion.div>,
-    document.body,
+      onClose={onClose}
+      onPhoneChange={setPhone}
+      onCodeChange={setCode}
+      onChangePhone={() => {
+        setChallenge(null);
+        setCode('');
+        setStatus('');
+        setError('');
+      }}
+      onSubmit={handleSubmit}
+    />
   );
 };
 
@@ -462,9 +608,7 @@ export const RinspaceWorldTopbar: React.FC<{
     selectUnreadNotificationGroupsCount,
   );
   const [loginOpen, setLoginOpen] = useState(() => {
-    const recovery = new URLSearchParams(location.search).get(
-      'rinspace_login',
-    );
+    const recovery = new URLSearchParams(location.search).get('rinspace_login');
     return !signedIn && (location.hash === '#login' || recovery === '1');
   });
   const [loginError, setLoginError] = useState('');
@@ -475,7 +619,8 @@ export const RinspaceWorldTopbar: React.FC<{
     window.requestAnimationFrame(() => loginTrigger.current?.focus());
   }, []);
   const returnTo = useMemo(
-    () => recoveredReturnHref(location.pathname, location.search, location.hash),
+    () =>
+      recoveredReturnHref(location.pathname, location.search, location.hash),
     [location.hash, location.pathname, location.search],
   );
 
@@ -524,55 +669,18 @@ export const RinspaceWorldTopbar: React.FC<{
 
   return (
     <>
-      <header
-        className='topbar rin-topbar-shell'
-        data-session-state={signedIn ? 'authenticated' : 'anonymous'}
+      <RinspaceTopbarFrame
+        sessionState={signedIn ? 'authenticated' : 'anonymous'}
+        logoSrc={rinspaceMark}
+        brandName={intl.formatMessage(messages.brandName)}
+        flipHref='/'
+        homeHref='/?world=inner'
+        flipLabel={intl.formatMessage(messages.flip)}
+        homeLabel={intl.formatMessage(messages.home)}
       >
-        <span className='brand'>
-          <motion.a
-            className='brand-mark'
-            href='/'
-            aria-label={intl.formatMessage(messages.flip)}
-            whileHover={reducedMotion ? undefined : { rotateY: 360 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            style={{ transformPerspective: 600 }}
-          >
-            {customAppIcon ? (
-              <img
-                src={customAppIcon}
-                alt=''
-                width='128'
-                height='128'
-                draggable={false}
-              />
-            ) : (
-              <span className='brand-mark-fallback' aria-hidden='true'>
-                R
-              </span>
-            )}
-          </motion.a>
-          <a
-            className='brand-word'
-            href='/?world=inner'
-            aria-label={intl.formatMessage(messages.home)}
-          >
-            <SplittingText
-              className='brand-word-motion'
-              text={intl.formatMessage(messages.brandName)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              stagger={0.04}
-              disableAnimation={Boolean(reducedMotion)}
-            />
-          </a>
-        </span>
-
-        <Search singleColumn topbar />
-
-        <nav
-          className='account-nav'
-          aria-label={intl.formatMessage(messages.navigation)}
+        <RinspaceTopbarControls
+          navigationLabel={intl.formatMessage(messages.navigation)}
+          search={<RinspaceInnerSearch />}
         >
           <AnimateThemeToggler
             className='topbar-pill'
@@ -593,7 +701,7 @@ export const RinspaceWorldTopbar: React.FC<{
                 whileHover={reducedMotion ? undefined : { y: -1 }}
                 whileTap={reducedMotion ? undefined : { scale: 0.94 }}
               >
-                <CompassIcon size={18} />
+                <Sparkles size={18} />
               </motion.a>
               <motion.a
                 className='topbar-pill'
@@ -603,7 +711,7 @@ export const RinspaceWorldTopbar: React.FC<{
                 whileHover={reducedMotion ? undefined : { y: -1 }}
                 whileTap={reducedMotion ? undefined : { scale: 0.94 }}
               >
-                <PlusIcon size={18} />
+                <Plus size={16} />
               </motion.a>
               <motion.a
                 className='notification-pill'
@@ -613,7 +721,11 @@ export const RinspaceWorldTopbar: React.FC<{
                 whileHover={reducedMotion ? undefined : { y: -1 }}
                 whileTap={reducedMotion ? undefined : { scale: 0.94 }}
               >
-                <BellIcon size={18} />
+                {unreadNotifications > 0 ? (
+                  <BellRing size={16} />
+                ) : (
+                  <Bell size={16} />
+                )}
                 {unreadNotifications > 0 ? (
                   <span>
                     {unreadNotifications > 99 ? '99+' : unreadNotifications}
@@ -629,7 +741,7 @@ export const RinspaceWorldTopbar: React.FC<{
                   whileHover={reducedMotion ? undefined : { y: -1 }}
                   whileTap={reducedMotion ? undefined : { scale: 0.94 }}
                 >
-                  <GaugeIcon size={18} />
+                  <Kanban size={16} />
                 </motion.a>
               ) : null}
               {username ? (
@@ -648,7 +760,7 @@ export const RinspaceWorldTopbar: React.FC<{
                       </span>
                       <span className='avatar-name-text'>{accountName}</span>
                     </span>
-                    <CaretDownIcon size={16} aria-hidden='true' />
+                    <ChevronDown size={16} aria-hidden='true' />
                   </summary>
                   <div className='rin-account-menu' role='menu'>
                     <a
@@ -659,7 +771,7 @@ export const RinspaceWorldTopbar: React.FC<{
                         '',
                       )}
                     >
-                      <UserIcon size={16} />
+                      <User size={16} />
                       {intl.formatMessage(messages.account)}
                     </a>
                     <a
@@ -670,7 +782,7 @@ export const RinspaceWorldTopbar: React.FC<{
                         '',
                       )}
                     >
-                      <GearIcon size={16} />
+                      <Settings size={16} />
                       {intl.formatMessage(messages.preferences)}
                     </a>
                     <button
@@ -678,7 +790,7 @@ export const RinspaceWorldTopbar: React.FC<{
                       role='menuitem'
                       onClick={submitSignOut}
                     >
-                      <SignOutIcon size={16} />
+                      <LogOut size={16} />
                       {intl.formatMessage(messages.signOut)}
                     </button>
                   </div>
@@ -697,8 +809,8 @@ export const RinspaceWorldTopbar: React.FC<{
               {intl.formatMessage(messages.signInOrRegister)}
             </AnimateButton>
           )}
-        </nav>
-      </header>
+        </RinspaceTopbarControls>
+      </RinspaceTopbarFrame>
       {loginOpen ? (
         <RinspaceLoginDialog
           open

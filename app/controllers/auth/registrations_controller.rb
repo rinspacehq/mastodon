@@ -15,6 +15,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   before_action :set_rules, only: :new
   before_action :require_rules_acceptance!, only: :new
   before_action :set_registration_form_time, only: :new
+  prepend_before_action :redirect_to_rinspace_login, only: [:new, :create]
 
   skip_before_action :check_self_destruct!, only: [:edit, :update]
   skip_before_action :require_functional!, only: [:edit, :update]
@@ -101,6 +102,12 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   end
 
   private
+
+  def redirect_to_rinspace_login
+    return if ENV['RINSPACE_CLOUDBASE_ENV_ID'].blank?
+
+    redirect_to '/auth/rinspace/recover'
+  end
 
   def set_invite
     @invite = begin

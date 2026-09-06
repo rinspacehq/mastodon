@@ -47,12 +47,24 @@ RSpec.describe 'Rinspace SSO preparation' do
     expect(response).to redirect_to('/?world=inner&rinspace_login=1')
   end
 
+  it 'preserves the current product route from non-topbar login entry points' do
+    get '/auth/rinspace/recover', params: { return_to: '/explore?world=inner#links' }
+
+    expect(response).to redirect_to('/?world=inner&rinspace_login=1&rinspace_return_to=%2Fexplore%3Fworld%3Dinner%23links')
+  end
+
   it 'replaces the Mastodon password page with the inline inner-world login' do
     ClimateControl.modify RINSPACE_CLOUDBASE_ENV_ID: 'rin-test' do
+      get '/?world=inner'
+      expect(response.headers['Content-Security-Policy']).to include("form-action 'self'")
+
       get '/settings/preferences/appearance?world=inner'
       expect(response).to redirect_to('/auth/sign_in')
 
       get '/auth/sign_in'
+      expect(response).to redirect_to('/auth/rinspace/recover')
+
+      post '/auth/sign_in', params: { user: { email: 'legacy@example.com', password: 'unused' } }
       expect(response).to redirect_to('/auth/rinspace/recover')
 
       get '/auth/rinspace/recover'
@@ -60,6 +72,19 @@ RSpec.describe 'Rinspace SSO preparation' do
 
       get response.location
       expect(response).to have_http_status(:ok)
+    end
+  end
+
+  it 'replaces the Mastodon registration page with the same inline Rinspace login' do
+    ClimateControl.modify RINSPACE_CLOUDBASE_ENV_ID: 'rin-test' do
+      get '/auth/sign_up'
+      expect(response).to redirect_to('/auth/rinspace/recover')
+
+      post '/auth/sign_up', params: { user: { email: 'legacy@example.com', password: 'unused' } }
+      expect(response).to redirect_to('/auth/rinspace/recover')
+
+      get '/auth/rinspace/recover'
+      expect(response).to redirect_to('/?world=inner&rinspace_login=1')
     end
   end
 

@@ -24,7 +24,7 @@ class Auth::RinspaceSsoController < ApplicationController
   end
 
   def recover
-    return_to = safe_return_to(session['user_return_to'])
+    return_to = safe_return_to(params[:return_to]) || safe_return_to(session['user_return_to'])
     uri = Addressable::URI.parse('/?world=inner')
     query = Rack::Utils.parse_nested_query(uri.query.to_s)
     query['rinspace_login'] = '1'

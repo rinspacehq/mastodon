@@ -28,4 +28,12 @@ RSpec.describe InitialStateSerializer do
       end
     end
   end
+
+  describe '#sso_redirect' do
+    it 'sends every signed-out UI entry through Rinspace recovery' do
+      ClimateControl.modify(RINSPACE_CLOUDBASE_ENV_ID: 'rinspace-production') do
+        expect(serializer.send(:sso_redirect)).to eq('/auth/rinspace/recover')
+      end
+    end
+  end
 end

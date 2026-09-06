@@ -96,7 +96,7 @@ export default class MediaContainer extends PureComponent {
             );
           })}
 
-          <ModalRoot backgroundColor={this.state.backgroundColor} onClose={this.handleCloseMedia}>
+          <ModalRoot backgroundColor={this.state.backgroundColor} motionPreset='immersive' onClose={this.handleCloseMedia}>
             {this.state.media && (
               <MediaModal
                 media={this.state.media}
