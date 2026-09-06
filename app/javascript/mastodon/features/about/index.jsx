@@ -97,7 +97,7 @@ class About extends PureComponent {
             <NavigationFocusTarget as='h1'>
               {isLoading ? <Skeleton width='10ch' /> : domain}
             </NavigationFocusTarget>
-            <p><FormattedMessage id='about.powered_by' defaultMessage='Decentralized social media powered by {mastodon}' values={{ mastodon: <a href='https://joinmastodon.org' className='about__mail' target='_blank' rel='noopener'>Mastodon</a> }} /></p>
+            <p><FormattedMessage id='about.powered_by' defaultMessage='The decentralized social space by {mastodon}' values={{ mastodon: <a href='/'>Rinspace</a> }} /></p>
           </div>
 
           <div className='about__meta'>
@@ -148,7 +148,7 @@ class About extends PureComponent {
               </>
             ) : (domainBlocks.isAvailable ? (
               <>
-                <p><FormattedMessage id='about.domain_blocks.preamble' defaultMessage='Mastodon generally allows you to view content from and interact with users from any other server in the fediverse. These are the exceptions that have been made on this particular server.' /></p>
+                <p><FormattedMessage id='about.domain_blocks.preamble' defaultMessage='Rinspace generally allows you to view content from and interact with users from other servers in the fediverse. These are the exceptions configured on this server.' /></p>
 
                 {domainBlocks.items.length > 0 && (
                   <div className='about__domain-blocks'>
@@ -173,7 +173,7 @@ class About extends PureComponent {
           <LinkFooter context='about' />
 
           <div className='about__footer'>
-            <p><FormattedMessage id='about.disclaimer' defaultMessage='Mastodon is free, open-source software, and a trademark of Mastodon GmbH.' /></p>
+            <p><FormattedMessage id='about.disclaimer' defaultMessage='Rinspace is built on Mastodon, free and open-source software. Mastodon is a trademark of Mastodon GmbH.' /></p>
           </div>
         </div>
 

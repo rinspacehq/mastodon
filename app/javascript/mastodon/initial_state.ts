@@ -33,6 +33,11 @@ interface InitialStateMeta {
   registrations_open: boolean;
   reduce_motion: boolean;
   repository: string;
+  rinspace_auth?: {
+    client_id: string;
+    gateway: string;
+    sso_prepare_path: string;
+  };
   search_enabled: boolean;
   trends_enabled: boolean;
   single_user_mode: boolean;
@@ -133,6 +138,7 @@ export const profile_directory = getMeta('profile_directory');
 export const reduceMotion = getMeta('reduce_motion');
 export const registrationsOpen = getMeta('registrations_open');
 export const repository = getMeta('repository');
+export const rinspaceAuth = getMeta('rinspace_auth');
 export const searchEnabled = getMeta('search_enabled');
 export const trendsEnabled = getMeta('trends_enabled');
 export const showTrends = getMeta('show_trends');

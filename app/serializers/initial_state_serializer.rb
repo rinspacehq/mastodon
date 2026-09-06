@@ -118,6 +118,7 @@ class InitialStateSerializer < ActiveModel::Serializer
       profile_directory: Setting.profile_directory,
       registrations_open: Setting.registrations_mode != 'none' && !Rails.configuration.x.single_user_mode,
       repository: Mastodon::Version.repository,
+      rinspace_auth: rinspace_auth,
       search_enabled: Chewy.enabled?,
       single_user_mode: Rails.configuration.x.single_user_mode,
       source_url: instance_presenter.source_url,
@@ -150,6 +151,19 @@ class InitialStateSerializer < ActiveModel::Serializer
   end
 
   def sso_redirect
+    return '/auth/rinspace/recover' if ENV['RINSPACE_CLOUDBASE_ENV_ID'].present?
+
     "/auth/auth/#{Devise.omniauth_providers[0]}" if ENV['ONE_CLICK_SSO_LOGIN'] == 'true' && ENV['OMNIAUTH_ONLY'] == 'true' && Devise.omniauth_providers.length == 1
+  end
+
+  def rinspace_auth
+    client_id = ENV.fetch('RINSPACE_CLOUDBASE_ENV_ID', '').strip
+    return if client_id.blank? || sso_redirect.blank?
+
+    {
+      client_id: client_id,
+      gateway: "https://#{client_id}.api.tcloudbasegateway.com/auth/v1",
+      sso_prepare_path: '/auth/rinspace',
+    }
   end
 end

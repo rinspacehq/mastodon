@@ -54,7 +54,7 @@ zh-CN:
         status:
           attributes:
             reblog:
-              taken: 已经被转嘟过
+              taken: 已经被转发过
         terms_of_service:
           attributes:
             effective_date:

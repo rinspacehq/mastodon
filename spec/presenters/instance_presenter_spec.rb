@@ -5,6 +5,23 @@ require 'rails_helper'
 RSpec.describe InstancePresenter do
   let(:instance_presenter) { described_class.new }
 
+  describe '#title' do
+    it 'delegates the site title to Setting outside local-only mode' do
+      allow(Mastodon::RinspaceLocalOnly).to receive(:enabled?).and_return(false)
+      Setting.site_title = 'Site title'
+
+      expect(instance_presenter.title).to eq 'Site title'
+    end
+
+    it 'uses the localized Rinspace brand in local-only mode' do
+      allow(Mastodon::RinspaceLocalOnly).to receive(:enabled?).and_return(true)
+
+      I18n.with_locale(:'zh-CN') do
+        expect(instance_presenter.title).to eq '芥子环'
+      end
+    end
+  end
+
   describe '#description' do
     it 'delegates site_description to Setting' do
       Setting.site_short_description = 'Site desc'

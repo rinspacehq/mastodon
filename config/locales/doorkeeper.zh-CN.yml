@@ -143,7 +143,7 @@ zh-CN:
         push: 推送通知
         reports: 举报
         search: 搜索
-        statuses: 嘟文
+        statuses: 推文
     layouts:
       admin:
         nav:
@@ -176,7 +176,7 @@ zh-CN:
       read:accounts: 查看账号信息
       read:blocks: 查看你的屏蔽列表
       read:bookmarks: 查看你的书签
-      read:favourites: 查看喜欢的嘟文
+      read:favourites: 查看喜欢的推文
       read:filters: 查看你的过滤规则
       read:follows: 查看你的关注
       read:lists: 查看你的列表
@@ -184,13 +184,13 @@ zh-CN:
       read:notifications: 查看你的通知
       read:reports: 查看你的举报
       read:search: 以你的身份搜索
-      read:statuses: 查看所有嘟文
+      read:statuses: 查看所有推文
       write: 修改你的账号数据
       write:accounts: 修改你的个人资料
       write:blocks: 屏蔽账号与站点
-      write:bookmarks: 将嘟文加入书签
+      write:bookmarks: 将推文加入书签
       write:conversations: 静音并删除会话
-      write:favourites: 喜欢嘟文
+      write:favourites: 喜欢推文
       write:filters: 创建过滤规则
       write:follows: 关注其他人
       write:lists: 创建列表
@@ -198,4 +198,4 @@ zh-CN:
       write:mutes: 隐藏用户和对话
       write:notifications: 清除你的通知
       write:reports: 举报他人
-      write:statuses: 发表嘟文
+      write:statuses: 发表推文

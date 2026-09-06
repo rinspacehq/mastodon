@@ -15,9 +15,15 @@ module WebAppControllerConcern
       policy = ContentSecurityPolicy.new
 
       if policy.sso_host.present?
-        p.form_action policy.sso_host, -> { "https://#{request.host}/auth/auth/" }
+        sources = [policy.sso_host, -> { "https://#{request.host}/auth/auth/" }]
+        sources.unshift(:self) if ENV['RINSPACE_CLOUDBASE_ENV_ID'].present?
+        p.form_action(*sources)
       else
         p.form_action :none
+      end
+
+      if policy.rinspace_auth_host.present?
+        p.connect_src(*p.directives.fetch('connect-src'), policy.rinspace_auth_host)
       end
     end
   end

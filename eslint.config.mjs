@@ -130,6 +130,7 @@ export default tseslint.config([
     'streaming/**/*',
     '.bundle/**/*',
     'storybook-static/**/*',
+    'app/javascript/rinspace_shared/**/*',
   ]),
   react.configs.flat.recommended,
   react.configs.flat['jsx-runtime'],

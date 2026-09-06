@@ -2818,7 +2818,6 @@ __metadata:
     "@phosphor-icons/react": "npm:2.1.10"
     "@react-spring/web": "npm:10.1.2"
     "@reduxjs/toolkit": "npm:2.12.0"
-    "@rinspace/world-shell": "file:vendor/rinspace/rinspace-world-shell-0.1.4.tgz"
     "@rolldown/plugin-babel": "npm:0.2.3"
     "@storybook/addon-a11y": "npm:10.3.3"
     "@storybook/addon-docs": "npm:10.3.3"
@@ -2898,7 +2897,9 @@ __metadata:
     lande: "npm:1.0.10"
     lint-staged: "npm:17.0.5"
     lodash: "npm:4.18.1"
+    lucide-react: "npm:1.31.0"
     marky: "npm:1.3.0"
+    motion: "npm:12.43.0"
     msw: "npm:2.12.14"
     msw-storybook-addon: "npm:2.0.6"
     oxfmt: "npm:0.47.0"
@@ -3620,15 +3621,6 @@ __metadata:
     react-redux:
       optional: true
   checksum: 10c0/2b85e31294a7139994fd78b08eb3ce706ce3b03b5081c13403b93ba4883a152d637171e4d9d969766238851f8915b1daa9f36b5a0a458aff0ff7600ee38795c9
-  languageName: node
-  linkType: hard
-
-"@rinspace/world-shell@file:vendor/rinspace/rinspace-world-shell-0.1.4.tgz::locator=%40mastodon%2Fmastodon%40workspace%3A.":
-  version: 0.1.4
-  resolution: "@rinspace/world-shell@file:vendor/rinspace/rinspace-world-shell-0.1.4.tgz#vendor/rinspace/rinspace-world-shell-0.1.4.tgz::hash=00b35f&locator=%40mastodon%2Fmastodon%40workspace%3A."
-  peerDependencies:
-    react: ^19.0.0
-  checksum: 10c0/0dcc51638044552242ab97f59b5b57ac3d773b014a11f7bfc9910ec588716ad29cd558d8e543eb339133516f39a5e854d3c83a83617d1650fb05792f5e229824
   languageName: node
   linkType: hard
 
@@ -8206,6 +8198,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"framer-motion@npm:^12.43.0":
+  version: 12.43.0
+  resolution: "framer-motion@npm:12.43.0"
+  dependencies:
+    motion-dom: "npm:^12.43.0"
+    motion-utils: "npm:^12.39.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/cce3c1daf8f53da4d9299e6bdd2a1e9f08a30e13d84ce1e468cf25285f9ec2a900c812e0aa3dce79e7453a2a3cf328a717451beef9bf0a6175a3d3794116e36a
+  languageName: node
+  linkType: hard
+
 "fresh@npm:^2.0.0":
   version: 2.0.0
   resolution: "fresh@npm:2.0.0"
@@ -9796,6 +9810,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lucide-react@npm:1.31.0":
+  version: 1.31.0
+  resolution: "lucide-react@npm:1.31.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/c49e451279b46250e117ebe112c7b0b60712912571b7139ce9ea004e7d9125a2684d545a16e62706b2bc5e074cf557c9cc0471b437e0c868f59369324f9a6d5e
+  languageName: node
+  linkType: hard
+
 "lz-string@npm:^1.5.0":
   version: 1.5.0
   resolution: "lz-string@npm:1.5.0"
@@ -10007,6 +10030,43 @@ __metadata:
   dependencies:
     minipass: "npm:^7.1.2"
   checksum: 10c0/5aad75ab0090b8266069c9aabe582c021ae53eb33c6c691054a13a45db3b4f91a7fb1bd79151e6b4e9e9a86727b522527c0a06ec7d45206b745d54cd3097bcec
+  languageName: node
+  linkType: hard
+
+"motion-dom@npm:^12.43.0":
+  version: 12.43.0
+  resolution: "motion-dom@npm:12.43.0"
+  dependencies:
+    motion-utils: "npm:^12.39.0"
+  checksum: 10c0/ef7d3f6eaa6cfeb1a939847a8b2581d119f2efc054948921ece0e2b1091f0969c15ca7707b87a46dddac7f156a714878f168e7b9f6ea189eeb7d5d9fbbb99d26
+  languageName: node
+  linkType: hard
+
+"motion-utils@npm:^12.39.0":
+  version: 12.39.0
+  resolution: "motion-utils@npm:12.39.0"
+  checksum: 10c0/6d7a2a2cc0797b72410a666a9cc1c201c8e39bf9669670464e433fe1e72af5f0217154c869867b34fbadf3664cf222c0d022bbc4eed7927f201ae971918e7440
+  languageName: node
+  linkType: hard
+
+"motion@npm:12.43.0":
+  version: 12.43.0
+  resolution: "motion@npm:12.43.0"
+  dependencies:
+    framer-motion: "npm:^12.43.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/15544ecc71d356661a959c78c4f84b3ca91728f5d17265b68912d2bbcf86f20409ebf5acf2f6c82e0c0425d1024267b04abd5b786177a3694bf706f7a3a529d6
   languageName: node
   linkType: hard
 

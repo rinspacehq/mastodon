@@ -9,6 +9,14 @@ RSpec.describe InstanceHelper do
 
       expect(helper.site_title).to eq 'New site title'
     end
+
+    it 'uses the localized Rinspace brand in local-only mode' do
+      allow(Mastodon::RinspaceLocalOnly).to receive(:enabled?).and_return(true)
+
+      I18n.with_locale(:'zh-CN') do
+        expect(helper.site_title).to eq '芥子环'
+      end
+    end
   end
 
   describe 'site_hostname' do

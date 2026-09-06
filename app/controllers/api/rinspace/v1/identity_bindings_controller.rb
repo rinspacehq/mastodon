@@ -5,7 +5,9 @@ class Api::Rinspace::V1::IdentityBindingsController < Api::Rinspace::V1::BaseCon
     permitted = identity_params
     result = Rinspace::EnsureIdentityService.new.call(
       subject: permitted[:subject], handle: permitted[:handle], display_name: permitted[:displayName],
-      avatar_url: permitted[:avatarUrl] || '', bio: permitted[:bio] || '', version: permitted[:version],
+      avatar_url: permitted.key?(:avatarUrl) ? permitted[:avatarUrl] : nil,
+      header_url: permitted.key?(:headerUrl) ? permitted[:headerUrl] : nil,
+      bio: permitted[:bio] || '', version: permitted[:version],
       state: permitted[:state] || 'active'
     )
     render json: { accountId: result.account.id, handle: result.account.username, version: result.version }
@@ -16,6 +18,6 @@ class Api::Rinspace::V1::IdentityBindingsController < Api::Rinspace::V1::BaseCon
   private
 
   def identity_params
-    params.permit(:subject, :handle, :displayName, :avatarUrl, :bio, :version, :state)
+    params.permit(:subject, :handle, :displayName, :avatarUrl, :headerUrl, :bio, :version, :state)
   end
 end

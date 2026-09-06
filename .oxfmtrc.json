@@ -27,6 +27,7 @@
     "/app/javascript/mastodon/features/emoji/emoji_data.json",
     "AUTHORS.md",
     "/app/javascript/mastodon/locales/*.json",
+    "/app/javascript/rinspace_shared",
     "/config/locales",
     ".storybook/static/mockServiceWorker.js",
 

@@ -43,6 +43,12 @@ export const browserHistory = createBrowserHistory<LocationState>();
 const originalPush = browserHistory.push.bind(browserHistory);
 const originalReplace = browserHistory.replace.bind(browserHistory);
 
+const initialPath = createPath(browserHistory.location);
+const canonicalInitialPath = innerWorldPath(initialPath);
+if (canonicalInitialPath !== initialPath) {
+  originalReplace(canonicalInitialPath, browserHistory.location.state);
+}
+
 export function useAppHistory() {
   return useHistory<LocationState>();
 }

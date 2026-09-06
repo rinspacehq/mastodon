@@ -95,6 +95,18 @@ RSpec.describe ApplicationHelper do
   end
 
   describe 'available_sign_up_url' do
+    context 'when Rinspace identity is configured' do
+      around do |example|
+        ClimateControl.modify RINSPACE_CLOUDBASE_ENV_ID: 'rin-test' do
+          example.run
+        end
+      end
+
+      it 'uses the shared Rinspace login recovery entry point' do
+        expect(helper.available_sign_up_url).to eq('/auth/rinspace/recover')
+      end
+    end
+
     context 'when registrations are closed' do
       before do
         allow(Setting).to receive(:[]).with('registrations_mode').and_return 'none'
@@ -120,6 +132,24 @@ RSpec.describe ApplicationHelper do
     context 'when registrations are allowed' do
       it 'returns a link to the registration page' do
         expect(helper.available_sign_up_url).to eq(new_user_registration_url)
+      end
+    end
+  end
+
+  describe 'link_to_login' do
+    context 'when Rinspace identity is configured' do
+      around do |example|
+        ClimateControl.modify RINSPACE_CLOUDBASE_ENV_ID: 'rin-test' do
+          example.run
+        end
+      end
+
+      it 'uses the shared Rinspace login recovery entry point' do
+        expect(helper.link_to_login('Log in')).to include('href="/auth/rinspace/recover"')
+      end
+
+      it 'does not submit directly to an OmniAuth provider' do
+        expect(helper.link_to_login('Log in', method: :post)).not_to include('data-method')
       end
     end
   end

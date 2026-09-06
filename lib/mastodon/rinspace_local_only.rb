@@ -74,9 +74,17 @@ module Mastodon
 
       uri = Addressable::URI.parse(value.to_s)
       return false unless %w[http https].include?(uri.scheme)
+      return false if uri.userinfo.present? || uri.fragment.present?
       return false if blocked_inbound_path?(uri.path)
 
-      local_hosts.include?(uri.normalized_host)
+      local_hosts.include?(uri.normalized_host) || allowed_profile_media_uri?(uri)
+    rescue Addressable::URI::InvalidURIError
+      false
+    end
+
+    def allowed_profile_media_url?(value)
+      uri = Addressable::URI.parse(value.to_s)
+      allowed_profile_media_uri?(uri)
     rescue Addressable::URI::InvalidURIError
       false
     end
@@ -118,6 +126,18 @@ module Mastodon
       rescue Addressable::URI::InvalidURIError
         nil
       end.to_set.freeze
+    end
+
+    def profile_media_hosts
+      @profile_media_hosts ||= ENV.fetch('RINSPACE_PROFILE_MEDIA_HOSTS', '').split(',').filter_map do |value|
+        Addressable::URI.parse("https://#{value.strip}").normalized_host if value.present?
+      rescue Addressable::URI::InvalidURIError
+        nil
+      end.to_set.freeze
+    end
+
+    def allowed_profile_media_uri?(uri)
+      uri.scheme == 'https' && uri.userinfo.blank? && uri.fragment.blank? && !blocked_inbound_path?(uri.path) && profile_media_hosts.include?(uri.normalized_host)
     end
 
     def safe_target(value)

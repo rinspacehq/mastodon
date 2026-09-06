@@ -128,6 +128,21 @@ export const config: UserConfigFnPromise = async ({ mode, command }) => {
       rolldownOptions: {
         input: await findEntrypoints(),
         output: {
+          // Rolldown's default automatic splitting emits hundreds of tiny
+          // vendor chunks for the Mastodon application graph. Only merge
+          // third-party package modules so application and Sass/CSS
+          // entrypoints retain their native chunk semantics.
+          codeSplitting: {
+            groups: [
+              {
+                name: 'vendor-shared',
+                test: /node_modules[\\/]/,
+                entriesAware: true,
+                entriesAwareMergeThreshold: 50_000,
+                minSize: 20_000,
+              },
+            ],
+          },
           chunkFileNames({ facadeModuleId, name }) {
             if (!facadeModuleId) {
               return '[name]-[hash].js';

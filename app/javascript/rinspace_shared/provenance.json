@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "sourceRepository": "rinspacehq/rinspace",
+  "sourcePath": "ui/src/components/shared/RinspaceTopbarFrame.tsx",
+  "sourceCommit": "214515cfd4691607bb745996ba30997d6cc81522",
+  "sha256": "7e9ceed8d6d3bb9dec1fca3999d8eacefc050ec7f42285052d60eca00407e037",
+  "brandAssetSourcePath": "ui/public/assets/brand/rinspace-mark-128.png",
+  "brandAssetSha256": "0b10b304a5f1a1d0861ab5d8e8b0d900fdded9f9404e769d4c01858d9cf44375",
+  "generated": true
+}

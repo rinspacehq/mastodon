@@ -32,7 +32,7 @@ class ManifestSerializer < ActiveModel::Serializer
       src = URI.join(root_url, src).to_s if src.present?
 
       {
-        src: src || frontend_asset_url("icons/android-chrome-#{size}x#{size}.png"),
+        src: src || frontend_asset_url('images/rinspace-mark-128.png'),
         sizes: "#{size}x#{size}",
         type: 'image/png',
         purpose: 'any maskable',
@@ -41,11 +41,11 @@ class ManifestSerializer < ActiveModel::Serializer
   end
 
   def theme_color
-    '#191b22'
+    '#2b577a'
   end
 
   def background_color
-    '#191b22'
+    '#f8fafc'
   end
 
   def display
@@ -78,40 +78,24 @@ class ManifestSerializer < ActiveModel::Serializer
     [
       {
         name: 'Compose new post',
-        url: '/publish',
+        url: '/publish?world=inner',
       },
       {
         name: 'Notifications',
-        url: '/notifications',
+        url: '/notifications?world=inner',
       },
       {
         name: 'Explore',
-        url: '/explore',
+        url: '/explore?world=inner',
       },
     ]
   end
 
   def prefer_related_applications
-    true
+    false
   end
 
   def related_applications
-    [
-      {
-        platform: 'play',
-        url: 'https://play.google.com/store/apps/details?id=org.joinmastodon.android',
-        id: 'org.joinmastodon.android',
-      },
-      {
-        platform: 'itunes',
-        url: 'https://apps.apple.com/us/app/mastodon-for-iphone/id1571998974',
-        id: 'id1571998974',
-      },
-      {
-        platform: 'f-droid',
-        url: 'https://f-droid.org/en/packages/org.joinmastodon.android/',
-        id: 'org.joinmastodon.android',
-      },
-    ]
+    []
   end
 end

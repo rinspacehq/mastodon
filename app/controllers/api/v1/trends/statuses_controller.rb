@@ -24,12 +24,23 @@ class Api::V1::Trends::StatusesController < Api::BaseController
                 else
                   []
                 end
+    @statuses = recent_local_statuses if @statuses.empty? && Mastodon::RinspaceLocalOnly.enabled?
   end
 
   def statuses_from_trends
     scope = Trends.statuses.query.allowed.in_locale(content_locale)
     scope = scope.filtered_for(current_account) if user_signed_in?
     scope
+  end
+
+  def recent_local_statuses
+    scope = Status.kept.local.where(visibility: :public, rinspace_review_state: 'approved')
+      .joins(:account)
+      .where(accounts: { suspended_at: nil, silenced_at: nil, discoverable: true })
+      .order(id: :desc)
+      .offset(offset_param)
+      .limit(limit_param(DEFAULT_STATUSES_LIMIT) * 5)
+    Status.permitted_statuses_from_ids(scope.pluck(:id), current_account, stable: true).first(limit_param(DEFAULT_STATUSES_LIMIT))
   end
 
   def next_path

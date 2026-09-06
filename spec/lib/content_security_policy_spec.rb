@@ -138,4 +138,18 @@ RSpec.describe ContentSecurityPolicy do
       end
     end
   end
+
+  describe '#rinspace_auth_host' do
+    it 'returns the exact CloudBase auth origin for a valid environment id' do
+      ClimateControl.modify RINSPACE_CLOUDBASE_ENV_ID: 'rin-example-123' do
+        expect(subject.rinspace_auth_host).to eq 'https://rin-example-123.api.tcloudbasegateway.com'
+      end
+    end
+
+    it 'rejects an environment id that could inject a CSP source' do
+      ClimateControl.modify RINSPACE_CLOUDBASE_ENV_ID: 'rin.example.com https:' do
+        expect { subject.rinspace_auth_host }.to raise_error(ArgumentError, 'invalid RINSPACE_CLOUDBASE_ENV_ID')
+      end
+    end
+  end
 end

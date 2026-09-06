@@ -136,7 +136,7 @@ module Vite
       @builder ||= Vite::Builder.new(config:, logger:)
     end
 
-    def resolve_relations(manifest, raw)
+    def resolve_relations(manifest, raw, visiting = Set.new)
       # NOTE: By using Set we make sure we add each asset only once
       imports = Set.new
       stylesheets = Set.new
@@ -145,12 +145,13 @@ module Vite
         raw_import = manifest[import]
         next unless raw_import
 
-        id, deps = lookup(file: raw_import['file'], integrity: raw_import['integrity']) do
-          resolve_relations(manifest, raw_import)
-        end
+        id = lookup(file: raw_import['file'], integrity: raw_import['integrity'])
 
-        imports.merge(deps[0])
-        stylesheets.merge(deps[1])
+        unless visiting.include?(import)
+          nested_imports, nested_stylesheets = resolve_relations(manifest, raw_import, visiting | [import])
+          imports.merge(nested_imports)
+          stylesheets.merge(nested_stylesheets)
+        end
         imports.add id
       end
 
@@ -163,26 +164,20 @@ module Vite
         # but without the integrity field
         raw_style = { 'file' => stylesheet } if raw_style.nil?
 
-        id, = lookup(file: raw_style['file'], integrity: raw_style['integrity'])
+        id = lookup(file: raw_style['file'], integrity: raw_style['integrity'])
         stylesheets.add id
       end
 
       [imports, stylesheets]
     end
 
-    # Lookup in the internal cache if an entry has been processed
-    # If not, yield and save the result of the block as the entry deps
+    # Lookup in the internal cache if an asset has been processed.
     def lookup(file:, integrity:)
-      id, deps = @lookup[file] || []
-
-      if id.nil?
+      @lookup.fetch(file) do
         @pool << Asset.new(file, integrity)
         id = @pool.size - 1 # last ID
-        deps = yield if block_given?
-        @lookup[file] = [id, deps]
+        @lookup[file] = id
       end
-
-      [id, deps]
     end
 
     def find_entries(ids)

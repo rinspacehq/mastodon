@@ -112,6 +112,8 @@ const mapStateToProps = state => ({
     state.getIn(['compose', 'isDragDisabled']) !== true,
   firstLaunch: state.getIn(['settings', 'introductionVersion'], 0) < INTRODUCTION_VERSION,
   newAccount: !state.getIn(['accounts', me, 'note']) && !state.getIn(['accounts', me, 'bot']) && state.getIn(['accounts', me, 'following_count'], 0) === 0 && state.getIn(['accounts', me, 'statuses_count'], 0) === 0,
+  avatar: state.getIn(['accounts', me, 'avatar_static']),
+  displayName: state.getIn(['accounts', me, 'display_name']),
   username: state.getIn(['accounts', me, 'username']),
 });
 
@@ -282,6 +284,8 @@ class UI extends PureComponent {
     layout: PropTypes.string.isRequired,
     firstLaunch: PropTypes.bool,
     newAccount: PropTypes.bool,
+    avatar: PropTypes.string,
+    displayName: PropTypes.string,
     username: PropTypes.string,
     ...WithRouterPropTypes,
   };
@@ -637,7 +641,11 @@ class UI extends PureComponent {
     return (
       <Hotkeys global handlers={handlers}>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
-          <RinspaceWorldTopbar username={this.props.username} />
+          <RinspaceWorldTopbar
+            avatar={this.props.avatar}
+            displayName={this.props.displayName}
+            username={this.props.username}
+          />
 
           <div className='rinspace-inner-runtime' data-rin-world-main>
             {!minimalShell && (

@@ -35,7 +35,9 @@ module ApplicationHelper
   end
 
   def available_sign_up_url
-    if closed_registrations? || omniauth_only?
+    if rinspace_identity_login?
+      '/auth/rinspace/recover'
+    elsif closed_registrations? || omniauth_only?
       'https://joinmastodon.org/'
     else
       ENV.fetch('SSO_ACCOUNT_SIGN_UP', new_user_registration_url)
@@ -51,17 +53,26 @@ module ApplicationHelper
 
     html_options = name if block
 
-    if omniauth_only? && Devise.mappings[:user].omniauthable? && User.omniauth_providers.size == 1
+    if rinspace_identity_login?
+      target = '/auth/rinspace/recover'
+      html_options ||= {}
+      html_options.delete(:method)
+    elsif omniauth_only? && Devise.mappings[:user].omniauthable? && User.omniauth_providers.size == 1
       target = omniauth_authorize_path(:user, User.omniauth_providers[0])
       html_options ||= {}
       html_options[:method] = :post
     end
+
 
     if block
       link_to(target, html_options, &block)
     else
       link_to(name, target, html_options)
     end
+  end
+
+  def rinspace_identity_login?
+    ENV['RINSPACE_CLOUDBASE_ENV_ID'].present?
   end
 
   def provider_sign_in_link(provider)

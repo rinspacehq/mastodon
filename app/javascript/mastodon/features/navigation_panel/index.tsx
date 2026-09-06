@@ -34,7 +34,6 @@ import { openNavigation, closeNavigation } from 'mastodon/actions/navigation';
 import { Account } from 'mastodon/components/account';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { WordmarkLogo } from 'mastodon/components/logo';
-import { Search } from 'mastodon/features/compose/components/search';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
 import { getNavigationSkipLinkId } from 'mastodon/features/ui/components/skip_links';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
@@ -217,7 +216,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
   const intl = useIntl();
   const { signedIn, permissions, disabledAccountId } = useIdentity();
   const location = useLocation();
-  const showSearch = useBreakpoint('full') && !multiColumn;
   const account = useAccount(me);
 
   let banner: React.ReactNode;
@@ -250,8 +248,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           <WordmarkLogo />
         </Link>
       </div>
-
-      {showSearch && <Search singleColumn />}
 
       {!multiColumn && <ProfileCard />}
 

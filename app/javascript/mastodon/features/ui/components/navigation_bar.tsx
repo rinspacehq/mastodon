@@ -22,6 +22,10 @@ import { useIdentity } from 'mastodon/identity_context';
 import { registrationsOpen, sso_redirect } from 'mastodon/initial_state';
 import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
+import {
+  rinspaceLoginHref,
+  rinspaceLoginMethod,
+} from 'mastodon/utils/rinspace_login';
 
 export const messages = defineMessages({
   home: { id: 'tabs_bar.home', defaultMessage: 'Home' },
@@ -106,8 +110,8 @@ const LoginOrSignUp: React.FC = () => {
     return (
       <div className='ui__navigation-bar__sign-up'>
         <a
-          href={sso_redirect}
-          data-method='post'
+          href={rinspaceLoginHref(sso_redirect)}
+          data-method={rinspaceLoginMethod(sso_redirect)}
           className='button button--block button-secondary'
         >
           <FormattedMessage

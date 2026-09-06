@@ -33,6 +33,20 @@ RSpec.describe 'API V1 Trends Statuses' do
           .to start_with('application/json')
       end
 
+      it 'falls back to recent eligible local posts in Rinspace local-only mode' do
+        original = Rails.configuration.x.mastodon.rinspace_local_only
+        Rails.configuration.x.mastodon.rinspace_local_only = true
+        account = Fabricate(:account, discoverable: true)
+        status = Fabricate(:status, account:, visibility: :public, rinspace_review_state: 'approved')
+
+        get '/api/v1/trends/statuses'
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body.pluck('id')).to include(status.id.to_s)
+      ensure
+        Rails.configuration.x.mastodon.rinspace_local_only = original
+      end
+
       def prepare_trends
         Fabricate.times(3, :status, trendable: true, language: 'en').each do |status|
           2.times { |i| Trends.statuses.add(status, i) }

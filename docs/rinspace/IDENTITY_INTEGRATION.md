@@ -6,6 +6,8 @@ Required production settings are documented in `.env.production.sample`. `RINSPA
 
 The immutable OIDC `sub` is stored in both `Identity.uid` and `RinspaceIdentityBinding.subject`. A profile rename updates the same local `Account`; the old handle is not redirected or reserved. Disabled bindings cannot log in. Deleted bindings are terminal and retain only the minimum evidence needed to prevent accidental duplicate identities.
 
+Profile avatars are downloaded only from HTTPS hosts listed exactly in `RINSPACE_PROFILE_MEDIA_HOSTS`. This narrow list is part of the local infrastructure trust boundary; it must contain controlled Rinspace object-delivery hosts only and must never be used to permit general remote-profile or federation traffic. Identity replay initializes a legacy `NULL` discoverability value once, while preserving an explicit user opt-out, and re-synchronizes affected local status candidates with Gorse.
+
 Control Plane service calls use an HMAC over method, request URI, timestamp, nonce, optional key ID, and SHA-256 body hash. Requests outside the two-minute window and nonce replays are rejected. Private keys must never be exposed to browser code.
 
 Tag bindings are explicit and versioned. A same-name hashtag does not create a Rinspace knowledge tag. Follow imports call Mastodon's normal `FollowService` and therefore preserve locked-account follow requests, blocks, limits, notifications, and normal relationship rules. Integration idempotency records make a repeated command safe; a key reused for different content is rejected.
