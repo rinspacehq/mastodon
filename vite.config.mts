@@ -138,7 +138,10 @@ export const config: UserConfigFnPromise = async ({ mode, command }) => {
                 name: 'vendor-shared',
                 test: /node_modules[\\/]/,
                 entriesAware: true,
-                entriesAwareMergeThreshold: 50_000,
+                // Never merge the service-worker dependency group with a DOM
+                // entry group. Doing so makes `/sw.js` evaluate `document`
+                // before it can install.
+                entriesAwareMergeThreshold: 0,
                 minSize: 20_000,
               },
             ],

@@ -1,8 +1,6 @@
-import { forwardRef } from 'react';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
-
-import { motion, useReducedMotion } from 'motion/react';
-import type { HTMLMotionProps } from 'motion/react';
+/* eslint-disable -- generated from the private, linted Animate UI source */
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { motion, type HTMLMotionProps } from 'motion/react';
 
 export interface AnimateIconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean;
@@ -11,40 +9,28 @@ export interface AnimateIconButtonProps extends ButtonHTMLAttributes<HTMLButtonE
 }
 
 /** Intent animation derived from Animate UI's animated Lucide control pattern. */
-export const AnimateIconButton = forwardRef<
-  HTMLButtonElement,
-  AnimateIconButtonProps
->(function AnimateIconButton(
-  { active, className = '', icon, label, type = 'button', ...props },
+export const AnimateIconButton = forwardRef<HTMLButtonElement, AnimateIconButtonProps>(function AnimateIconButton(
+  { active = false, className = '', icon, label, type = 'button', ...props },
   ref,
 ) {
-  const reducedMotion = useReducedMotion();
-  const isActive = active ?? false;
   const motionProps = props as Omit<HTMLMotionProps<'button'>, 'children'>;
   return (
     <motion.button
       ref={ref}
       aria-label={label}
-      aria-pressed={active}
+      aria-pressed={props.onClick ? active : undefined}
       className={`rin-animate-icon-button ${className}`.trim()}
-      data-active={isActive || undefined}
+      data-active={active || undefined}
       type={type}
-      whileHover={reducedMotion ? undefined : 'hover'}
-      whileTap={reducedMotion ? undefined : 'tap'}
+      whileHover="hover"
+      whileTap="tap"
       initial={false}
       {...motionProps}
     >
       <motion.span
-        aria-hidden='true'
-        variants={{
-          hover: { rotate: isActive ? -6 : 6, scale: 1.08 },
-          tap: { scale: 0.86 },
-        }}
-        transition={
-          reducedMotion
-            ? { duration: 0 }
-            : { type: 'spring', stiffness: 520, damping: 28 }
-        }
+        aria-hidden="true"
+        variants={{ hover: { rotate: active ? -6 : 6, scale: 1.08 }, tap: { scale: 0.86 } }}
+        transition={{ type: 'spring', stiffness: 520, damping: 28 }}
       >
         {icon}
       </motion.span>
