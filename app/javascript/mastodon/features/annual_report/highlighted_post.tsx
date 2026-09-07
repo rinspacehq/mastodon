@@ -60,7 +60,7 @@ export const HighlightedPost: React.FC<{
     label = (
       <FormattedMessage
         id='annual_report.summary.highlighted_post.boost_count'
-        defaultMessage='This post was boosted {count, plural, one {once} other {# times}}.'
+        defaultMessage='This post was reposted {count, plural, one {once} other {# times}}.'
         values={{ count: status.get('reblogs_count') }}
       />
     );

@@ -65,12 +65,12 @@ export const BoostModal: React.FC<{
               {status.get('reblogged') ? (
                 <FormattedMessage
                   id='boost_modal.undo_reblog'
-                  defaultMessage='Unboost post?'
+                  defaultMessage='Undo repost?'
                 />
               ) : (
                 <FormattedMessage
                   id='boost_modal.reblog'
-                  defaultMessage='Boost post?'
+                  defaultMessage='Repost?'
                 />
               )}
             </NavigationFocusTarget>

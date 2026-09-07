@@ -24,7 +24,7 @@ const tooltips = defineMessages({
     id: 'notifications.filter.favourites',
     defaultMessage: 'Favorites',
   },
-  boosts: { id: 'notifications.filter.boosts', defaultMessage: 'Boosts' },
+  boosts: { id: 'notifications.filter.boosts', defaultMessage: 'Reposts' },
   polls: { id: 'notifications.filter.polls', defaultMessage: 'Poll results' },
   follows: { id: 'notifications.filter.follows', defaultMessage: 'Follows' },
   collections: {

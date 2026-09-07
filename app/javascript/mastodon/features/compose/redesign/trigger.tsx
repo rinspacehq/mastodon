@@ -73,23 +73,27 @@ export const ComposeRedesignButton: React.FC<{
     return null;
   }
 
-  if (displayState === 'minimized') {
-    return (
-      <MenuCard className={classes.composerMinimized} elevation={2}>
-        <ComposeFormHeader />
-      </MenuCard>
-    );
-  }
-
-  if (displayState === 'showing') {
+  if (displayState === 'showing' || displayState === 'minimized') {
     // Pass the viewport height as a CSS variable so it's only used for mobile.
     const style = {
       '--viewport-height': viewportHeight ? `${viewportHeight}px` : undefined,
     } as React.CSSProperties;
     return (
-      <Suspense fallback={<CircularProgress strokeWidth={2} size={50} />}>
-        <ComposeLazyForm autoFocus className={classes.composer} style={style} />
-      </Suspense>
+      <>
+        <Suspense fallback={<CircularProgress strokeWidth={2} size={50} />}>
+          <ComposeLazyForm
+            autoFocus
+            className={classes.composer}
+            hidden={displayState === 'minimized'}
+            style={style}
+          />
+        </Suspense>
+        {displayState === 'minimized' ? (
+          <MenuCard className={classes.composerMinimized} elevation={2}>
+            <ComposeFormHeader />
+          </MenuCard>
+        ) : null}
+      </>
     );
   }
 

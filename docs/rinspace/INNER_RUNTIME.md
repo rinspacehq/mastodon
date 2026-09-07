@@ -2,21 +2,18 @@
 
 > Authority update (2026-09-06): private `rinspace` owns the product, outer UI, shared visual
 > specification and integration contract. This fork owns the Mastodon inner-runtime implementation.
-> The existing `@rinspace/world-shell` dependency and `config/rinspace-world-release.lock.json` are
-> retired compatibility inputs awaiting replacement; no new release may be consumed from
-> `rinspace-web`.
+> The retired `@rinspace/world-shell` / `@rinspace/tweet-composer` dependencies and public release
+> lock have been removed. Shared presentation now arrives only through the private repository's
+> one-way generated-source sync and `app/javascript/rinspace_shared/provenance.json`.
 
 The Mastodon fork is the inner-world runtime for Mastodon-owned pages and services. It keeps native
 status, timeline, search, notification, interaction, streaming and social-graph behavior, while its
 Rinspace adapter implements the product contract recorded in the private repository.
 
-The retirement audit found that `package.json` currently imports the vendored `0.1.8` shell
-(`dddf517e44bd8df28accf1e56e027d73c285b2198f4e4b8f96b1c508a76cdafc`), while
-`config/rinspace-world-release.lock.json` still records `0.1.4`
-(`22fb42c996654a11a1fd28c9a173588b55e9de16ba9fe4da9ccf6ca7d9ed10d9`). The lock therefore
-does not reproduce the current dependency and cannot be treated as release evidence. Do not repair
-it by inventing public provenance; remove the package through the private-contract navigation
-migration and create new release evidence from the resulting fork commit.
+`package.json` and `yarn.lock` must not contain a Rinspace public frontend package. The shared
+topbar and tweet-composer audits verify the generated source and style hashes against private-source
+provenance and reject those retired dependencies. Release evidence records the exact private
+integration revision and Mastodon fork commit rather than inventing a public package version.
 
 The inner navigation must match the current private outer-world navigation structure, control count,
 geometry, typography, theme and responsive behavior. Its search, Explore, publish, notification,
