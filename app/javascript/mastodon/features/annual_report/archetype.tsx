@@ -51,7 +51,7 @@ export const archetypeSelfDescriptions = defineMessages<ArchetypeData>({
   booster: {
     id: 'annual_report.summary.archetype.booster.desc_self',
     defaultMessage:
-      'You stayed on the hunt for posts to boost, amplifying other creators with perfect aim.',
+      'You stayed on the hunt for posts to repost, amplifying other creators with perfect aim.',
   },
   replier: {
     id: 'annual_report.summary.archetype.replier.desc_self',
@@ -79,7 +79,7 @@ export const archetypePublicDescriptions = defineMessages<ArchetypeData>({
   booster: {
     id: 'annual_report.summary.archetype.booster.desc_public',
     defaultMessage:
-      '{name} stayed on the hunt for posts to boost, amplifying other creators with perfect aim.',
+      '{name} stayed on the hunt for posts to repost, amplifying other creators with perfect aim.',
   },
   replier: {
     id: 'annual_report.summary.archetype.replier.desc_public',

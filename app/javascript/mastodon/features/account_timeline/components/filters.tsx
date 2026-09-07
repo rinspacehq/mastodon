@@ -82,7 +82,7 @@ const FilterDropdown: FC = () => {
         {boosts && !replies && (
           <FormattedMessage
             id='account.filters.posts_boosts'
-            defaultMessage='Posts and boosts'
+            defaultMessage='Posts and reposts'
           />
         )}
         {!boosts && !replies && (
@@ -127,7 +127,7 @@ const FilterDropdown: FC = () => {
             <label htmlFor={`${accessibleId}-boosts`}>
               <FormattedMessage
                 id='account.filters.boosts_toggle'
-                defaultMessage='Show boosts'
+                defaultMessage='Show reposts'
               />
             </label>
             <Toggle

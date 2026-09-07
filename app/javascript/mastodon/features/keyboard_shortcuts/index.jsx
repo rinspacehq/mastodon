@@ -61,7 +61,7 @@ class KeyboardShortcuts extends ImmutablePureComponent {
               </tr>
               <tr>
                 <td><kbd>b</kbd></td>
-                <td><FormattedMessage id='keyboard_shortcuts.boost' defaultMessage='to boost' /></td>
+                <td><FormattedMessage id='keyboard_shortcuts.boost' defaultMessage='to repost' /></td>
               </tr>
               <tr>
                 <td><kbd>q</kbd></td>

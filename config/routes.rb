@@ -21,6 +21,13 @@ Rails.application.routes.draw do
         resources :identity_bindings, only: :create
         resources :tag_bindings, only: :create
         resources :follows, only: :create
+        get 'composer/config', to: 'composer#show_config'
+        get 'composer/emojis', to: 'composer#emojis'
+        get 'composer/suggestions', to: 'composer#suggestions'
+        post 'composer/media', to: 'composer#create_media'
+        put 'composer/media/:id', to: 'composer#update_media'
+        post 'composer/statuses', to: 'composer#create_status'
+        get 'composer/accounts/:subject/statuses', to: 'composer#account_statuses', constraints: { subject: %r{[^/]+} }
       end
     end
   end

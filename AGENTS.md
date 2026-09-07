@@ -17,6 +17,10 @@ These instructions apply to this Rinspace Mastodon fork and supplement `/home/ub
 - `/home/ubuntu/rinspace-web` and `@rinspace/world-shell` are retired experiment inputs. Do not
   install a new public-frontend release, regenerate contracts from that repository, or use its UI as
   the visual reference for new work.
+- A feature, package, build or deployment request does not reactivate that repository. Any local
+  `rinspace-web` commit, tag, archive or vendored package created after retirement is non-authoritative
+  until the sole maintainer completes the coordinated policy change defined by
+  `/home/ubuntu/WORKSPACE.md`.
 - Mastodon remains the data authority for its local statuses, interactions, notifications and social
   follow graph. That data ownership does not make the fork the authority for the overall Rinspace
   product or outer-world design.
@@ -32,6 +36,9 @@ These instructions apply to this Rinspace Mastodon fork and supplement `/home/ub
   routes and APIs.
 - Match navigation and theme against the current private `rinspace/ui` implementation and approved
   specification. Do not invent a reduced shell or treat a synthetic demo as production truth.
+- Do not add or refresh dependencies sourced from retired `rinspace-web`, including
+  `@rinspace/world-shell` or `@rinspace/tweet-composer`. Existing local experiments using them are
+  release blockers to remove, not provenance for a new Mastodon image.
 - For third-party components such as Animate UI, inspect the official upstream and exact pinned
   revision first. Use only the subset and adaptation boundary approved in private `rinspace`; do not
   infer the library from `rinspace-web`.

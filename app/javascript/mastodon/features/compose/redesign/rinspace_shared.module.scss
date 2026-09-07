@@ -1,0 +1,14 @@
+.root {
+  --rin-composer-surface: var(--color-bg-primary);
+  --rin-composer-subtle: var(--color-bg-secondary);
+  --rin-composer-ink: var(--color-text-primary);
+  --rin-composer-muted: var(--color-text-secondary);
+  --rin-composer-border: var(--color-border-primary);
+  --rin-composer-accent: var(--rin-accent, #466b88);
+  --rin-composer-danger: var(--color-text-error);
+
+  box-sizing: border-box;
+  max-inline-size: none;
+  max-block-size: 100%;
+  z-index: 2;
+}
