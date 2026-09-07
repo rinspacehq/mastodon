@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "sourceRepository": "rinspacehq/rinspace",
   "sourcePath": "ui/src/components/shared/RinspaceTopbarFrame.tsx",
-  "sourceCommit": "2d55f6c820df41e8593ca4388fcf60eec717d272",
+  "sourceCommit": "3677adea99ba7872ad92c60dfe993669c8362d81",
   "sha256": "44180d41464ba728bd785a7efe751af3021fb3946800952c90b78a5a663fc6a6",
   "composer": {
     "sourcePath": "ui/src/components/shared/RinspaceTweetComposer.tsx",
     "targetPath": "app/javascript/rinspace_shared/RinspaceTweetComposer.tsx",
-    "sha256": "b8b6c0411cf14db2810188a182de39b7e80f6b49fb08d9697763bc3343d720cc",
+    "sha256": "9e80bfd645357405b8d2509d2092d24c7bb74fe774fd3524f676b17ee9e5dc2b",
     "styleSourcePath": "ui/src/styles/rinspace-tweet-composer.css",
     "styleTargetPath": "app/javascript/rinspace_shared/rinspace-tweet-composer.css",
     "styleSha256": "b5b3a86169a5618cbfd23d817d5ad1867bac0619fc29b0967859a47f3ea5a3ea"

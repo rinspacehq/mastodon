@@ -364,6 +364,7 @@ function trailingSuggestion(value: string) {
 
 export interface TweetComposerControllerOptions {
   adapter: TweetComposerAdapter;
+  enabled?: boolean;
   initialDraft?: Partial<TweetComposerDraft>;
   messages: TweetComposerMessages;
   onPublished?: (result: TweetComposerPublishResult) => void;
@@ -407,6 +408,7 @@ export interface TweetComposerViewProps {
 
 export function useTweetComposerController({
   adapter,
+  enabled = true,
   initialDraft,
   messages,
   onPublished,
@@ -465,9 +467,10 @@ export function useTweetComposerController({
   }, [adapter, messages]);
 
   useEffect(() => {
+    if (!enabled) return undefined;
     const controller = loadConfig();
     return () => controller.abort();
-  }, [loadConfig]);
+  }, [enabled, loadConfig]);
 
   useEffect(() => () => {
     activeUploads.current.forEach((controller) => controller.abort());
