@@ -1,0 +1,19 @@
+/* Shared presentation source for the outer and inner mobile topbars. */
+@media (width <= 620px) {
+  :where(.rin-app-shell, .ui) > .topbar.rin-topbar-shell {
+    grid-template-columns: max-content minmax(36px, 1fr) auto;
+  }
+
+  :where(.rin-app-shell, .ui)
+    > .topbar.rin-topbar-shell
+    :is(.rinspace-topbar-search, .topbar-search).mobile-search-open[role="search"] {
+    position: absolute;
+    grid-column: auto;
+    grid-row: auto;
+    inset-block-start: calc(100% + 8px);
+    inset-inline-start: max(10px, env(safe-area-inset-left));
+    inset-inline-end: max(10px, env(safe-area-inset-right));
+    inline-size: auto;
+    justify-self: stretch;
+  }
+}
