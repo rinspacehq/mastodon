@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "sourceRepository": "rinspacehq/rinspace",
   "sourcePath": "ui/src/components/shared/RinspaceTopbarFrame.tsx",
-  "sourceCommit": "3677adea99ba7872ad92c60dfe993669c8362d81",
-  "sha256": "44180d41464ba728bd785a7efe751af3021fb3946800952c90b78a5a663fc6a6",
+  "sourceCommit": "cee31caf4d5aa4ff23aa38e6b193b236cb9bed35",
+  "sha256": "f28ba0d23c8b25d0e98102e10540a5b033aea1dc20219afb68830f57a6c7c5a6",
   "composer": {
     "sourcePath": "ui/src/components/shared/RinspaceTweetComposer.tsx",
     "targetPath": "app/javascript/rinspace_shared/RinspaceTweetComposer.tsx",
@@ -71,6 +71,11 @@
       "sha256": "8132d261098c7fe4aea79e668d6a7a5d3e2a64dad81875b3dbfd6fd4cc586f65"
     },
     {
+      "sourcePath": "ui/src/components/animate-ui/icons/operations.tsx",
+      "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/operations.tsx",
+      "sha256": "21d993715fe81649db0c0b7e171bd825bc7d1e3c63d9f2f38d142b948e2c7993"
+    },
+    {
       "sourcePath": "ui/src/components/animate-ui/icons/plus.tsx",
       "targetPath": "app/javascript/mastodon/components/rinspace_animate/icons/plus.tsx",
       "sha256": "7e31a357095948c4856f0551e08f98e88bb99d3748b2f17d1debe4c195f8b664"
@@ -103,7 +108,7 @@
     {
       "sourcePath": "ui/src/rinspace_topbar_runtime.ts",
       "targetPath": "app/javascript/rinspace_topbar_runtime.ts",
-      "sha256": "23cd0b61fdaf70dc931e60ab2b8aa4b046195ba835999e89e6d795e7b9350f31"
+      "sha256": "eb8d4c1ab88f3ae9d2fbfb85d0e9b0618c12f6d3a88529d371f798ed27f34943"
     }
   ],
   "generated": true

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   KeyboardEvent as ReactKeyboardEvent,
+  ReactNode,
   SyntheticEvent,
 } from 'react';
 
@@ -9,17 +10,26 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useLocation } from 'react-router-dom';
 
+import { Moon, Sun } from 'lucide-react';
+
 import rinspaceMark from '@/images/rinspace-mark-128.png';
 import {
+  RinspaceTopbarAnonymousActionBar,
   RinspacePhoneAuthDialog,
   RinspaceTopbarActionBar,
   RinspaceTopbarControls,
   RinspaceTopbarFrame,
 } from '@/rinspace_shared/RinspaceTopbarFrame';
+import type { RinspaceTopbarCompactMenu } from '@/rinspace_shared/RinspaceTopbarFrame';
 import { AnimateButton } from 'mastodon/components/rinspace_animate/button';
+import { Bell as AnimateBell } from 'mastodon/components/rinspace_animate/icons/bell';
+import { BellRing as AnimateBellRing } from 'mastodon/components/rinspace_animate/icons/bell-ring';
+import { Kanban as AnimateKanban } from 'mastodon/components/rinspace_animate/icons/kanban';
 import { LogOut as AnimateLogOut } from 'mastodon/components/rinspace_animate/icons/log-out';
+import { Plus as AnimatePlus } from 'mastodon/components/rinspace_animate/icons/plus';
 import { Search as AnimateSearch } from 'mastodon/components/rinspace_animate/icons/search';
 import { Settings as AnimateSettings } from 'mastodon/components/rinspace_animate/icons/settings';
+import { Sparkles as AnimateSparkles } from 'mastodon/components/rinspace_animate/icons/sparkles';
 import { User as AnimateUser } from 'mastodon/components/rinspace_animate/icons/user';
 import { AnimateThemeToggler } from 'mastodon/components/rinspace_animate/theme_toggler';
 import { useTheme } from 'mastodon/hooks/useTheme';
@@ -60,6 +70,7 @@ const messages = defineMessages({
     id: 'rinspace.world.theme_to_light',
     defaultMessage: 'Switch to light theme',
   },
+  more: { id: 'rinspace.world.more', defaultMessage: 'More' },
   explore: { id: 'rinspace.world.explore', defaultMessage: 'Explore' },
   publish: { id: 'rinspace.world.publish', defaultMessage: 'Publish' },
   notifications: {
@@ -585,6 +596,54 @@ const RinspaceLoginDialog: React.FC<LoginDialogProps> = ({
   );
 };
 
+interface RinspaceMoreMenuProps {
+  open: boolean;
+  trigger: ReactNode;
+  children: ReactNode;
+  onToggle: () => void;
+}
+
+const RinspaceMoreMenu: React.FC<RinspaceMoreMenuProps> = ({
+  open,
+  trigger,
+  children,
+  onToggle,
+}) => {
+  const menu = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !menu.current?.contains(event.target)
+      ) {
+        onToggle();
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onToggle();
+    };
+    document.addEventListener('pointerdown', closeOnOutsidePointer, true);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer, true);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [onToggle, open]);
+
+  return (
+    <div ref={menu} className='topbar-more-menu'>
+      {trigger}
+      {open ? (
+        <div className='rin-more-menu' role='menu'>
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 export const RinspaceWorldTopbar: React.FC<{
   avatar?: string;
   displayName?: string;
@@ -603,7 +662,11 @@ export const RinspaceWorldTopbar: React.FC<{
   });
   const [loginError, setLoginError] = useState('');
   const [loginBusy, setLoginBusy] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const loginTrigger = useRef<HTMLButtonElement>(null);
+  const toggleMore = useCallback(() => {
+    setMoreOpen((current) => !current);
+  }, []);
   const closeLogin = useCallback(() => {
     setLoginOpen(false);
     window.requestAnimationFrame(() => loginTrigger.current?.focus());
@@ -666,6 +729,101 @@ export const RinspaceWorldTopbar: React.FC<{
       onToggle={toggleTheme}
     />
   );
+  const compactMenu: RinspaceTopbarCompactMenu = {
+    label: intl.formatMessage(messages.more),
+    expanded: moreOpen,
+    onSelect: toggleMore,
+    render: (trigger) => (
+      <RinspaceMoreMenu
+        open={moreOpen}
+        onToggle={toggleMore}
+        trigger={trigger}
+      >
+        {signedIn ? (
+          <>
+            <a
+              role='menuitem'
+              href={innerHref('/explore', '', '')}
+              onClick={() => {
+                setMoreOpen(false);
+              }}
+            >
+              <AnimateSparkles animateOnHover size={16} />
+              {intl.formatMessage(messages.explore)}
+            </a>
+            <a
+              role='menuitem'
+              href={innerHref('/publish', '', '')}
+              onClick={() => {
+                setMoreOpen(false);
+              }}
+            >
+              <AnimatePlus animateOnHover size={16} />
+              {intl.formatMessage(messages.publish)}
+            </a>
+            <a
+              role='menuitem'
+              href={innerHref('/notifications', '', '')}
+              onClick={() => {
+                setMoreOpen(false);
+              }}
+            >
+              {unreadNotifications > 0 ? (
+                <AnimateBellRing animateOnHover size={16} />
+              ) : (
+                <AnimateBell animateOnHover size={16} />
+              )}
+              {intl.formatMessage(messages.notifications)}
+              {unreadNotifications > 0 ? (
+                <span className='topbar-menu-count'>
+                  {unreadNotifications}
+                </span>
+              ) : null}
+            </a>
+            <button
+              type='button'
+              role='menuitem'
+              onClick={() => {
+                toggleTheme();
+                setMoreOpen(false);
+              }}
+            >
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+              {intl.formatMessage(
+                theme === 'light' ? messages.themeDark : messages.themeLight,
+              )}
+            </button>
+            {canAdmin ? (
+              <a
+                role='menuitem'
+                href={innerHref('/admin', '', '')}
+                onClick={() => {
+                  setMoreOpen(false);
+                }}
+              >
+                <AnimateKanban animateOnHover size={16} />
+                {intl.formatMessage(messages.administration)}
+              </a>
+            ) : null}
+          </>
+        ) : (
+          <button
+            type='button'
+            role='menuitem'
+            onClick={() => {
+              toggleTheme();
+              setMoreOpen(false);
+            }}
+          >
+            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            {intl.formatMessage(
+              theme === 'light' ? messages.themeDark : messages.themeLight,
+            )}
+          </button>
+        )}
+      </RinspaceMoreMenu>
+    ),
+  };
 
   return (
     <>
@@ -682,11 +840,10 @@ export const RinspaceWorldTopbar: React.FC<{
           navigationLabel={intl.formatMessage(messages.navigation)}
           search={<RinspaceInnerSearch />}
         >
-          {signedIn ? null : themeControl}
-
           {signedIn ? (
             <RinspaceTopbarActionBar
               themeControl={themeControl}
+              compactMenu={compactMenu}
               primary={{
                 href: innerHref('/explore', '', ''),
                 label: intl.formatMessage(messages.explore),
@@ -767,16 +924,16 @@ export const RinspaceWorldTopbar: React.FC<{
               }
             />
           ) : (
-            <AnimateButton
-              ref={loginTrigger}
-              unstyled
-              type='button'
-              className='topbar-auth-button'
-              disabled={loginBusy}
-              onClick={() => void beginLogin()}
-            >
-              {intl.formatMessage(messages.signInOrRegister)}
-            </AnimateButton>
+            <RinspaceTopbarAnonymousActionBar
+              themeControl={themeControl}
+              compactMenu={compactMenu}
+              authentication={{
+                label: intl.formatMessage(messages.signInOrRegister),
+                onSelect: () => void beginLogin(),
+                disabled: loginBusy,
+                buttonRef: loginTrigger,
+              }}
+            />
           )}
         </RinspaceTopbarControls>
       </RinspaceTopbarFrame>

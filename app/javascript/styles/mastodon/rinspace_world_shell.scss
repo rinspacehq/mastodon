@@ -351,6 +351,24 @@
   justify-self: end;
 }
 
+.ui > .topbar .topbar-desktop-actions,
+.ui > .topbar .topbar-compact-actions {
+  align-items: center;
+  gap: 10px;
+}
+
+.ui > .topbar .topbar-desktop-actions {
+  display: inline-flex;
+}
+
+.ui > .topbar .topbar-compact-actions {
+  display: none;
+}
+
+.ui > .topbar .topbar-auth-icon {
+  display: none;
+}
+
 .ui > .topbar :where(.topbar-pill, .notification-pill) {
   position: relative;
   display: inline-grid;
@@ -399,6 +417,43 @@
   font-weight: 700;
 }
 
+.ui > .topbar .topbar-more-trigger {
+  position: relative;
+}
+
+.ui > .topbar .topbar-more-count {
+  position: absolute;
+  inset-block-start: -6px;
+  inset-inline-end: -7px;
+  display: grid;
+  min-inline-size: 18px;
+  block-size: 18px;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 1px solid var(--rin-canvas);
+  border-radius: 999px;
+  background: var(--rin-accent);
+  color: #fff;
+  font-family: var(--rin-font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.ui > .topbar .topbar-menu-count {
+  min-inline-size: 18px;
+  margin-inline-start: auto;
+  padding-inline: 5px;
+  border-radius: 999px;
+  background: var(--rin-accent);
+  color: #fff;
+  font-family: var(--rin-font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
 .ui > .topbar .topbar-auth-button {
   border: 0;
   background: transparent;
@@ -418,7 +473,8 @@
   color: var(--rin-accent);
 }
 
-.ui > .topbar .account-menu {
+.ui > .topbar .account-menu,
+.ui > .topbar .topbar-more-menu {
   position: relative;
   display: inline-flex;
   flex: 0 0 auto;
@@ -485,7 +541,7 @@
   white-space: nowrap;
 }
 
-.ui > .topbar .rin-account-menu {
+.ui > .topbar :where(.rin-account-menu, .rin-more-menu) {
   position: absolute;
   inset-block-start: calc(100% + 8px);
   inset-inline-end: 0;
@@ -500,7 +556,7 @@
   box-shadow: 0 18px 44px rgb(15 23 42 / 16%);
 }
 
-.ui > .topbar .rin-account-menu :where(a, button) {
+.ui > .topbar :where(.rin-account-menu, .rin-more-menu) :where(a, button) {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -517,8 +573,14 @@
   cursor: pointer;
 }
 
-.ui > .topbar .rin-account-menu :where(a, button):hover,
-.ui > .topbar .rin-account-menu :where(a, button):focus-visible {
+.ui
+  > .topbar
+  :where(.rin-account-menu, .rin-more-menu)
+  :where(a, button):hover,
+.ui
+  > .topbar
+  :where(.rin-account-menu, .rin-more-menu)
+  :where(a, button):focus-visible {
   background: var(--rin-surface-subtle);
 }
 
@@ -676,9 +738,92 @@
   display: none !important;
 }
 
+@media (width <= 900px) {
+  .ui > .topbar {
+    grid-template-columns: max-content minmax(140px, 1fr) auto;
+    gap: 10px;
+    block-size: 64px;
+    min-block-size: 64px;
+    padding: 0 16px;
+  }
+
+  .ui > .topbar.rin-topbar-shell .brand {
+    min-inline-size: max-content;
+    max-inline-size: none;
+    flex: 0 0 auto;
+  }
+
+  .ui > .topbar.rin-topbar-shell .brand > .brand-word,
+  .ui > .topbar.rin-topbar-shell .brand .brand-word-text {
+    max-inline-size: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  .ui > .topbar .topbar-search {
+    grid-column: 2;
+    grid-row: 1;
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .ui > .topbar .account-nav {
+    grid-column: 3;
+    grid-row: 1;
+    gap: 8px;
+    overflow: visible;
+  }
+
+  .ui > .topbar .topbar-desktop-actions {
+    display: none;
+  }
+
+  .ui > .topbar .topbar-compact-actions {
+    display: inline-flex;
+  }
+
+  .ui > .topbar .account-menu-trigger {
+    inline-size: 34px;
+    max-inline-size: 34px;
+    justify-content: center;
+    padding: 3px;
+  }
+
+  .ui
+    > .topbar
+    .account-menu-trigger
+    :where(.avatar-name-text, .account-menu-chevron) {
+    display: none;
+  }
+
+  .ui > .topbar .topbar-auth-control {
+    display: inline-grid;
+    inline-size: 34px;
+    block-size: 34px;
+    flex: 0 0 34px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--rin-border);
+    border-radius: 999px;
+    background: var(--rin-surface);
+    color: var(--rin-ink);
+    text-decoration: none;
+  }
+
+  .ui > .topbar .topbar-auth-label {
+    display: none;
+  }
+
+  .ui > .topbar .topbar-auth-icon {
+    display: inline-grid;
+    place-items: center;
+  }
+}
+
 @media (width <= 620px) {
   .ui > .topbar {
-    grid-template-columns: minmax(0, 1fr) 38px auto;
+    grid-template-columns: max-content 36px auto;
     justify-items: stretch;
     gap: 8px;
     block-size: 54px;
@@ -689,22 +834,8 @@
   }
 
   .ui > .topbar .brand {
-    max-inline-size: 100%;
-    gap: 6px;
-    font-size: 1.08rem;
-  }
-
-  .ui > .topbar .brand-mark {
-    inline-size: 34px;
-    block-size: 34px;
-    flex-basis: 34px;
-  }
-
-  .ui > .topbar .brand-word {
-    overflow: hidden;
-    font-size: 0.9rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-inline-size: max-content;
+    max-inline-size: none;
   }
 
   .ui > .topbar .rinspace-topbar-search,
@@ -785,15 +916,6 @@
     overflow: visible;
   }
 
-  .ui > .topbar .account-menu-trigger {
-    max-inline-size: 58px;
-    padding-inline-end: 7px;
-  }
-
-  .ui > .topbar .account-menu-trigger .avatar-name-text {
-    display: none;
-  }
-
   .rinspace-inner-runtime .columns-area__panels {
     min-height: calc(100vh - 54px);
     min-height: calc(100dvh - 54px);
@@ -802,7 +924,7 @@
 
 @media (width <= 360px) {
   .ui > .topbar {
-    grid-template-columns: minmax(0, 1fr) 34px auto;
+    grid-template-columns: max-content 34px auto;
     gap: 4px;
     padding-inline-start: max(6px, env(safe-area-inset-left));
     padding-inline-end: max(6px, env(safe-area-inset-right));
@@ -810,9 +932,5 @@
 
   .ui > .topbar .account-nav {
     gap: 4px;
-  }
-
-  .ui > .topbar[data-session-state='authenticated'] .brand-word {
-    display: none;
   }
 }
