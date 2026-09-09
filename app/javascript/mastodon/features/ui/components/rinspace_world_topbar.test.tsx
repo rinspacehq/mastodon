@@ -2,7 +2,13 @@ import { IntlProvider } from 'react-intl';
 
 import { MemoryRouter } from 'react-router-dom';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { innerHref, RinspaceWorldTopbar } from './rinspace_world_topbar';
@@ -214,22 +220,21 @@ describe('RinspaceWorldTopbar', () => {
   it('binds the complete signed-in control order to Mastodon routes', () => {
     adapterState.signedIn = true;
     adapterState.unreadNotifications = 7;
-    renderTopbar();
+    const { container } = renderTopbar();
 
     const navigation = screen.getByRole('navigation');
-    const controls = Array.from(navigation.children).map((element) =>
-      (element.matches('details')
-        ? element.querySelector('summary')
-        : element
-      )?.getAttribute('aria-label'),
+    const desktopControls = Array.from(
+      navigation.querySelector('.topbar-desktop-actions')?.children ?? [],
+      (element) => element.getAttribute('aria-label'),
     );
-    expect(controls).toEqual([
+    expect(desktopControls).toEqual([
       'Switch to dark theme',
       'Explore',
       'Publish',
       'Notifications',
-      'Account menu',
     ]);
+    expect(screen.getByRole('button', { name: 'More' })).toBeTruthy();
+    expect(screen.getByLabelText('Account menu')).toBeTruthy();
     expect(
       screen.getByRole('link', { name: 'Explore' }).getAttribute('href'),
     ).toBe('/explore?world=inner');
@@ -244,6 +249,20 @@ describe('RinspaceWorldTopbar', () => {
         .getAttribute('href'),
     ).toBe('/settings/preferences/appearance?world=inner');
     expect(screen.getByText('7')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
+    const moreMenu = container.querySelector('.rin-more-menu');
+    expect(moreMenu).toBeTruthy();
+    expect(
+      within(moreMenu as HTMLElement)
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent.trim()),
+    ).toEqual([
+      'Explore',
+      'Publish',
+      'Notifications7',
+      'Switch to dark theme',
+    ]);
   });
 
   it('adds administration only for a role that can view the dashboard', () => {

@@ -1,6 +1,6 @@
 // RINSPACE_SHARED_SOURCE: edit only in rinspace/ui, then run the one-way sync.
 import { useEffect, useRef } from "react";
-import type { MouseEventHandler, ReactNode, SyntheticEvent } from "react";
+import type { MouseEventHandler, ReactNode, Ref, SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "motion/react";
 
@@ -10,8 +10,10 @@ import {
   AnimateButton,
   AnimateChevronDown,
   AnimateKanban,
+  AnimateMore,
   AnimatePlus,
   AnimateSparkles,
+  AnimateUser,
 } from "@/rinspace_topbar_runtime";
 
 export interface RinspaceTopbarFrameProps {
@@ -41,6 +43,7 @@ export interface RinspaceTopbarAction {
 
 export interface RinspaceTopbarActionBarProps {
   themeControl: ReactNode;
+  compactMenu: RinspaceTopbarCompactMenu;
   primary: RinspaceTopbarAction;
   publishing: {
     label: string;
@@ -51,6 +54,28 @@ export interface RinspaceTopbarActionBarProps {
   renderPublishing?: (trigger: ReactNode, label: string) => ReactNode;
   renderAccount: (chevron: ReactNode) => ReactNode;
   decorate?: (control: ReactNode, label: string) => ReactNode;
+  nativeTitles?: boolean;
+}
+
+export interface RinspaceTopbarCompactMenu {
+  label: string;
+  notificationCount?: number;
+  expanded?: boolean;
+  onSelect?: MouseEventHandler<HTMLButtonElement>;
+  render: (trigger: ReactNode) => ReactNode;
+}
+
+export interface RinspaceTopbarAnonymousActionBarProps {
+  themeControl: ReactNode;
+  compactMenu: RinspaceTopbarCompactMenu;
+  authentication: {
+    label: string;
+    onSelect: () => void;
+    disabled?: boolean;
+    buttonRef?: Ref<HTMLButtonElement>;
+    onFocus?: () => void;
+    onPointerEnter?: () => void;
+  };
   nativeTitles?: boolean;
 }
 
@@ -141,6 +166,7 @@ export function RinspaceTopbarControls({
  */
 export function RinspaceTopbarActionBar({
   themeControl,
+  compactMenu,
   primary,
   publishing,
   notifications,
@@ -154,64 +180,144 @@ export function RinspaceTopbarActionBar({
 
   return (
     <>
-      {themeControl}
-      {decorate(
-        <a
-          className="topbar-pill"
-          href={primary.href}
-          aria-label={primary.label}
-          title={title(primary.label)}
-          onClick={primary.onNavigate}
-        >
-          <AnimateSparkles animateOnHover size={18} />
-        </a>,
-        primary.label,
+      <span className="topbar-desktop-actions">
+        {themeControl}
+        {decorate(
+          <a
+            className="topbar-pill"
+            href={primary.href}
+            aria-label={primary.label}
+            title={title(primary.label)}
+            onClick={primary.onNavigate}
+          >
+            <AnimateSparkles animateOnHover size={18} />
+          </a>,
+          primary.label,
+        )}
+        {renderPublishing(
+          <AnimateButton
+            unstyled
+            type="button"
+            className="topbar-pill"
+            aria-label={publishing.label}
+            title={title(publishing.label)}
+            onClick={publishing.onSelect}
+          >
+            <AnimatePlus animateOnHover size={16} />
+          </AnimateButton>,
+          publishing.label,
+        )}
+        {decorate(
+          <a
+            className="notification-pill"
+            href={notifications.href}
+            aria-label={notifications.label}
+            title={title(notifications.label)}
+            onClick={notifications.onNavigate}
+          >
+            {notifications.count > 0 ? (
+              <AnimateBellRing animateOnHover size={16} />
+            ) : (
+              <AnimateBell animateOnHover size={16} />
+            )}
+            {notifications.count > 0 ? (
+              <span>{notifications.count}</span>
+            ) : null}
+          </a>,
+          notifications.label,
+        )}
+        {administration
+          ? decorate(
+              <a
+                className="notification-pill"
+                href={administration.href}
+                aria-label={administration.label}
+                title={title(administration.label)}
+                onClick={administration.onNavigate}
+              >
+                <AnimateKanban animateOnHover size={16} />
+              </a>,
+              administration.label,
+            )
+          : null}
+      </span>
+      <RinspaceTopbarCompactMenuControl
+        compactMenu={compactMenu}
+        nativeTitles={nativeTitles}
+      />
+      {renderAccount(
+        <AnimateChevronDown
+          className="account-menu-chevron"
+          animateOnHover
+          size={16}
+        />,
       )}
-      {renderPublishing(
+    </>
+  );
+}
+
+export function RinspaceTopbarCompactMenuControl({
+  compactMenu,
+  nativeTitles = false,
+}: {
+  compactMenu: RinspaceTopbarCompactMenu;
+  nativeTitles?: boolean;
+}) {
+  return (
+    <span className="topbar-compact-actions">
+      {compactMenu.render(
         <AnimateButton
           unstyled
           type="button"
-          className="topbar-pill"
-          aria-label={publishing.label}
-          title={title(publishing.label)}
-          onClick={publishing.onSelect}
+          className="topbar-pill topbar-more-trigger"
+          aria-label={compactMenu.label}
+          aria-expanded={compactMenu.expanded}
+          aria-haspopup="menu"
+          title={nativeTitles ? compactMenu.label : undefined}
+          onClick={compactMenu.onSelect}
         >
-          <AnimatePlus animateOnHover size={16} />
+          <AnimateMore animateOnHover size={18} />
+          {(compactMenu.notificationCount ?? 0) > 0 ? (
+            <span className="topbar-more-count">
+              {compactMenu.notificationCount}
+            </span>
+          ) : null}
         </AnimateButton>,
-        publishing.label,
       )}
-      {decorate(
-        <a
-          className="notification-pill"
-          href={notifications.href}
-          aria-label={notifications.label}
-          title={title(notifications.label)}
-          onClick={notifications.onNavigate}
-        >
-          {notifications.count > 0 ? (
-            <AnimateBellRing animateOnHover size={16} />
-          ) : (
-            <AnimateBell animateOnHover size={16} />
-          )}
-          {notifications.count > 0 ? <span>{notifications.count}</span> : null}
-        </a>,
-        notifications.label,
-      )}
-      {administration
-        ? decorate(
-            <a
-              className="notification-pill"
-              href={administration.href}
-              aria-label={administration.label}
-              title={title(administration.label)}
-              onClick={administration.onNavigate}
-            >
-              <AnimateKanban animateOnHover size={16} />
-            </a>,
-            administration.label,
-          )
-        : null}
-      {renderAccount(<AnimateChevronDown animateOnHover size={16} />)}
+    </span>
+  );
+}
+
+export function RinspaceTopbarAnonymousActionBar({
+  themeControl,
+  compactMenu,
+  authentication,
+  nativeTitles = false,
+}: RinspaceTopbarAnonymousActionBarProps) {
+  return (
+    <>
+      <span className="topbar-desktop-actions">{themeControl}</span>
+      <RinspaceTopbarCompactMenuControl
+        compactMenu={compactMenu}
+        nativeTitles={nativeTitles}
+      />
+      <AnimateButton
+        ref={authentication.buttonRef}
+        unstyled
+        type="button"
+        className="topbar-auth-button topbar-auth-control"
+        aria-label={authentication.label}
+        title={nativeTitles ? authentication.label : undefined}
+        disabled={authentication.disabled}
+        onClick={authentication.onSelect}
+        onFocus={authentication.onFocus}
+        onPointerEnter={authentication.onPointerEnter}
+      >
+        <span className="topbar-auth-label">{authentication.label}</span>
+        <span className="topbar-auth-icon" aria-hidden="true">
+          <AnimateUser animateOnHover size={18} />
+        </span>
+      </AnimateButton>
     </>
   );
 }
