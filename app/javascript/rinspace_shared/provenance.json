@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "sourceRepository": "rinspacehq/rinspace",
   "sourcePath": "ui/src/components/shared/RinspaceTopbarFrame.tsx",
-  "sourceCommit": "e39234d562e0d6ecdf8813bdc93c1a56bebd393b",
+  "sourceCommit": "92954ea9ea5f59453301946bbd6af63449ca412e",
   "sha256": "f28ba0d23c8b25d0e98102e10540a5b033aea1dc20219afb68830f57a6c7c5a6",
   "composer": {
     "sourcePath": "ui/src/components/shared/RinspaceTweetComposer.tsx",
@@ -15,7 +15,7 @@
   "mobileSearchStyle": {
     "sourcePath": "ui/src/styles/rinspace-topbar-mobile-search.css",
     "targetPath": "app/javascript/rinspace_shared/rinspace-topbar-mobile-search.css",
-    "sha256": "bf6a7befd15abb69950e911f67d8259be0a9180ec8b10195fc2cd361d0e59f99"
+    "sha256": "dc4e5cff49e5d6a1de8bfbe57adf6b818f9447a23eb2776fd4933dc16bc49ea8"
   },
   "brandAssetSourcePath": "ui/public/assets/brand/rinspace-mark-128.png",
   "brandAssetSha256": "0b10b304a5f1a1d0861ab5d8e8b0d900fdded9f9404e769d4c01858d9cf44375",
