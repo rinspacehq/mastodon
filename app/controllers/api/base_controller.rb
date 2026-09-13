@@ -15,6 +15,7 @@ class Api::BaseController < ApplicationController
 
   before_action :require_authenticated_user!, if: :disallow_unauthenticated_api_access?
   before_action :require_not_suspended!
+  before_action :require_active_rinspace_token_parent!
   before_action :require_rinspace_governed_write!
 
   vary_by 'Authorization'
@@ -105,6 +106,32 @@ class Api::BaseController < ApplicationController
   end
 
   private
+
+  def require_active_rinspace_token_parent!
+    token = doorkeeper_token
+    return unless token
+
+	if token.rinspace_managed?
+	  Rinspace::ParentSessionClient.new.assert_active!(
+	    issuer: token.rinspace_parent_issuer,
+	    uid: token.rinspace_parent_uid,
+	    sid: token.rinspace_parent_sid,
+	    version: token.rinspace_parent_version,
+	    runtime: 'mastodon-api'
+	  )
+	elsif ENV['RINSPACE_IDENTITY_STRICT'] == 'true' && token.resource_owner_id.present?
+	  raise Rinspace::ParentSessionClient::InactiveError unless token.rinspace_personal?
+	  user = User.find(token.resource_owner_id)
+	  uid = RinspaceIdentityBinding.find_by!(account_id: user.account_id, state: 'verified').subject
+	  status = Rinspace::ParentSessionClient.new.account_status!(uid:)
+	  raise Rinspace::ParentSessionClient::InactiveError unless status.fetch('credentialEpoch').to_i == token.rinspace_credential_epoch
+	end
+  rescue Rinspace::ParentSessionClient::InactiveError, ActiveRecord::RecordNotFound, KeyError
+    render json: { error: 'Parent session is inactive' }, status: :unauthorized
+  rescue Rinspace::ParentSessionClient::UnavailableError
+    response.headers['Retry-After'] = '3'
+    render json: { error: 'Identity service is temporarily unavailable' }, status: :service_unavailable
+  end
 
   def require_rinspace_governed_write!
     return unless ENV['RINSPACE_IDENTITY_STRICT'] == 'true' && !request.get? && !request.head? && !request.options?

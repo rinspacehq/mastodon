@@ -17,6 +17,7 @@ import { AuthenticationError, RequestError, extractStatusAndMessage as extractEr
 import { logger, httpLogger, initializeLogLevel, attachWebsocketHttpLogger, createWebsocketLogger } from './logging.js';
 import { setupMetrics } from './metrics.js';
 import * as Redis from './redis.js';
+import { RinspaceParentAuthorizer } from './rinspace_parent_authorization.js';
 import { isTruthy, normalizeHashtag, firstParam } from './utils.js';
 
 const environment = process.env.NODE_ENV || 'development';
@@ -48,6 +49,7 @@ initializeLogLevel(process.env, environment);
  * @property {string} accountId
  * @property {string[]} chosenLanguages
  * @property {number} permissions
+ * @property {{issuer: string, uid: string, sid: string, version: string}|null} rinspaceParent
  */
 
 /**
@@ -127,6 +129,12 @@ const CHANNEL_NAMES = [
 const startServer = async () => {
   const pgConfig = Database.configFromEnv(process.env, environment);
   const pgPool = Database.getPool(pgConfig, environment, logger);
+  const rinspaceParentAuthorizer = new RinspaceParentAuthorizer({
+    baseUrl: process.env.RINSPACE_IDENTITY_INTERNAL_URL,
+    serviceId: process.env.RINSPACE_IDENTITY_SERVICE_ID,
+    audience: process.env.RINSPACE_IDENTITY_AUDIENCE,
+    secret: process.env.RINSPACE_IDENTITY_SERVICE_SECRET,
+  });
 
   const metrics = setupMetrics(CHANNEL_NAMES, pgPool);
 
@@ -380,17 +388,26 @@ const startServer = async () => {
    * @returns {Promise<ResolvedAccount>}
    */
   const accountFromToken = async (token, req) => {
-    const result = await pgPool.query('SELECT oauth_access_tokens.id, oauth_access_tokens.resource_owner_id, users.account_id, users.chosen_languages, oauth_access_tokens.scopes, COALESCE(user_roles.permissions, 0) AS permissions FROM oauth_access_tokens INNER JOIN users ON oauth_access_tokens.resource_owner_id = users.id INNER JOIN accounts ON accounts.id = users.account_id LEFT OUTER JOIN user_roles ON user_roles.id = users.role_id WHERE oauth_access_tokens.token = $1 AND oauth_access_tokens.revoked_at IS NULL AND users.disabled IS FALSE AND accounts.suspended_at IS NULL LIMIT 1', [token]);
+    const result = await pgPool.query('SELECT oauth_access_tokens.id, oauth_access_tokens.resource_owner_id, users.account_id, users.chosen_languages, oauth_access_tokens.scopes, COALESCE(user_roles.permissions, 0) AS permissions, oauth_access_tokens.rinspace_parent_issuer, oauth_access_tokens.rinspace_parent_uid, oauth_access_tokens.rinspace_parent_sid, oauth_access_tokens.rinspace_parent_version FROM oauth_access_tokens INNER JOIN users ON oauth_access_tokens.resource_owner_id = users.id INNER JOIN accounts ON accounts.id = users.account_id LEFT OUTER JOIN user_roles ON user_roles.id = users.role_id WHERE oauth_access_tokens.token = $1 AND oauth_access_tokens.revoked_at IS NULL AND users.disabled IS FALSE AND accounts.suspended_at IS NULL LIMIT 1', [token]);
 
     if (result.rows.length === 0) {
       throw new AuthenticationError('Invalid access token');
     }
+
+    const rinspaceParent = result.rows[0].rinspace_parent_sid ? {
+      issuer: result.rows[0].rinspace_parent_issuer,
+      uid: result.rows[0].rinspace_parent_uid,
+      sid: result.rows[0].rinspace_parent_sid,
+      version: String(result.rows[0].rinspace_parent_version),
+    } : null;
+    await rinspaceParentAuthorizer.assertActive(rinspaceParent);
 
     req.accessTokenId = result.rows[0].id;
     req.scopes = result.rows[0].scopes.split(' ');
     req.accountId = result.rows[0].account_id;
     req.chosenLanguages = result.rows[0].chosen_languages;
     req.permissions = result.rows[0].permissions;
+    req.rinspaceParent = rinspaceParent;
 
     return {
       accessTokenId: result.rows[0].id,
@@ -398,6 +415,7 @@ const startServer = async () => {
       accountId: result.rows[0].account_id,
       chosenLanguages: result.rows[0].chosen_languages,
       permissions: result.rows[0].permissions,
+      rinspaceParent,
     };
   };
 
@@ -529,8 +547,10 @@ const startServer = async () => {
         res.end();
       },
     });
+    const stopParentLease = rinspaceParentAuthorizer.startLease(req.rinspaceParent, () => res.end());
 
     res.on('close', () => {
+      stopParentLease();
       unsubscribe(accessTokenChannelId, listener);
       unsubscribe(systemChannelId, listener);
 
@@ -1334,8 +1354,10 @@ const startServer = async () => {
       logger: log,
       subscriptions: {},
     };
+    const stopParentLease = rinspaceParentAuthorizer.startLease(req.rinspaceParent, () => ws.close(1008, 'Parent session inactive'));
 
     ws.on('close', function onWebsocketClose() {
+      stopParentLease();
       const subscriptions = Object.keys(session.subscriptions);
 
       subscriptions.forEach(channelIds => {
