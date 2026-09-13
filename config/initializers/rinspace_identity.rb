@@ -11,13 +11,19 @@ recommendations = Rails.configuration.x.mastodon.rinspace_recommendations_enable
 views = Rails.configuration.x.mastodon.rinspace_views_enabled
 abort 'Recommendations and views require the governed community-write stage' if (recommendations || views) && !community_write
 
-required = %w[OIDC_ENABLED OIDC_ISSUER OIDC_CLIENT_ID OIDC_CLIENT_SECRET OIDC_REDIRECT_URI RINSPACE_CONTROL_PLANE_HMAC_KEY]
+required = %w[
+  OIDC_ENABLED OIDC_ISSUER OIDC_CLIENT_ID OIDC_CLIENT_SECRET OIDC_REDIRECT_URI OIDC_JWKS_URI
+  RINSPACE_CONTROL_PLANE_HMAC_KEY RINSPACE_IDENTITY_INTERNAL_URL RINSPACE_IDENTITY_SERVICE_ID
+  RINSPACE_IDENTITY_SERVICE_KEY_ID RINSPACE_IDENTITY_SERVICE_SECRET RINSPACE_IDENTITY_AUDIENCE RINSPACE_CREDENTIAL_ADAPTER_TOKEN
+]
 required.concat(%w[RINSPACE_MODERATION_ENDPOINT RINSPACE_MODERATION_HMAC_KEY]) if community_write
 required.concat(%w[RINSPACE_GORSE_ENDPOINT RINSPACE_GORSE_API_KEY]) if recommendations
 required << 'RINSPACE_VIEW_DEDUPE_HMAC_KEY' if views
 missing = required.select { |name| ENV[name].to_s.blank? }
 abort "Missing mandatory Rinspace identity settings: #{missing.join(', ')}" if missing.any?
 abort 'Rinspace control-plane HMAC key must contain at least 32 bytes' if ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY'].bytesize < 32
+abort 'Rinspace identity HMAC key must contain at least 32 bytes' if ENV['RINSPACE_IDENTITY_SERVICE_SECRET'].bytesize < 32
+abort 'Rinspace credential adapter token must contain at least 32 bytes' if ENV['RINSPACE_CREDENTIAL_ADAPTER_TOKEN'].bytesize < 32
 
 required_true = %w[OIDC_ENABLED OIDC_USE_PKCE OIDC_SEND_NONCE OMNIAUTH_ONLY ONE_CLICK_SSO_LOGIN]
 not_enabled = required_true.reject { |name| ENV[name] == 'true' }
@@ -28,6 +34,7 @@ unless ENV['OIDC_DISCOVERY'] == 'true'
   abort "OIDC discovery is disabled but explicit endpoints are missing: #{missing_endpoints.join(', ')}" if missing_endpoints.any?
 end
 abort 'OIDC and control-plane credentials must be purpose-specific' if ENV['OIDC_CLIENT_SECRET'] == ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY']
+abort 'Rinspace Identity and other service credentials must be purpose-specific' if [ENV['OIDC_CLIENT_SECRET'], ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY']].include?(ENV['RINSPACE_IDENTITY_SERVICE_SECRET'])
 if community_write
   abort 'Rinspace moderation HMAC key must contain at least 32 bytes' if ENV['RINSPACE_MODERATION_HMAC_KEY'].bytesize < 32
   abort 'Rinspace service credentials must be purpose-specific' if [ENV['OIDC_CLIENT_SECRET'], ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY']].include?(ENV['RINSPACE_MODERATION_HMAC_KEY'])

@@ -85,6 +85,59 @@ RSpec.describe Web::PushNotificationWorker do
         .to have_been_made
     end
 
+    context 'with a Rinspace-managed browser subscription' do
+      let(:parent_client) { instance_double(Rinspace::ParentSessionClient, assert_active!: true) }
+      let(:activation) do
+        SessionActivation.activate(
+          user:,
+          session_id: 'managed-push',
+          rinspace_parent_issuer: 'https://rinspace.example',
+          rinspace_parent_uid: 'uid-push',
+          rinspace_parent_sid: SecureRandom.uuid,
+          rinspace_parent_version: 3,
+          rinspace_parent_auth_time: Time.zone.now,
+          rinspace_binding_id: SecureRandom.uuid
+        )
+      end
+      let(:managed_subscription) do
+        Fabricate(:web_push_subscription, user_id: user.id, access_token: activation.access_token, key_p256dh: p256dh, key_auth: auth, endpoint:, data: { alerts: { notification.type => true } })
+      end
+
+      before do
+        allow(Rinspace::ParentSessionClient).to receive(:new).and_return(parent_client)
+        allow(Webpush::Legacy::Encryption).to receive(:encrypt).and_return(legacy_payload)
+      end
+
+      it 'checks the parent immediately before sending' do
+        subject.perform(managed_subscription.id, notification.id)
+
+        expect(parent_client).to have_received(:assert_active!).with(
+          issuer: activation.rinspace_parent_issuer,
+          uid: 'uid-push',
+          sid: activation.rinspace_parent_sid,
+          version: 3,
+          runtime: 'mastodon-push'
+        )
+        expect(legacy_web_push_endpoint_request).to have_been_made
+      end
+
+      it 'removes an inactive subscription without sending' do
+        allow(parent_client).to receive(:assert_active!).and_raise(Rinspace::ParentSessionClient::InactiveError)
+
+        subject.perform(managed_subscription.id, notification.id)
+
+        expect { managed_subscription.reload }.to raise_error(ActiveRecord::RecordNotFound)
+        expect(a_request(:post, endpoint)).to_not have_been_made
+      end
+
+      it 'retries instead of sending while Identity is unavailable' do
+        allow(parent_client).to receive(:assert_active!).and_raise(Rinspace::ParentSessionClient::UnavailableError)
+
+        expect { subject.perform(managed_subscription.id, notification.id) }.to raise_error(Rinspace::ParentSessionClient::UnavailableError)
+        expect(a_request(:post, endpoint)).to_not have_been_made
+      end
+    end
+
     context 'with invalid record that will fail' do
       before do
         # Fabricator always runs validation, here we deliberately want to bypass

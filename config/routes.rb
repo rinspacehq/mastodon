@@ -17,6 +17,12 @@ end
 Rails.application.routes.draw do
   namespace :api do
     namespace :rinspace do
+	  namespace :internal do
+		get 'credentials/:uid', to: 'credentials#index'
+		delete 'credentials/:uid/:ref', to: 'credentials#destroy'
+		post 'credentials/:uid/revoke-all', to: 'credentials#revoke_all'
+		post 'events', to: 'events#create'
+	  end
       namespace :v1 do
         resources :identity_bindings, only: :create
         resources :tag_bindings, only: :create
@@ -49,6 +55,7 @@ Rails.application.routes.draw do
   end
 
   namespace :oauth do
+    post 'backchannel_logout', to: 'backchannel_logouts#create'
     # As this is borrowed from OpenID, the specification says we must also support
     # POST for the userinfo endpoint:
     # https://openid.net/specs/openid-connect-core-1_0.html#UserInfo

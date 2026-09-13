@@ -25,6 +25,7 @@ class ApplicationController < ActionController::Base
   helper_method :skip_csrf_meta_tags?
 
   before_action :check_self_destruct!
+  before_action :require_active_rinspace_browser_parent!
 
   before_action :store_referrer, except: :raise_not_found, if: :devise_controller?
   before_action :require_functional!, if: :user_signed_in?
@@ -139,5 +140,25 @@ class ApplicationController < ActionController::Base
 
   def set_cache_control_defaults
     response.cache_control.replace(private: true, no_store: true)
+  end
+
+  def require_active_rinspace_browser_parent!
+    return if request.authorization.present? || !user_signed_in?
+
+    activation = current_session
+    raise Rinspace::ParentSessionClient::InactiveError if cookies.signed['_session_id'].present? && activation.nil?
+    return unless activation&.rinspace_managed?
+
+    Rinspace::ParentSessionClient.new.assert_active!(
+      issuer: activation.rinspace_parent_issuer,
+      uid: activation.rinspace_parent_uid,
+      sid: activation.rinspace_parent_sid,
+      version: activation.rinspace_parent_version
+    )
+  rescue Rinspace::ParentSessionClient::InactiveError
+    render plain: 'Parent session is inactive', status: :unauthorized
+  rescue Rinspace::ParentSessionClient::UnavailableError
+    response.headers['Retry-After'] = '3'
+    render plain: 'Identity service is temporarily unavailable', status: :service_unavailable
   end
 end

@@ -14,6 +14,7 @@ class Web::PushNotificationWorker
     @notification = Notification.find(notification_id)
 
     return if @notification.updated_at < TTL.ago
+    return unless active_rinspace_parent?
 
     # Clean up old Web::PushSubscriptions that were added before validation of
     # the endpoint and keys: #30542, #30540
@@ -38,6 +39,22 @@ class Web::PushNotificationWorker
   end
 
   private
+
+  def active_rinspace_parent?
+    token = @subscription.access_token
+    return true unless token&.rinspace_managed?
+
+    Rinspace::ParentSessionClient.new.assert_active!(
+      issuer: token.rinspace_parent_issuer,
+      uid: token.rinspace_parent_uid,
+      sid: token.rinspace_parent_sid,
+      version: token.rinspace_parent_version,
+      runtime: 'mastodon-push'
+    )
+  rescue Rinspace::ParentSessionClient::InactiveError
+    @subscription.destroy!
+    false
+  end
 
   def perform_legacy_request
     payload = web_push_request.legacy_encrypt(push_notification_json)
