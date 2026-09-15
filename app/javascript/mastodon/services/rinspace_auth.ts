@@ -318,12 +318,102 @@ export async function completeRinspacePhoneOtp(
     throw new RinspaceAuthError('request', 'rinspace_auth_session_missing');
   }
 
+  await exchangeRinspaceIdentitySession({
+    verificationToken: verified.verification_token,
+    phoneNumber: challenge.phoneNumber,
+    isUser: challenge.isUser,
+  });
+
   saveSession({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
     expires_in: session.expires_in,
     sub: session.sub,
   });
+}
+
+const identityBasePath = '/api/identity/v1';
+
+export interface RinspaceIdentityEnvelope {
+  status?: string;
+  csrfToken?: string;
+}
+
+function identityRequestId() {
+  if (typeof crypto.randomUUID === 'function') return `inner-${crypto.randomUUID()}`;
+  return `inner-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+export async function readRinspaceIdentityEnvelope(): Promise<RinspaceIdentityEnvelope | null> {
+  try {
+    const response = await fetch(`${identityBasePath}/session`, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as RinspaceIdentityEnvelope;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The outer world owns the Rinspace identity session. The inner world must
+ * never ask an already signed-in visitor to log in a second time, so the login
+ * affordances hand off to the shared OIDC entry point whenever the identity
+ * session can answer for the visitor.
+ */
+export async function hasRinspaceIdentitySession() {
+  const envelope = await readRinspaceIdentityEnvelope();
+  return envelope?.status === 'authenticated' || envelope?.status === 'restoring';
+}
+
+/**
+ * A phone login performed inside the inner world has to establish the same
+ * managed identity session the outer world uses. Without this exchange the
+ * following OIDC handoff would fail and the visitor would be asked to log in
+ * again on the outer world.
+ */
+async function exchangeRinspaceIdentitySession(input: {
+  verificationToken: string;
+  phoneNumber: string;
+  isUser: boolean;
+}) {
+  const envelope = await readRinspaceIdentityEnvelope();
+  if (!envelope?.csrfToken) {
+    throw new RinspaceAuthError('request', 'rinspace_identity_unavailable');
+  }
+  let response: Response;
+  try {
+    response = await fetch(`${identityBasePath}/cloudbase/exchange`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-rinspace-csrf': envelope.csrfToken,
+        'x-device-id': getDeviceId(),
+      },
+      body: JSON.stringify({
+        verificationToken: input.verificationToken,
+        phone: `+86${normalizeMainlandPhone(input.phoneNumber)}`,
+        isUser: input.isUser,
+        requestId: identityRequestId(),
+        clientLabel: 'rinspace-inner-world',
+      }),
+    });
+  } catch {
+    throw new RinspaceAuthError('request', 'rinspace_identity_unavailable');
+  }
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    throw new RinspaceAuthError(
+      'request',
+      payload.message ?? 'rinspace_identity_exchange_failed',
+      response.status,
+    );
+  }
 }
 
 export function startRinspaceSso(returnTo: string) {

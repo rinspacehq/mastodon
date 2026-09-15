@@ -51,7 +51,8 @@ describe('Rinspace browser authentication adapter', () => {
   });
 
   it('persists the outer session only after verification and sign-in succeed', async () => {
-    vi.spyOn(window, 'fetch')
+    const fetchMock = vi
+      .spyOn(window, 'fetch')
       .mockResolvedValueOnce(response({ verification_token: 'verified' }))
       .mockResolvedValueOnce(
         response({
@@ -59,6 +60,15 @@ describe('Rinspace browser authentication adapter', () => {
           refresh_token: 'refresh-token',
           expires_in: 3600,
           sub: 'subject-1',
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({ status: 'anonymous', csrfToken: 'csrf-token' }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          status: 'authenticated',
+          currentSession: { sid: 'sid-1' },
         }),
       );
 
@@ -75,6 +85,20 @@ describe('Rinspace browser authentication adapter', () => {
       access_token: 'access-token',
       refresh_token: 'refresh-token',
       sub: 'subject-1',
+    });
+
+    // The inner-world login must establish the shared managed identity session
+    // as well, otherwise the following OIDC handoff asks for a second login.
+    const [exchangeUrl, exchangeInit] = fetchMock.mock.calls[3] ?? [];
+    expect(exchangeUrl).toBe('/api/identity/v1/cloudbase/exchange');
+    expect(
+      (exchangeInit?.headers as Record<string, string>)['x-rinspace-csrf'],
+    ).toBe('csrf-token');
+    expect(exchangeInit?.body).toEqual(expect.any(String));
+    expect(JSON.parse(exchangeInit?.body as string)).toMatchObject({
+      verificationToken: 'verified',
+      phone: '+8613800138000',
+      isUser: true,
     });
   });
 
