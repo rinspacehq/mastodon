@@ -48,4 +48,23 @@ RSpec.describe Rinspace::ManagedSessionActivationService do
     expect(parent_authorizer).to have_received(:fail_binding!).with(uid:, binding_id:)
   end
 
+  it 'reuses the activation bound to the same parent session instead of creating a second binding' do
+    existing = Fabricate(
+      :session_activation,
+      user:,
+      session_id: 'existing-browser-session',
+      rinspace_parent_issuer: issuer,
+      rinspace_parent_uid: uid,
+      rinspace_parent_sid: sid,
+      rinspace_parent_version: 2,
+      rinspace_parent_auth_time: auth_time,
+      rinspace_binding_id: binding_id
+    )
+
+    expect(service.call(session_id: 'another-browser-session', **parent)).to eq(existing)
+    expect(parent_authorizer).to_not have_received(:create_binding!)
+    expect(parent_authorizer).to_not have_received(:activate_binding!)
+    expect(user.session_activations.count).to eq(1)
+  end
+
 end

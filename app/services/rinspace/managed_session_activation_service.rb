@@ -7,6 +7,12 @@ class Rinspace::ManagedSessionActivationService < BaseService
   end
 
   def call(user:, session_id:, issuer:, uid:, sid:, version:, auth_time:, request: nil)
+    # The identity service allows a single live binding per device session and
+    # runtime, so a repeated sign-in on the same parent session reuses the
+    # browser activation that already holds its binding.
+    existing = user.session_activations.find_by(rinspace_parent_issuer: issuer, rinspace_parent_uid: uid, rinspace_parent_sid: sid)
+    return existing if existing
+
     grant = @parent_authorizer.create_binding!(issuer:, uid:, sid:, version:)
     binding_activated = false
     activation = SessionActivation.activate(
