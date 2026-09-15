@@ -48,11 +48,32 @@ class ApplicationController < ActionController::Base
     return if request.referer.blank?
 
     redirect_uri = URI(request.referer)
-    return if redirect_uri.path.start_with?('/auth', '/settings/two_factor_authentication', '/settings/otp_authentication')
+    return if redirect_uri.path.to_s.start_with?(*non_returnable_path_prefixes)
 
     stored_url = redirect_uri.to_s if redirect_uri.host == request.host && redirect_uri.port == request.port
 
     store_location_for(:user, stored_url)
+  end
+
+  # Auth pages are never post-login destinations.  The identity provider
+  # serves its own endpoints from a path prefix on this origin (for example
+  # +/rinspace/auth/authorize+), and that endpoint is the referer of the
+  # OmniAuth callback.  Storing it sends the freshly signed-in browser back
+  # into authorization, where the already consumed +state+ fails the callback
+  # and the visitor lands on the recovery shell instead of the product page.
+  def non_returnable_path_prefixes
+    ['/auth', '/settings/two_factor_authentication', '/settings/otp_authentication', *identity_endpoint_path_prefixes]
+  end
+
+  def identity_endpoint_path_prefixes
+    [ENV['OIDC_ISSUER'], ENV['OIDC_AUTH_ENDPOINT']].filter_map do |value|
+      next if value.blank?
+
+      path = URI(value.to_s).path.to_s
+      path if path.start_with?('/') && path != '/'
+    rescue URI::InvalidURIError
+      nil
+    end
   end
 
   def mfa_setup_path(path_params = {})
