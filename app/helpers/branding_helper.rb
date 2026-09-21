@@ -5,6 +5,16 @@ module BrandingHelper
     I18n.t('rinspace.brand_name', default: site_title)
   end
 
+  def metadata_site_name
+    return site_title unless Mastodon::RinspaceLocalOnly.enabled?
+
+    I18n.t('rinspace.metadata_name', default: rinspace_brand_name)
+  end
+
+  def rinspace_site_description
+    I18n.t('rinspace.site_description', default: instance_presenter.description)
+  end
+
   def logo_as_symbol(version = :icon)
     case version
     when :icon

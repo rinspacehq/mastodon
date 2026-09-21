@@ -7,9 +7,11 @@ class Auth::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def self.provides_callback_for(provider)
     define_method provider do
       @provider = provider
-      @user = User.find_for_omniauth(request.env['omniauth.auth'], current_user)
+      auth = request.env['omniauth.auth']
+      @user = User.find_for_omniauth(auth, current_user)
 
       if @user.persisted?
+        request.env['rinspace.managed_parent'] = managed_parent_from(auth) if provider.to_sym == :openid_connect && ENV['RINSPACE_IDENTITY_STRICT'] == 'true'
         record_login_activity
         sign_in_and_redirect @user, event: :authentication
         set_flash_message(:notice, :success, kind: label_for_provider) if is_navigational_format?
@@ -36,6 +38,21 @@ class Auth::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
   private
+
+  def managed_parent_from(auth)
+    claims = auth.extra&.raw_info || {}
+    issuer = ENV.fetch('OIDC_ISSUER', '').delete_suffix('/')
+    uid = auth.uid.to_s.strip
+    sid = claims['sid'].to_s.strip
+    version = claims['rin_session_version'].to_i
+    auth_time = Time.zone.at(Integer(claims['auth_time'], exception: true))
+    valid_sid = Rinspace::ParentSessionClient::UUID_PATTERN.match?(sid)
+    raise ActiveRecord::RecordInvalid unless issuer.present? && uid.present? && valid_sid && version.positive?
+
+    { issuer:, uid:, sid:, version:, auth_time: }
+  rescue ArgumentError, TypeError
+    raise ActiveRecord::RecordInvalid
+  end
 
   def record_login_activity
     @user.login_activities.create(

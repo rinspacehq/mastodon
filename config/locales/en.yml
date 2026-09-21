@@ -2,12 +2,14 @@
 en:
   rinspace:
     brand_name: Rinspace
+    metadata_name: 芥子环 (Rinspace)
+    site_description: Rinspace is a tag-centered long-form knowledge community; its inner world is for local posts, shared interests, and thoughtful exchange.
   about:
-    about_mastodon_html: 'The social network of the future: No ads, no corporate surveillance, ethical design, and decentralization! Own your data with Rinspace!'
+    about_mastodon_html: 'Rinspace is a tag-centered long-form knowledge community; its inner world is for local posts, shared interests, and thoughtful exchange.'
     contact_missing: Not set
     contact_unavailable: N/A
     default_thumbnail_description: Rinspace community preview image.
-    hosted_on: Rinspace hosted on %{domain}
+    hosted_on: 芥子环 (Rinspace)
     title: About
   accounts:
     errors:

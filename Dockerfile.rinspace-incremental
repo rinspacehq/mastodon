@@ -3,8 +3,8 @@
 # Build a Rinspace Mastodon patch release from the exact production image.
 # This keeps the already-validated Ruby gems and native media libraries while
 # rebuilding application assets and copying the complete source tree.
-ARG BASE_IMAGE=rinspace-mastodon:release-43b042592
-ARG NODE_IMAGE=node:24-trixie-slim
+ARG BASE_IMAGE=rinspace-mastodon:release-87ab222a3@sha256:f80493fd5d08a5591b5a32b7849c11ec4e8aab1d29f58ee317a87502ab241f29
+ARG NODE_IMAGE=node:24-trixie-slim@sha256:6950b66b4c0cb0151ce89fa75074673850763d096b044f422c6729b588dd4956
 
 FROM ${NODE_IMAGE} AS node
 

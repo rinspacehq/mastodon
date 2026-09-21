@@ -25,6 +25,7 @@ class ApplicationController < ActionController::Base
   helper_method :skip_csrf_meta_tags?
 
   before_action :check_self_destruct!
+  before_action :require_active_rinspace_browser_parent!
 
   before_action :store_referrer, except: :raise_not_found, if: :devise_controller?
   before_action :require_functional!, if: :user_signed_in?
@@ -47,11 +48,32 @@ class ApplicationController < ActionController::Base
     return if request.referer.blank?
 
     redirect_uri = URI(request.referer)
-    return if redirect_uri.path.start_with?('/auth', '/settings/two_factor_authentication', '/settings/otp_authentication')
+    return if redirect_uri.path.to_s.start_with?(*non_returnable_path_prefixes)
 
     stored_url = redirect_uri.to_s if redirect_uri.host == request.host && redirect_uri.port == request.port
 
     store_location_for(:user, stored_url)
+  end
+
+  # Auth pages are never post-login destinations.  The identity provider
+  # serves its own endpoints from a path prefix on this origin (for example
+  # +/rinspace/auth/authorize+), and that endpoint is the referer of the
+  # OmniAuth callback.  Storing it sends the freshly signed-in browser back
+  # into authorization, where the already consumed +state+ fails the callback
+  # and the visitor lands on the recovery shell instead of the product page.
+  def non_returnable_path_prefixes
+    ['/auth', '/settings/two_factor_authentication', '/settings/otp_authentication', *identity_endpoint_path_prefixes]
+  end
+
+  def identity_endpoint_path_prefixes
+    [ENV['OIDC_ISSUER'], ENV['OIDC_AUTH_ENDPOINT']].filter_map do |value|
+      next if value.blank?
+
+      path = URI(value.to_s).path.to_s
+      path if path.start_with?('/') && path != '/'
+    rescue URI::InvalidURIError
+      nil
+    end
   end
 
   def mfa_setup_path(path_params = {})
@@ -139,5 +161,25 @@ class ApplicationController < ActionController::Base
 
   def set_cache_control_defaults
     response.cache_control.replace(private: true, no_store: true)
+  end
+
+  def require_active_rinspace_browser_parent!
+    return if request.authorization.present? || !user_signed_in?
+
+    activation = current_session
+    raise Rinspace::ParentSessionClient::InactiveError if cookies.signed['_session_id'].present? && activation.nil?
+    return unless activation&.rinspace_managed?
+
+    Rinspace::ParentSessionClient.new.assert_active!(
+      issuer: activation.rinspace_parent_issuer,
+      uid: activation.rinspace_parent_uid,
+      sid: activation.rinspace_parent_sid,
+      version: activation.rinspace_parent_version
+    )
+  rescue Rinspace::ParentSessionClient::InactiveError
+    render plain: 'Parent session is inactive', status: :unauthorized
+  rescue Rinspace::ParentSessionClient::UnavailableError
+    response.headers['Retry-After'] = '3'
+    render plain: 'Identity service is temporarily unavailable', status: :service_unavailable
   end
 end

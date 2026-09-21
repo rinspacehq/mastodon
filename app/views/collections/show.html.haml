@@ -9,7 +9,7 @@
   - unless @collection.sensitive?
     %meta{ name: 'description', content: @collection.description }/
     = opengraph 'og:description', @collection.description
-  = opengraph 'og:site_name', site_title
+  = opengraph 'og:site_name', metadata_site_name
   = opengraph 'og:type', 'website'
   = opengraph 'og:title', @collection.name
   = opengraph 'og:url', collection_url(@collection)

@@ -11,13 +11,15 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { RINSPACE_LOGIN_REQUEST_EVENT } from 'mastodon/utils/rinspace_login';
+
 import { innerHref, RinspaceWorldTopbar } from './rinspace_world_topbar';
 
 const adapterState = vi.hoisted(() => ({
   signedIn: false,
   permissions: 0,
   unreadNotifications: 0,
-  rinspaceSession: null as null | { access_token: string },
+  identitySession: false,
 }));
 
 const startSso = vi.hoisted(() => vi.fn());
@@ -33,7 +35,8 @@ vi.mock('mastodon/identity_context', () => ({
 
 vi.mock('mastodon/services/rinspace_auth', () => ({
   completeRinspacePhoneOtp: vi.fn(),
-  getFreshRinspaceSession: () => Promise.resolve(adapterState.rinspaceSession),
+  hasRinspaceIdentitySession: () =>
+    Promise.resolve(adapterState.identitySession),
   isMainlandPhone: (phone: string) => /^1\d{10}$/.test(phone),
   normalizeMainlandPhone: (phone: string) => phone,
   RinspaceAuthError: class extends Error {},
@@ -68,7 +71,7 @@ describe('RinspaceWorldTopbar', () => {
     adapterState.signedIn = false;
     adapterState.permissions = 0;
     adapterState.unreadNotifications = 0;
-    adapterState.rinspaceSession = null;
+    adapterState.identitySession = false;
     startSso.mockClear();
     window.localStorage.clear();
   });
@@ -89,7 +92,12 @@ describe('RinspaceWorldTopbar', () => {
     expect(
       screen.getByRole('button', { name: 'Switch to dark theme' }),
     ).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Explore' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Mine' })).toBeNull();
+    expect(
+      screen
+        .getByRole('link', { name: 'Go to the inner-world home' })
+        .getAttribute('href'),
+    ).toBe('/explore?world=inner');
 
     fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
 
@@ -97,6 +105,18 @@ describe('RinspaceWorldTopbar', () => {
       await screen.findByRole('dialog', { name: 'Sign in / Register' }),
     ).toBeTruthy();
     expect(screen.getByLabelText('Phone number')).toBeTruthy();
+  });
+
+  it('opens the same phone dialog for an anonymous interaction request', async () => {
+    renderTopbar('/p/123/example');
+
+    window.dispatchEvent(new Event(RINSPACE_LOGIN_REQUEST_EVENT));
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in / Register' }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText('Phone number')).toBeTruthy();
+    expect(startSso).not.toHaveBeenCalled();
   });
 
   it('searches the real Mastodon endpoint and keeps result routes in the inner world', async () => {
@@ -138,7 +158,7 @@ describe('RinspaceWorldTopbar', () => {
   });
 
   it('uses an existing outer session and preserves the exact inner return URL', async () => {
-    adapterState.rinspaceSession = { access_token: 'access' };
+    adapterState.identitySession = true;
     renderTopbar('/search?q=reverse%20engineering&world=inner#results');
 
     fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
@@ -158,40 +178,27 @@ describe('RinspaceWorldTopbar', () => {
     ).toBeTruthy();
   });
 
-  it('removes the recovery marker but preserves the original URL after sign-in', async () => {
-    adapterState.rinspaceSession = { access_token: 'access' };
+  it('hands the recovery marker straight to SSO when the identity session exists', async () => {
+    adapterState.identitySession = true;
     renderTopbar(
       '/search?q=reverse+engineering&world=inner&rinspace_login=1#results',
     );
-    expect(
-      await screen.findByRole('dialog', { name: 'Sign in / Register' }),
-    ).toBeTruthy();
-
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Close sign-in window' }),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
 
     await waitFor(() => {
       expect(startSso).toHaveBeenCalledWith(
         '/search?q=reverse+engineering&world=inner#results',
       );
     });
+    expect(
+      screen.queryByRole('dialog', { name: 'Sign in / Register' }),
+    ).toBeNull();
   });
 
-  it('opens recovery in the public shell and submits the protected inner target', async () => {
-    adapterState.rinspaceSession = { access_token: 'access' };
+  it('prefers the protected inner target when the recovery marker finds a session', async () => {
+    adapterState.identitySession = true;
     renderTopbar(
       '/?world=inner&rinspace_login=1&rinspace_return_to=%2Fsettings%2Fpreferences%2Fappearance%3Fworld%3Dinner',
     );
-    expect(
-      await screen.findByRole('dialog', { name: 'Sign in / Register' }),
-    ).toBeTruthy();
-
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Close sign-in window' }),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in / Register' }));
 
     await waitFor(() => {
       expect(startSso).toHaveBeenCalledWith(
@@ -229,15 +236,15 @@ describe('RinspaceWorldTopbar', () => {
     );
     expect(desktopControls).toEqual([
       'Switch to dark theme',
-      'Explore',
+      'Mine',
       'Publish',
       'Notifications',
     ]);
     expect(screen.getByRole('button', { name: 'More' })).toBeTruthy();
     expect(screen.getByLabelText('Account menu')).toBeTruthy();
     expect(
-      screen.getByRole('link', { name: 'Explore' }).getAttribute('href'),
-    ).toBe('/explore?world=inner');
+      screen.getByRole('link', { name: 'Mine' }).getAttribute('href'),
+    ).toBe('/home?world=inner');
     expect(screen.getByRole('button', { name: 'Publish' })).toBeTruthy();
     expect(innerHref('/publish', '', '')).toBe('/publish?world=inner');
     expect(
@@ -257,12 +264,7 @@ describe('RinspaceWorldTopbar', () => {
       within(moreMenu as HTMLElement)
         .getAllByRole('menuitem')
         .map((item) => item.textContent.trim()),
-    ).toEqual([
-      'Explore',
-      'Publish',
-      'Notifications7',
-      'Switch to dark theme',
-    ]);
+    ).toEqual(['Mine', 'Publish', 'Notifications7', 'Switch to dark theme']);
   });
 
   it('adds administration only for a role that can view the dashboard', () => {

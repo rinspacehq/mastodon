@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -8,6 +8,7 @@ import { Skeleton } from '@/mastodon/components/skeleton';
 import { sso_redirect } from '@/mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
 import {
+  handleRinspaceLoginClick,
   rinspaceLoginHref,
   rinspaceLoginMethod,
 } from '@/mastodon/utils/rinspace_login';
@@ -23,6 +24,12 @@ export const LoggedOutInfo: React.FC = () => {
   useEffect(() => {
     void dispatch(fetchServer());
   }, [dispatch]);
+  const openRinspaceLogin = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      handleRinspaceLoginClick(event, sso_redirect);
+    },
+    [],
+  );
 
   return (
     <>
@@ -46,6 +53,7 @@ export const LoggedOutInfo: React.FC = () => {
             sso_redirect ? rinspaceLoginHref(sso_redirect) : '/auth/sign_up'
           }
           data-method={rinspaceLoginMethod(sso_redirect)}
+          onClick={openRinspaceLogin}
           variant='solid'
         >
           <FormattedMessage
@@ -57,6 +65,7 @@ export const LoggedOutInfo: React.FC = () => {
           as='a'
           href={rinspaceLoginHref(sso_redirect)}
           data-method={rinspaceLoginMethod(sso_redirect)}
+          onClick={openRinspaceLogin}
         >
           <FormattedMessage id='server_banner.log_in' defaultMessage='Log in' />
         </Button>

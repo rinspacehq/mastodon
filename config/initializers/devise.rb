@@ -4,7 +4,16 @@ require 'devise/strategies/authenticatable'
 
 Warden::Manager.after_set_user except: :fetch do |user, warden|
   session_id = warden.cookies.signed['_session_id'] || warden.raw_session['auth_id']
-  session_id = user.activate_session(warden.request) unless user.session_activations.active?(session_id)
+  unless user.session_activations.active?(session_id)
+    parent = warden.env['rinspace.managed_parent']
+    session_id = if parent
+                   Rinspace::ManagedSessionActivationService.new(parent_authorizer: Rinspace::ParentSessionClient.new).call(
+                     user:, session_id: SecureRandom.hex, request: warden.request, **parent
+                   ).session_id
+                 else
+                   user.activate_session(warden.request)
+                 end
+  end
 
   warden.cookies.signed['_session_id'] = {
     value: session_id,
@@ -33,7 +42,16 @@ Warden::Manager.after_fetch do |user, warden|
 end
 
 Warden::Manager.before_logout do |_, warden|
-  SessionActivation.deactivate warden.cookies.signed['_session_id']
+  session_id = warden.cookies.signed['_session_id']
+  activation = SessionActivation.find_by(session_id:)
+  if activation&.rinspace_managed?
+    Rinspace::ParentSessionClient.new.revoke_parent!(
+      uid: activation.rinspace_parent_uid,
+      sid: activation.rinspace_parent_sid,
+      binding_id: activation.rinspace_binding_id
+    )
+  end
+  SessionActivation.deactivate session_id
   warden.cookies.delete('_session_id')
 end
 

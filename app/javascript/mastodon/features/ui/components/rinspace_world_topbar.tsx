@@ -38,7 +38,7 @@ import { canViewAdminDashboard } from 'mastodon/permissions';
 import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
 import {
   completeRinspacePhoneOtp,
-  getFreshRinspaceSession,
+  hasRinspaceIdentitySession,
   isMainlandPhone,
   normalizeMainlandPhone,
   RinspaceAuthError,
@@ -47,6 +47,7 @@ import {
 } from 'mastodon/services/rinspace_auth';
 import type { RinspaceOtpChallenge } from 'mastodon/services/rinspace_auth';
 import { useAppSelector } from 'mastodon/store';
+import { RINSPACE_LOGIN_REQUEST_EVENT } from 'mastodon/utils/rinspace_login';
 
 const messages = defineMessages({
   brandName: { id: 'rinspace.world.brand_name', defaultMessage: 'Rinspace' },
@@ -71,7 +72,7 @@ const messages = defineMessages({
     defaultMessage: 'Switch to light theme',
   },
   more: { id: 'rinspace.world.more', defaultMessage: 'More' },
-  explore: { id: 'rinspace.world.explore', defaultMessage: 'Explore' },
+  mine: { id: 'rinspace.world.mine', defaultMessage: 'Mine' },
   publish: { id: 'rinspace.world.publish', defaultMessage: 'Publish' },
   notifications: {
     id: 'rinspace.world.notifications',
@@ -656,14 +657,16 @@ export const RinspaceWorldTopbar: React.FC<{
   const unreadNotifications = useAppSelector(
     selectUnreadNotificationGroupsCount,
   );
-  const [loginOpen, setLoginOpen] = useState(() => {
+  const loginRequested = useMemo(() => {
     const recovery = new URLSearchParams(location.search).get('rinspace_login');
     return !signedIn && (location.hash === '#login' || recovery === '1');
-  });
+  }, [location.hash, location.search, signedIn]);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginBusy, setLoginBusy] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const loginTrigger = useRef<HTMLButtonElement>(null);
+  const loginRequestedRef = useRef(false);
   const toggleMore = useCallback(() => {
     setMoreOpen((current) => !current);
   }, []);
@@ -692,13 +695,15 @@ export const RinspaceWorldTopbar: React.FC<{
     window.localStorage.setItem('rinspace-inner-color-scheme', next);
   };
 
-  const beginLogin = async () => {
+  const beginLogin = useCallback(async () => {
     if (loginBusy) return;
     setLoginBusy(true);
     setLoginError('');
     try {
-      const session = await getFreshRinspaceSession();
-      if (session) {
+      // The outer world owns the Rinspace identity session. Whenever that
+      // session can answer for this visitor the inner world must hand off to
+      // the shared OIDC entry point instead of asking for a second login.
+      if (await hasRinspaceIdentitySession()) {
         startRinspaceSso(returnTo);
         return;
       }
@@ -713,7 +718,27 @@ export const RinspaceWorldTopbar: React.FC<{
     } finally {
       setLoginBusy(false);
     }
-  };
+  }, [intl, loginBusy, returnTo]);
+
+  useEffect(() => {
+    if (!loginRequested || loginRequestedRef.current) return;
+    loginRequestedRef.current = true;
+    void beginLogin();
+  }, [beginLogin, loginRequested]);
+
+  useEffect(() => {
+    const openUnifiedLogin = (event: Event) => {
+      event.preventDefault();
+      void beginLogin();
+    };
+    window.addEventListener(RINSPACE_LOGIN_REQUEST_EVENT, openUnifiedLogin);
+    return () => {
+      window.removeEventListener(
+        RINSPACE_LOGIN_REQUEST_EVENT,
+        openUnifiedLogin,
+      );
+    };
+  }, [beginLogin]);
 
   const canAdmin = canViewAdminDashboard(permissions);
   const accountName = displayName?.trim()
@@ -734,22 +759,18 @@ export const RinspaceWorldTopbar: React.FC<{
     expanded: moreOpen,
     onSelect: toggleMore,
     render: (trigger) => (
-      <RinspaceMoreMenu
-        open={moreOpen}
-        onToggle={toggleMore}
-        trigger={trigger}
-      >
+      <RinspaceMoreMenu open={moreOpen} onToggle={toggleMore} trigger={trigger}>
         {signedIn ? (
           <>
             <a
               role='menuitem'
-              href={innerHref('/explore', '', '')}
+              href={innerHref('/home', '', '')}
               onClick={() => {
                 setMoreOpen(false);
               }}
             >
               <AnimateSparkles animateOnHover size={16} />
-              {intl.formatMessage(messages.explore)}
+              {intl.formatMessage(messages.mine)}
             </a>
             <a
               role='menuitem'
@@ -775,9 +796,7 @@ export const RinspaceWorldTopbar: React.FC<{
               )}
               {intl.formatMessage(messages.notifications)}
               {unreadNotifications > 0 ? (
-                <span className='topbar-menu-count'>
-                  {unreadNotifications}
-                </span>
+                <span className='topbar-menu-count'>{unreadNotifications}</span>
               ) : null}
             </a>
             <button
@@ -832,7 +851,7 @@ export const RinspaceWorldTopbar: React.FC<{
         logoSrc={rinspaceMark}
         brandName={intl.formatMessage(messages.brandName)}
         flipHref='/'
-        homeHref='/?world=inner'
+        homeHref={innerHref('/explore', '', '')}
         flipLabel={intl.formatMessage(messages.flip)}
         homeLabel={intl.formatMessage(messages.home)}
       >
@@ -845,8 +864,8 @@ export const RinspaceWorldTopbar: React.FC<{
               themeControl={themeControl}
               compactMenu={compactMenu}
               primary={{
-                href: innerHref('/explore', '', ''),
-                label: intl.formatMessage(messages.explore),
+                href: innerHref('/home', '', ''),
+                label: intl.formatMessage(messages.mine),
               }}
               publishing={{
                 label: intl.formatMessage(messages.publish),
@@ -870,56 +889,56 @@ export const RinspaceWorldTopbar: React.FC<{
               nativeTitles
               renderAccount={(chevron) =>
                 username ? (
-                <details className='account-menu'>
-                  <summary
-                    className='account-menu-trigger'
-                    aria-label={intl.formatMessage(messages.accountMenu)}
-                  >
-                    <span className='avatar-name'>
-                      <span className='avatar-name-mark' aria-hidden='true'>
-                        {avatar ? (
-                          <img src={avatar} alt='' />
-                        ) : (
-                          username.slice(0, 1).toUpperCase()
-                        )}
+                  <details className='account-menu'>
+                    <summary
+                      className='account-menu-trigger'
+                      aria-label={intl.formatMessage(messages.accountMenu)}
+                    >
+                      <span className='avatar-name'>
+                        <span className='avatar-name-mark' aria-hidden='true'>
+                          {avatar ? (
+                            <img src={avatar} alt='' />
+                          ) : (
+                            username.slice(0, 1).toUpperCase()
+                          )}
+                        </span>
+                        <span className='avatar-name-text'>{accountName}</span>
                       </span>
-                      <span className='avatar-name-text'>{accountName}</span>
-                    </span>
-                    {chevron}
-                  </summary>
-                  <div className='rin-account-menu' role='menu'>
-                    <a
-                      role='menuitem'
-                      href={innerHref(
-                        `/@${encodeURIComponent(username)}`,
-                        '',
-                        '',
-                      )}
-                    >
-                      <AnimateUser animateOnHover size={16} />
-                      {intl.formatMessage(messages.account)}
-                    </a>
-                    <a
-                      role='menuitem'
-                      href={innerHref(
-                        '/settings/preferences/appearance',
-                        '',
-                        '',
-                      )}
-                    >
-                      <AnimateSettings animateOnHover size={16} />
-                      {intl.formatMessage(messages.preferences)}
-                    </a>
-                    <button
-                      type='button'
-                      role='menuitem'
-                      onClick={submitSignOut}
-                    >
-                      <AnimateLogOut animateOnHover size={16} />
-                      {intl.formatMessage(messages.signOut)}
-                    </button>
-                  </div>
-                </details>
+                      {chevron}
+                    </summary>
+                    <div className='rin-account-menu' role='menu'>
+                      <a
+                        role='menuitem'
+                        href={innerHref(
+                          `/@${encodeURIComponent(username)}`,
+                          '',
+                          '',
+                        )}
+                      >
+                        <AnimateUser animateOnHover size={16} />
+                        {intl.formatMessage(messages.account)}
+                      </a>
+                      <a
+                        role='menuitem'
+                        href={innerHref(
+                          '/settings/preferences/appearance',
+                          '',
+                          '',
+                        )}
+                      >
+                        <AnimateSettings animateOnHover size={16} />
+                        {intl.formatMessage(messages.preferences)}
+                      </a>
+                      <button
+                        type='button'
+                        role='menuitem'
+                        onClick={submitSignOut}
+                      >
+                        <AnimateLogOut animateOnHover size={16} />
+                        {intl.formatMessage(messages.signOut)}
+                      </button>
+                    </div>
+                  </details>
                 ) : null
               }
             />

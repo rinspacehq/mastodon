@@ -1,4 +1,34 @@
 const recoveryPath = '/auth/rinspace/recover';
+export const RINSPACE_LOGIN_REQUEST_EVENT = 'rinspace:login-request';
+
+export function usesRinspaceLogin(
+  configuredRedirect: string | null | undefined,
+) {
+  return configuredRedirect === recoveryPath;
+}
+
+export function requestRinspaceLogin(
+  configuredRedirect: string | null | undefined,
+) {
+  if (!usesRinspaceLogin(configuredRedirect)) return false;
+
+  const request = new Event(RINSPACE_LOGIN_REQUEST_EVENT, {
+    cancelable: true,
+  });
+  window.dispatchEvent(request);
+  if (!request.defaultPrevented) {
+    window.location.assign(rinspaceLoginHref(configuredRedirect));
+  }
+  return true;
+}
+
+export function handleRinspaceLoginClick(
+  event: Pick<Event, 'preventDefault'>,
+  configuredRedirect: string | null | undefined,
+) {
+  if (!requestRinspaceLogin(configuredRedirect)) return;
+  event.preventDefault();
+}
 
 export function rinspaceLoginHref(
   configuredRedirect: string | null | undefined,

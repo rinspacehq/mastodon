@@ -23,6 +23,7 @@ import { registrationsOpen, sso_redirect } from 'mastodon/initial_state';
 import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import {
+  handleRinspaceLoginClick,
   rinspaceLoginHref,
   rinspaceLoginMethod,
 } from 'mastodon/utils/rinspace_login';
@@ -101,6 +102,12 @@ const LoginOrSignUp: React.FC = () => {
   const openClosedRegistrationsModal = useCallback(() => {
     dispatch(openModal({ modalType: 'CLOSED_REGISTRATIONS', modalProps: {} }));
   }, [dispatch]);
+  const openRinspaceLogin = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      handleRinspaceLoginClick(event, sso_redirect);
+    },
+    [],
+  );
 
   useEffect(() => {
     void dispatch(fetchServer());
@@ -112,6 +119,7 @@ const LoginOrSignUp: React.FC = () => {
         <a
           href={rinspaceLoginHref(sso_redirect)}
           data-method={rinspaceLoginMethod(sso_redirect)}
+          onClick={openRinspaceLogin}
           className='button button--block button-secondary'
         >
           <FormattedMessage

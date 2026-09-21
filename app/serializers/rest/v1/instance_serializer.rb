@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class REST::V1::InstanceSerializer < ActiveModel::Serializer
+  include InstanceHelper
   include RoutingHelper
 
   attributes :uri, :title, :short_description, :description, :email,
@@ -21,6 +22,8 @@ class REST::V1::InstanceSerializer < ActiveModel::Serializer
   end
 
   def description
+    return I18n.t('rinspace.site_description') if Mastodon::RinspaceLocalOnly.enabled?
+
     Setting.site_description # Legacy
   end
 
@@ -33,7 +36,7 @@ class REST::V1::InstanceSerializer < ActiveModel::Serializer
   end
 
   def thumbnail
-    instance_presenter.thumbnail ? full_asset_url(instance_presenter.thumbnail.file.url(:'@1x')) : frontend_asset_url('images/preview.png')
+    instance_preview_url
   end
 
   def stats

@@ -23,6 +23,8 @@ class InstancePresenter < ActiveModelSerializers::Model
   end
 
   def description
+    return I18n.t('rinspace.site_description') if Mastodon::RinspaceLocalOnly.enabled?
+
     Setting.site_short_description
   end
 

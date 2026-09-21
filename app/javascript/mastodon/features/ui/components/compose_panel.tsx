@@ -8,7 +8,6 @@ import {
   unmountCompose,
 } from 'mastodon/actions/compose';
 import { useAppHistory } from 'mastodon/components/router';
-import ServerBanner from 'mastodon/components/server_banner';
 import ComposeFormContainer from 'mastodon/features/compose/containers/compose_form_container';
 import { LinkFooter } from 'mastodon/features/ui/components/link_footer';
 import { useIdentity } from 'mastodon/identity_context';
@@ -38,12 +37,7 @@ export const ComposePanel: React.FC = () => {
 
   return (
     <div className='compose-panel' onFocus={handleFocus}>
-      {!signedIn && (
-        <>
-          <ServerBanner />
-          <div className='flex-spacer' />
-        </>
-      )}
+      {!signedIn && <div className='flex-spacer' />}
 
       {signedIn && !hideComposer && <ComposeFormContainer singleColumn />}
       {signedIn && hideComposer && <div className='compose-form' />}

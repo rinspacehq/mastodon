@@ -172,7 +172,7 @@ class SwitchingColumnsArea extends PureComponent {
       if (forceOnboarding) {
         rootRedirect = '/start';
       } else if (singleColumn) {
-        rootRedirect = '/home';
+        rootRedirect = '/explore';
       } else {
         rootRedirect = '/deck/getting-started';
       }
