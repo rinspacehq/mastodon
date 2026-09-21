@@ -2,8 +2,9 @@
 // commit 3aedfb63. Mastodon selectors are namespaced; source hashes are recorded
 // in the private two-worlds specification.
 :root {
-  --font-body: 'IBM Plex Sans', 'Rinspace Noto Sans SC', 'Noto Sans SC',
-    'PingFang SC', sans-serif;
+  --font-body:
+    'IBM Plex Sans', 'Rinspace Noto Sans SC', 'Noto Sans SC', 'PingFang SC',
+    sans-serif;
   --rin-canvas: #f8fafc;
   --rin-surface: #fff;
   --rin-surface-subtle: #eef2f5;
@@ -13,8 +14,9 @@
   --rin-border: #cbd5df;
   --rin-dialog-overlay: rgb(11 18 24 / 62%);
   --rin-radius-md: 8px;
-  --rin-font-editorial: 'Rinspace Newsreader', 'Newsreader',
-    'Rinspace Noto Serif SC', 'Noto Serif SC', Georgia, serif;
+  --rin-font-editorial:
+    'Rinspace Newsreader', 'Newsreader', 'Rinspace Noto Serif SC',
+    'Noto Serif SC', Georgia, serif;
   --rin-font-mono: 'IBM Plex Mono', 'Rinspace Code', ui-monospace, monospace;
 
   // Keep upstream token consumers on the Rinspace palette as well. Most UI
@@ -66,8 +68,9 @@
 }
 
 .ui > .topbar {
-  position: sticky;
+  position: fixed;
   inset-block-start: 0;
+  inset-inline: 0;
   z-index: 100;
   display: grid;
   grid-template-columns: minmax(160px, 1fr) minmax(240px, 420px) minmax(
@@ -392,6 +395,13 @@
   place-items: center;
 }
 
+// Match the outer-world Animate UI icon contract. Mastodon's global SVG
+// defaults otherwise leave the same theme toggler at Lucide's 24px default.
+.ui > .topbar .rin-animate-icon-button svg {
+  inline-size: 16px;
+  block-size: 16px;
+}
+
 .ui > .topbar :where(.topbar-pill, .notification-pill):hover,
 .ui > .topbar :where(.topbar-pill, .notification-pill):focus-visible {
   background: var(--rin-surface-subtle);
@@ -573,10 +583,7 @@
   cursor: pointer;
 }
 
-.ui
-  > .topbar
-  :where(.rin-account-menu, .rin-more-menu)
-  :where(a, button):hover,
+.ui > .topbar :where(.rin-account-menu, .rin-more-menu) :where(a, button):hover,
 .ui
   > .topbar
   :where(.rin-account-menu, .rin-more-menu)
@@ -722,6 +729,8 @@
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
+  box-sizing: border-box;
+  padding-block-start: 64px;
 }
 
 .rinspace-inner-runtime .columns-area__panels {
@@ -919,6 +928,10 @@
   .rinspace-inner-runtime .columns-area__panels {
     min-height: calc(100vh - 54px);
     min-height: calc(100dvh - 54px);
+  }
+
+  .rinspace-inner-runtime {
+    padding-block-start: 54px;
   }
 }
 
