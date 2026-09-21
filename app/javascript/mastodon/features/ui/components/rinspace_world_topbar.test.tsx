@@ -11,6 +11,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { RINSPACE_LOGIN_REQUEST_EVENT } from 'mastodon/utils/rinspace_login';
+
 import { innerHref, RinspaceWorldTopbar } from './rinspace_world_topbar';
 
 const adapterState = vi.hoisted(() => ({
@@ -33,7 +35,8 @@ vi.mock('mastodon/identity_context', () => ({
 
 vi.mock('mastodon/services/rinspace_auth', () => ({
   completeRinspacePhoneOtp: vi.fn(),
-  hasRinspaceIdentitySession: () => Promise.resolve(adapterState.identitySession),
+  hasRinspaceIdentitySession: () =>
+    Promise.resolve(adapterState.identitySession),
   isMainlandPhone: (phone: string) => /^1\d{10}$/.test(phone),
   normalizeMainlandPhone: (phone: string) => phone,
   RinspaceAuthError: class extends Error {},
@@ -102,6 +105,18 @@ describe('RinspaceWorldTopbar', () => {
       await screen.findByRole('dialog', { name: 'Sign in / Register' }),
     ).toBeTruthy();
     expect(screen.getByLabelText('Phone number')).toBeTruthy();
+  });
+
+  it('opens the same phone dialog for an anonymous interaction request', async () => {
+    renderTopbar('/p/123/example');
+
+    window.dispatchEvent(new Event(RINSPACE_LOGIN_REQUEST_EVENT));
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Sign in / Register' }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText('Phone number')).toBeTruthy();
+    expect(startSso).not.toHaveBeenCalled();
   });
 
   it('searches the real Mastodon endpoint and keeps result routes in the inner world', async () => {
@@ -249,12 +264,7 @@ describe('RinspaceWorldTopbar', () => {
       within(moreMenu as HTMLElement)
         .getAllByRole('menuitem')
         .map((item) => item.textContent.trim()),
-    ).toEqual([
-      'Mine',
-      'Publish',
-      'Notifications7',
-      'Switch to dark theme',
-    ]);
+    ).toEqual(['Mine', 'Publish', 'Notifications7', 'Switch to dark theme']);
   });
 
   it('adds administration only for a role that can view the dashboard', () => {

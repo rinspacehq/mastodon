@@ -47,6 +47,7 @@ import {
 } from 'mastodon/services/rinspace_auth';
 import type { RinspaceOtpChallenge } from 'mastodon/services/rinspace_auth';
 import { useAppSelector } from 'mastodon/store';
+import { RINSPACE_LOGIN_REQUEST_EVENT } from 'mastodon/utils/rinspace_login';
 
 const messages = defineMessages({
   brandName: { id: 'rinspace.world.brand_name', defaultMessage: 'Rinspace' },
@@ -725,6 +726,20 @@ export const RinspaceWorldTopbar: React.FC<{
     void beginLogin();
   }, [beginLogin, loginRequested]);
 
+  useEffect(() => {
+    const openUnifiedLogin = (event: Event) => {
+      event.preventDefault();
+      void beginLogin();
+    };
+    window.addEventListener(RINSPACE_LOGIN_REQUEST_EVENT, openUnifiedLogin);
+    return () => {
+      window.removeEventListener(
+        RINSPACE_LOGIN_REQUEST_EVENT,
+        openUnifiedLogin,
+      );
+    };
+  }, [beginLogin]);
+
   const canAdmin = canViewAdminDashboard(permissions);
   const accountName = displayName?.trim()
     ? displayName.trim()
@@ -744,11 +759,7 @@ export const RinspaceWorldTopbar: React.FC<{
     expanded: moreOpen,
     onSelect: toggleMore,
     render: (trigger) => (
-      <RinspaceMoreMenu
-        open={moreOpen}
-        onToggle={toggleMore}
-        trigger={trigger}
-      >
+      <RinspaceMoreMenu open={moreOpen} onToggle={toggleMore} trigger={trigger}>
         {signedIn ? (
           <>
             <a
@@ -785,9 +796,7 @@ export const RinspaceWorldTopbar: React.FC<{
               )}
               {intl.formatMessage(messages.notifications)}
               {unreadNotifications > 0 ? (
-                <span className='topbar-menu-count'>
-                  {unreadNotifications}
-                </span>
+                <span className='topbar-menu-count'>{unreadNotifications}</span>
               ) : null}
             </a>
             <button
@@ -880,56 +889,56 @@ export const RinspaceWorldTopbar: React.FC<{
               nativeTitles
               renderAccount={(chevron) =>
                 username ? (
-                <details className='account-menu'>
-                  <summary
-                    className='account-menu-trigger'
-                    aria-label={intl.formatMessage(messages.accountMenu)}
-                  >
-                    <span className='avatar-name'>
-                      <span className='avatar-name-mark' aria-hidden='true'>
-                        {avatar ? (
-                          <img src={avatar} alt='' />
-                        ) : (
-                          username.slice(0, 1).toUpperCase()
-                        )}
+                  <details className='account-menu'>
+                    <summary
+                      className='account-menu-trigger'
+                      aria-label={intl.formatMessage(messages.accountMenu)}
+                    >
+                      <span className='avatar-name'>
+                        <span className='avatar-name-mark' aria-hidden='true'>
+                          {avatar ? (
+                            <img src={avatar} alt='' />
+                          ) : (
+                            username.slice(0, 1).toUpperCase()
+                          )}
+                        </span>
+                        <span className='avatar-name-text'>{accountName}</span>
                       </span>
-                      <span className='avatar-name-text'>{accountName}</span>
-                    </span>
-                    {chevron}
-                  </summary>
-                  <div className='rin-account-menu' role='menu'>
-                    <a
-                      role='menuitem'
-                      href={innerHref(
-                        `/@${encodeURIComponent(username)}`,
-                        '',
-                        '',
-                      )}
-                    >
-                      <AnimateUser animateOnHover size={16} />
-                      {intl.formatMessage(messages.account)}
-                    </a>
-                    <a
-                      role='menuitem'
-                      href={innerHref(
-                        '/settings/preferences/appearance',
-                        '',
-                        '',
-                      )}
-                    >
-                      <AnimateSettings animateOnHover size={16} />
-                      {intl.formatMessage(messages.preferences)}
-                    </a>
-                    <button
-                      type='button'
-                      role='menuitem'
-                      onClick={submitSignOut}
-                    >
-                      <AnimateLogOut animateOnHover size={16} />
-                      {intl.formatMessage(messages.signOut)}
-                    </button>
-                  </div>
-                </details>
+                      {chevron}
+                    </summary>
+                    <div className='rin-account-menu' role='menu'>
+                      <a
+                        role='menuitem'
+                        href={innerHref(
+                          `/@${encodeURIComponent(username)}`,
+                          '',
+                          '',
+                        )}
+                      >
+                        <AnimateUser animateOnHover size={16} />
+                        {intl.formatMessage(messages.account)}
+                      </a>
+                      <a
+                        role='menuitem'
+                        href={innerHref(
+                          '/settings/preferences/appearance',
+                          '',
+                          '',
+                        )}
+                      >
+                        <AnimateSettings animateOnHover size={16} />
+                        {intl.formatMessage(messages.preferences)}
+                      </a>
+                      <button
+                        type='button'
+                        role='menuitem'
+                        onClick={submitSignOut}
+                      >
+                        <AnimateLogOut animateOnHover size={16} />
+                        {intl.formatMessage(messages.signOut)}
+                      </button>
+                    </div>
+                  </details>
                 ) : null
               }
             />

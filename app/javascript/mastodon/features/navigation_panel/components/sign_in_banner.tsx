@@ -6,6 +6,7 @@ import { openModal } from 'mastodon/actions/modal';
 import { registrationsOpen, sso_redirect } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import {
+  handleRinspaceLoginClick,
   rinspaceLoginHref,
   rinspaceLoginMethod,
 } from 'mastodon/utils/rinspace_login';
@@ -19,6 +20,12 @@ export const SignInBanner: React.FC = () => {
         openModal({ modalType: 'CLOSED_REGISTRATIONS', modalProps: {} }),
       ),
     [dispatch],
+  );
+  const openRinspaceLogin = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      handleRinspaceLoginClick(event, sso_redirect);
+    },
+    [],
   );
 
   let signupButton: React.ReactNode;
@@ -47,6 +54,7 @@ export const SignInBanner: React.FC = () => {
         <a
           href={rinspaceLoginHref(sso_redirect)}
           data-method={rinspaceLoginMethod(sso_redirect)}
+          onClick={openRinspaceLogin}
           className='button button--block button-secondary'
         >
           <FormattedMessage
