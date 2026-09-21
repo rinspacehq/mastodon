@@ -9,7 +9,9 @@ RSpec.describe 'API OEmbed' do
     context 'when status is public' do
       let(:status) { Fabricate(:status, visibility: :public) }
 
-      it 'returns success with private cache control headers' do
+      it 'returns Rinspace-branded embed metadata with private cache control headers' do
+        allow(Mastodon::RinspaceLocalOnly).to receive(:enabled?).and_return(true)
+
         get '/api/oembed', params: { url: short_account_status_url(status.account, status) }
 
         expect(response)
@@ -18,6 +20,12 @@ RSpec.describe 'API OEmbed' do
           .to start_with('application/json')
         expect(response.headers['Cache-Control'])
           .to include('private, no-store')
+
+        payload = response.parsed_body
+        expect(payload['provider_name']).to eq('芥子环 (Rinspace)')
+        expect(payload['html']).to include(canonical_rinspace_status_url(status.id, Rinspace::StatusSlug.for(status)))
+        expect(payload['html']).to include('rinspace-mark-128')
+        expect(payload['html']).not_to include('logo-symbol-icon')
       end
     end
 

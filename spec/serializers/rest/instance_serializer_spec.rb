@@ -12,6 +12,18 @@ RSpec.describe REST::InstanceSerializer do
     end
   end
 
+  describe 'Rinspace branding' do
+    before do
+      allow(Mastodon::RinspaceLocalOnly).to receive(:enabled?).and_return(true)
+    end
+
+    it 'uses the Rinspace product description and preview asset' do
+      expect(record.description).to include('Rinspace').and include('inner world')
+      expect(serialization.dig('thumbnail', 'url')).to include('rinspace-mark-128')
+      expect(serialization.dig('thumbnail', 'url')).not_to include('preview')
+    end
+  end
+
   describe 'configuration' do
     it 'returns the VAPID public key' do
       expect(serialization['configuration']['vapid']).to eq({

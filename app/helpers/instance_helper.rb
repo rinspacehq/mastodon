@@ -25,6 +25,21 @@ module InstanceHelper
     instance_presenter.app_icon&.file&.url(size)
   end
 
+  def instance_preview_url
+    thumbnail = instance_presenter.thumbnail
+    return full_asset_url(thumbnail.file.url(:'@1x')) if thumbnail
+
+    icon = app_icon_path(512)
+    icon.present? ? full_asset_url(icon) : frontend_asset_url('images/rinspace-mark-128.png')
+  end
+
+  def instance_preview_dimensions
+    thumbnail = instance_presenter.thumbnail
+    return thumbnail.meta.values_at('width', 'height') if thumbnail
+
+    app_icon_path(512).present? ? [512, 512] : [128, 128]
+  end
+
   def use_mask_icon?
     instance_presenter.app_icon.blank?
   end

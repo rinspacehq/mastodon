@@ -2,12 +2,14 @@
 zh-CN:
   rinspace:
     brand_name: 芥子环
+    metadata_name: 芥子环 (Rinspace)
+    site_description: 芥子环是一个以 Tag 为核心的长文知识社区；里世界用于发布推文、关注兴趣与认真交流。
   about:
-    about_mastodon_html: 迎接未来的社交网络：拒绝广告，告别商业监视，坚持伦理设计，拥抱去中心化！加入 Rinspace，夺回你的数据主权！
+    about_mastodon_html: 芥子环是一个以 Tag 为核心的长文知识社区；里世界用于发布推文、关注兴趣与认真交流。
     contact_missing: 未设置
     contact_unavailable: 未公开
     default_thumbnail_description: Rinspace 社区预览图。
-    hosted_on: 运行在 %{domain} 上的 Rinspace 实例
+    hosted_on: 芥子环 (Rinspace)
     title: 关于本站
   accounts:
     errors:

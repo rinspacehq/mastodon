@@ -33,6 +33,23 @@ RSpec.describe InstanceHelper do
     end
   end
 
+  describe 'brand metadata' do
+    before do
+      allow(Mastodon::RinspaceLocalOnly).to receive(:enabled?).and_return(true)
+    end
+
+    it 'uses a bilingual product name for link previews' do
+      I18n.with_locale(:'zh-CN') do
+        expect(helper.metadata_site_name).to eq('芥子环 (Rinspace)')
+      end
+    end
+
+    it 'never falls back to the upstream Mastodon preview image' do
+      expect(helper.instance_preview_url).to include('rinspace-mark-128')
+      expect(helper.instance_preview_dimensions).to eq([128, 128])
+    end
+  end
+
   describe 'favicon' do
     context 'when an icon exists' do
       let!(:favicon) { Fabricate(:site_upload, var: 'favicon') }

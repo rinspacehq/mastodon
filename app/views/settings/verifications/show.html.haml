@@ -44,7 +44,7 @@
     %div
       .status-card.expanded.bottomless
         .status-card__image
-          = image_tag frontend_asset_url('images/preview.png'), alt: '', class: 'status-card__image-image'
+          = image_tag instance_preview_url, alt: '', class: 'status-card__image-image'
         .status-card__content
           %span.status-card__host
             %span= t('author_attribution.s_blog', name: display_name(@account))

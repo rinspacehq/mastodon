@@ -30,7 +30,7 @@ class REST::InstanceSerializer < ActiveModel::Serializer
       }
     else
       {
-        url: frontend_asset_url('images/preview.png'),
+        url: instance_preview_url,
         description: I18n.t('about.default_thumbnail_description', locale: object.languages[0]),
       }
     end
@@ -42,7 +42,7 @@ class REST::InstanceSerializer < ActiveModel::Serializer
       src = URI.join(root_url, src).to_s if src.present?
 
       {
-        src: src || frontend_asset_url("icons/android-chrome-#{size}x#{size}.png"),
+        src: src || frontend_asset_url('images/rinspace-mark-128.png'),
         size: "#{size}x#{size}",
       }
     end

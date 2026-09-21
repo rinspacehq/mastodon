@@ -24,8 +24,17 @@ RSpec.describe InstancePresenter do
 
   describe '#description' do
     it 'delegates site_description to Setting' do
+      allow(Mastodon::RinspaceLocalOnly).to receive(:enabled?).and_return(false)
       Setting.site_short_description = 'Site desc'
       expect(instance_presenter.description).to eq 'Site desc'
+    end
+
+    it 'uses the localized Rinspace product description in local-only mode' do
+      allow(Mastodon::RinspaceLocalOnly).to receive(:enabled?).and_return(true)
+
+      I18n.with_locale(:'zh-CN') do
+        expect(instance_presenter.description).to include('芥子环').and include('里世界')
+      end
     end
   end
 
