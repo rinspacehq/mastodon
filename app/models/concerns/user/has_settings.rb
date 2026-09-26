@@ -5,6 +5,7 @@ module User::HasSettings
 
   included do
     serialize :settings, coder: UserSettingsSerializer
+    after_update_commit :reconcile_rinspace_external_search, if: :rinspace_external_search_preference_changed?
   end
 
   def settings_attributes=(attributes)
@@ -157,5 +158,20 @@ module User::HasSettings
 
   def hide_all_media?
     settings['web.display_media'] == 'hide_all'
+  end
+
+  private
+
+  def rinspace_external_search_preference_changed?
+    return false unless saved_change_to_settings?
+
+    before, after = saved_change_to_settings
+    before&.[]('noindex') != after&.[]('noindex')
+  end
+
+  def reconcile_rinspace_external_search
+    return unless ENV['RINSPACE_SEARCH_EVENTS_ENABLED'] == 'true'
+
+    Rinspace::SearchPreferenceReconcileWorker.perform_async(account_id)
   end
 end

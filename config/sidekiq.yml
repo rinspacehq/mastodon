@@ -28,6 +28,10 @@
       interval: 1 minute
       class: Scheduler::IndexingScheduler
       queue: scheduler
+    rinspace_search_event_delivery:
+      interval: 1 minute
+      class: Rinspace::SearchEventDeliveryWorker
+      queue: scheduler
     vacuum_scheduler:
       cron: '<%= Random.rand(0..59) %> <%= Random.rand(3..5) %> * * *'
       class: Scheduler::VacuumScheduler

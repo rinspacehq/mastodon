@@ -25,6 +25,12 @@ export interface ApiTagJSON {
   url: string;
 }
 
+export interface ApiRinspaceKnowledgeTagJSON {
+  id: string;
+  name: string;
+  url: string;
+}
+
 export interface ApiMentionJSON {
   id: string;
   username: string;
@@ -117,6 +123,7 @@ export interface ApiStatusJSON {
   mentions: ApiMentionJSON[];
 
   tags: ApiTagJSON[];
+  rinspace_knowledge_tags?: ApiRinspaceKnowledgeTagJSON[];
   emojis: ApiCustomEmojiJSON[];
   tagged_collections: ApiCollectionJSON[];
 

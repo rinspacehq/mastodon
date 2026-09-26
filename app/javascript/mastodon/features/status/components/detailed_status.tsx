@@ -423,6 +423,7 @@ export const DetailedStatus: React.FC<{
   const { statusContentProps, hashtagBar } = getHashtagBarForStatus(
     status as StatusLike,
   );
+  const knowledgeTags = status.get('rinspace_knowledge_tags');
 
   const matchedFilters = status.get('matched_filters');
 
@@ -438,6 +439,9 @@ export const DetailedStatus: React.FC<{
           'status--has-quote': !!status.get('quote'),
         })}
         data-rinspace-status-id={status.get('id')}
+        data-rin-public-document='tweet'
+        data-rin-object-id={status.get('id')}
+        data-rin-public-version={`status:${status.get('id')}:${Math.floor(Date.parse((status.get('edited_at') || status.get('created_at')) as string) / 1000)}`}
       >
         {status.get('visibility') === 'direct' && (
           <div className='status__prepend'>
@@ -506,6 +510,26 @@ export const DetailedStatus: React.FC<{
 
             {media}
             {hashtagBar}
+
+            {knowledgeTags?.size > 0 && (
+              <nav
+                className='rinspace-knowledge-tags'
+                aria-label='相关知识 Tag'
+              >
+                <FormattedMessage
+                  id='status.rinspace_knowledge_tags'
+                  defaultMessage='Related knowledge Tags:'
+                />{' '}
+                {knowledgeTags.map((tag: any, index: number) => (
+                  <span key={tag.get('id')}>
+                    {index > 0 && ' · '}
+                    <a href={tag.get('url')} rel='tag'>
+                      {tag.get('name')}
+                    </a>
+                  </span>
+                ))}
+              </nav>
+            )}
 
             {status.get('quote') && (
               <QuotedStatus

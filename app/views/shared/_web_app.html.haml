@@ -9,6 +9,7 @@
   = vite_typescript_tag 'application.ts', crossorigin: 'anonymous'
 
 .notranslate.app-holder#mastodon{ data: { props: default_props.to_json } }
+  = yield :rinspace_public_snapshot if content_for?(:rinspace_public_snapshot)
   %noscript
     = image_tag frontend_asset_path('images/rinspace-mark-128.png'), alt: rinspace_brand_name
 

@@ -20,6 +20,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   attribute :content, unless: :source_requested?
   attribute :text, if: :source_requested?
+  attribute :rinspace_knowledge_tags, if: :show_rinspace_knowledge_tags?
 
   belongs_to :reblog, serializer: REST::StatusSerializer
   belongs_to :application, if: :show_application?
@@ -176,12 +177,22 @@ class REST::StatusSerializer < ActiveModel::Serializer
     object.tagged_objects.filter_map { |tagged_object| tagged_object.object if tagged_object.ap_type == 'FeaturedCollection' }
   end
 
+  def rinspace_knowledge_tags
+    Rinspace::KnowledgeTagLinks.for(object).map do |tag|
+      { id: tag.id, name: tag.name, url: tag.url }
+    end
+  end
+
   def quote_approval
     {
       automatic: object.proper.quote_policy_as_keys(:automatic),
       manual: object.proper.quote_policy_as_keys(:manual),
       current_user: object.proper.quote_policy_for_account(current_user&.account),
     }
+  end
+
+  def show_rinspace_knowledge_tags?
+    instance_options[:rinspace_knowledge_tags] && Rinspace::SearchIndexEligibility.eligible?(object)
   end
 
   private

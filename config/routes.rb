@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       namespace :v1 do
         resources :identity_bindings, only: :create
         resources :tag_bindings, only: :create
+        get 'search/tags/:rinspace_tag_id/statuses', to: 'search_tag_statuses#index', constraints: { rinspace_tag_id: /\d+/ }
         resources :follows, only: :create
         get 'composer/config', to: 'composer#show_config'
         get 'composer/emojis', to: 'composer#emojis'
@@ -203,6 +204,7 @@ Rails.application.routes.draw do
 
   get '/p/:id', to: 'statuses#show', as: :rinspace_status, constraints: { id: /\d+/ }, defaults: { rinspace_permalink: true }
   get '/p/:id/:slug', to: 'statuses#show', as: :canonical_rinspace_status, constraints: { id: /\d+/, slug: %r{[^/]+} }, defaults: { rinspace_permalink: true }
+  get '/sitemap-tweets.xml', to: 'rinspace/sitemaps#tweets', defaults: { format: :xml }
 
   get '/@:username_with_domain/(*any)', to: 'home#index', constraints: { username_with_domain: %r{([^/])+?} }, as: :account_with_domain, format: false
   get '/settings', to: redirect('/settings/profile')

@@ -10,6 +10,7 @@ class StatusesController < ApplicationController
 
   before_action :require_account_signature!, only: [:show, :activity], if: -> { request.format == :json && authorized_fetch_mode? }
   before_action :set_status
+  before_action :set_search_index_eligibility, only: :show, if: :rinspace_permalink?
   before_action :redirect_to_original, only: :show
   before_action :redirect_to_canonical_permalink, only: :show, if: :rinspace_permalink?
   before_action :verify_embed_allowed, only: :embed
@@ -84,6 +85,11 @@ class StatusesController < ApplicationController
 
   def redirect_to_original
     redirect_to(ActivityPub::TagManager.instance.url_for(@status.reblog), allow_other_host: true) if @status.reblog?
+  end
+
+  def set_search_index_eligibility
+    @search_index_eligibility = Rinspace::SearchIndexEligibility.call(@status)
+    @rinspace_knowledge_tags = Rinspace::KnowledgeTagLinks.for(@status)
   end
 
   def redirect_to_canonical_permalink
