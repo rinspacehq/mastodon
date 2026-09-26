@@ -1,7 +1,7 @@
 - content_for :page_title, t('statuses.title', name: display_name(@account), quote: truncate(@status.spoiler_text.presence || @status.text, length: 50, omission: '…', escape: false))
 
 - content_for :header_tags do
-  - if @account.user_prefers_noindex?
+  - unless @search_index_eligibility&.eligible?
     %meta{ name: 'robots', content: 'noindex, noarchive' }/
   - else
     = render_seo_schema @status
@@ -23,5 +23,19 @@
 
   = render 'og_description', activity: @status
   = render 'og_image', status: @status, account: @account
+
+- content_for :rinspace_public_snapshot do
+  %main.rinspace-search-snapshot{ data: { rin_public_document: 'tweet', rin_object_id: @status.id, rin_public_version: "status:#{@status.id}:#{(@status.edited_at || @status.created_at).to_i}" } }
+    %article{ aria: { labelledby: 'rinspace-tweet-title' } }
+      %h1#rinspace-tweet-title= t('statuses.title', name: display_name(@account), quote: '')
+      %p
+        = link_to acct(@account), short_account_path(@account), rel: 'author'
+        %time{ datetime: @status.created_at.iso8601 }= l(@status.created_at)
+      .status__content{ data: { rin_primary_text: 'tweet' } }= status_content_format(@status)
+      - if @rinspace_knowledge_tags.present?
+        %nav{ aria: { label: '相关知识 Tag' } }
+          %span 相关知识 Tag：
+          - @rinspace_knowledge_tags.each do |tag|
+            = link_to tag.name, tag.url, rel: 'tag'
 
 = render 'shared/web_app'

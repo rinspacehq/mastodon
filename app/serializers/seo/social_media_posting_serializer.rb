@@ -11,6 +11,7 @@ class SEO::SocialMediaPostingSerializer < ActiveModel::Serializer
   attribute :video, if: -> { object.ordered_media_attachments.any? { |attachment| attachment.video? || attachment.gifv? } }
   attribute :audio, if: -> { object.ordered_media_attachments.any?(&:audio?) }
   attribute :shared_content, if: -> { object.with_preview_card? }
+  attribute :about, if: -> { knowledge_tags.present? }
 
   def context
     'https://schema.org'
@@ -21,7 +22,7 @@ class SEO::SocialMediaPostingSerializer < ActiveModel::Serializer
   end
 
   def url
-    ActivityPub::TagManager.instance.url_for(object)
+    canonical_rinspace_status_url(object.id, Rinspace::StatusSlug.for(object))
   end
 
   def date_published
@@ -123,5 +124,20 @@ class SEO::SocialMediaPostingSerializer < ActiveModel::Serializer
       type: 'WebPage',
       url: object.preview_card.url,
     }
+  end
+
+  def about
+    knowledge_tags.map do |tag|
+      {
+        type: 'DefinedTerm',
+        identifier: tag.id,
+        name: tag.name,
+        url: tag.url,
+      }
+    end
+  end
+
+  def knowledge_tags
+    @knowledge_tags ||= Rinspace::KnowledgeTagLinks.for(object)
   end
 end

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'uri'
+
 return if Rails.env.test? || ENV['RINSPACE_ASSETS_PRECOMPILE'] == 'true'
 
 if ENV['RINSPACE_IDENTITY_STRICT'] != 'true'
@@ -9,6 +11,7 @@ end
 community_write = Rails.configuration.x.mastodon.rinspace_community_write_enabled
 recommendations = Rails.configuration.x.mastodon.rinspace_recommendations_enabled
 views = Rails.configuration.x.mastodon.rinspace_views_enabled
+search_events = ENV['RINSPACE_SEARCH_EVENTS_ENABLED'] == 'true'
 abort 'Recommendations and views require the governed community-write stage' if (recommendations || views) && !community_write
 
 required = %w[
@@ -19,6 +22,7 @@ required = %w[
 required.concat(%w[RINSPACE_MODERATION_ENDPOINT RINSPACE_MODERATION_HMAC_KEY]) if community_write
 required.concat(%w[RINSPACE_GORSE_ENDPOINT RINSPACE_GORSE_API_KEY]) if recommendations
 required << 'RINSPACE_VIEW_DEDUPE_HMAC_KEY' if views
+required.concat(%w[RINSPACE_SEARCH_EVENT_ENDPOINT RINSPACE_SEARCH_EVENT_HMAC_KEY]) if search_events
 missing = required.select { |name| ENV[name].to_s.blank? }
 abort "Missing mandatory Rinspace identity settings: #{missing.join(', ')}" if missing.any?
 abort 'Rinspace control-plane HMAC key must contain at least 32 bytes' if ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY'].bytesize < 32
@@ -45,4 +49,11 @@ end
 if views
   abort 'View dedupe HMAC key must contain at least 32 bytes' if ENV['RINSPACE_VIEW_DEDUPE_HMAC_KEY'].bytesize < 32
   abort 'View dedupe key must be purpose-specific' if [ENV['OIDC_CLIENT_SECRET'], ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY'], ENV['RINSPACE_MODERATION_HMAC_KEY'], ENV['RINSPACE_GORSE_API_KEY']].compact.include?(ENV['RINSPACE_VIEW_DEDUPE_HMAC_KEY'])
+end
+if search_events
+  abort 'Search event HMAC key must contain at least 32 bytes' if ENV['RINSPACE_SEARCH_EVENT_HMAC_KEY'].bytesize < 32
+  reserved = [ENV['OIDC_CLIENT_SECRET'], ENV['RINSPACE_CONTROL_PLANE_HMAC_KEY'], ENV['RINSPACE_IDENTITY_SERVICE_SECRET'], ENV['RINSPACE_MODERATION_HMAC_KEY'], ENV['RINSPACE_VIEW_DEDUPE_HMAC_KEY']].compact
+  abort 'Search event key must be purpose-specific' if reserved.include?(ENV['RINSPACE_SEARCH_EVENT_HMAC_KEY'])
+  endpoint = URI.parse(ENV['RINSPACE_SEARCH_EVENT_ENDPOINT'])
+  abort 'Search event endpoint must use the fixed internal path' unless %w[http https].include?(endpoint.scheme) && endpoint.host.present? && endpoint.path == '/internal/v1/search/events' && endpoint.query.nil? && endpoint.fragment.nil?
 end

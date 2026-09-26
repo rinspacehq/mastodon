@@ -44,6 +44,7 @@ class Status < ApplicationRecord
   include Status::ThreadingConcern
   include Status::Visibility
   include Status::InteractionPolicyConcern
+  include Status::RinspaceSearchEvents
 
   CACHEABLE_ASSOCIATIONS = [
     :application,

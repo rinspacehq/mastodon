@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_05_093000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_26_161000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1128,6 +1128,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_093000) do
     t.index ["service", "nonce"], name: "index_rinspace_service_nonces_on_service_and_nonce", unique: true
   end
 
+  create_table "rinspace_search_event_outboxes", primary_key: "event_id", id: :string, force: :cascade do |t|
+    t.string "action", null: false
+    t.integer "attempt_count", default: 0, null: false
+    t.string "canonical_url", null: false
+    t.datetime "created_at", null: false
+    t.string "delivery_state", default: "pending", null: false
+    t.string "last_error_code", default: "", null: false
+    t.integer "last_status_code"
+    t.datetime "lease_until"
+    t.string "lease_token", default: "", null: false
+    t.datetime "next_attempt_at", null: false
+    t.datetime "occurred_at", null: false
+    t.string "public_version", null: false
+    t.bigint "status_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["delivery_state", "next_attempt_at", "occurred_at"], name: "index_rinspace_search_outbox_ready"
+    t.index ["status_id", "action", "public_version"], name: "index_rinspace_search_outbox_idempotency", unique: true
+    t.check_constraint "action::text = ANY (ARRAY['upsert'::character varying::text, 'delete'::character varying::text])", name: "rinspace_search_outbox_action"
+    t.check_constraint "attempt_count >= 0", name: "rinspace_search_outbox_attempts"
+    t.check_constraint "delivery_state::text = ANY (ARRAY['pending'::character varying::text, 'delivering'::character varying::text, 'delivered'::character varying::text, 'dead_letter'::character varying::text])", name: "rinspace_search_outbox_state"
+  end
+
   create_table "rinspace_tag_bindings", force: :cascade do |t|
     t.bigint "binding_version", default: 0, null: false
     t.string "canonical_name", null: false
@@ -1138,7 +1160,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_093000) do
     t.datetime "updated_at", null: false
     t.index ["rinspace_tag_id"], name: "index_rinspace_tag_bindings_on_rinspace_tag_id", unique: true
     t.index ["tag_id"], name: "index_rinspace_tag_bindings_on_tag_id", unique: true
-    t.check_constraint "state::text = ANY (ARRAY['verified'::character varying::text, 'unbound'::character varying::text])", name: "rinspace_tag_binding_state"
+    t.check_constraint "state::text = ANY (ARRAY['verified'::character varying::text, 'unbound'::character varying::text, 'pending'::character varying::text, 'retired'::character varying::text, 'conflicting'::character varying::text])", name: "rinspace_tag_binding_state"
   end
 
   create_table "rule_translations", force: :cascade do |t|
