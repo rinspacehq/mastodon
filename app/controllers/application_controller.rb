@@ -177,9 +177,36 @@ class ApplicationController < ActionController::Base
       version: activation.rinspace_parent_version
     )
   rescue Rinspace::ParentSessionClient::InactiveError
-    render plain: 'Parent session is inactive', status: :unauthorized
+    recover_inactive_rinspace_browser_parent!
   rescue Rinspace::ParentSessionClient::UnavailableError
     response.headers['Retry-After'] = '3'
+    response.cache_control.replace(private: true, no_store: true)
     render plain: 'Identity service is temporarily unavailable', status: :service_unavailable
+  end
+
+  def recover_inactive_rinspace_browser_parent!
+    # This is local recovery, not a user-requested logout. Warden's logout
+    # callbacks revoke the central parent and must not run on this path.
+    request.env.fetch('warden').set_user(nil, scope: :user, store: false, run_callbacks: false)
+    reset_session
+    cookies.delete('_session_id', path: '/')
+    cookies.delete('remember_user_token', path: '/')
+    @current_user = nil
+    @current_account = nil
+    @current_session = nil
+    response.cache_control.replace(private: true, no_store: true)
+
+    if request.get? && request.format.html? && !request.xhr?
+      # The recovery controller already validates the return path against its
+      # product allowlist. Never replay a write or redirect to a client URL.
+      redirect_to "/auth/rinspace/recover?#{ { return_to: request.fullpath }.to_query }", status: :see_other
+    else
+      request.env.fetch('warden').custom_failure!
+      if request.format.json?
+        render json: { error: 'Parent session is inactive' }, status: :unauthorized
+      else
+        render plain: 'Parent session is inactive', status: :unauthorized
+      end
+    end
   end
 end
