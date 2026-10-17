@@ -82,7 +82,7 @@ RSpec.describe 'Rinspace SSO preparation' do
       get '/auth/sign_up'
       expect(response).to redirect_to('/auth/rinspace/recover')
 
-      post '/auth/sign_up', params: { user: { email: 'legacy@example.com', password: 'unused' } }
+      post user_registration_path, params: { user: { email: 'legacy@example.com', password: 'unused' } }
       expect(response).to redirect_to('/auth/rinspace/recover')
 
       get '/auth/rinspace/recover'

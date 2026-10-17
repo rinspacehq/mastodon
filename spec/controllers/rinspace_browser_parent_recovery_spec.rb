@@ -15,6 +15,7 @@ RSpec.describe ApplicationController do
   let(:activation) do
     instance_double(
       SessionActivation,
+      updated_at: Time.current,
       rinspace_managed?: true,
       rinspace_parent_issuer: 'https://example.com/rinspace/auth',
       rinspace_parent_uid: 'recovery-spec',
