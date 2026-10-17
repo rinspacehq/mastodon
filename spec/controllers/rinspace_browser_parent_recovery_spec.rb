@@ -57,7 +57,7 @@ RSpec.describe ApplicationController do
       expect(cookies['__Host-rin_access']).to eq('main-site-cookie-marker')
       expect(session[:recovery_marker]).to be_nil
       expect(warden.user(:user)).to be_nil
-      expect(controller.current_account).to be_nil
+      expect(controller.send(:current_account)).to be_nil
     end
 
     it 'preserves another device activation and its API token' do
@@ -72,6 +72,9 @@ RSpec.describe ApplicationController do
 
     it 'allows the next request to reach the anonymous flow instead of looping on 401' do
       get :success
+      # Controller specs retain the Warden proxy; real Rack middleware creates
+      # a fresh proxy for each request, reading the reset session and cookies.
+      request.env['warden'] = Warden::Proxy.new(request.env, warden.manager)
       get :success
 
       expect(response).to have_http_status(:ok)

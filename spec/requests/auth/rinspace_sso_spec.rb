@@ -107,10 +107,12 @@ RSpec.describe 'Rinspace SSO preparation' do
   end
 
   describe 'post-login return targets' do
+    before { host! 'www.example.com' }
+
     it 'never returns the browser to the identity authorization endpoint' do
       ClimateControl.modify(OIDC_ISSUER: 'http://www.example.com/rinspace/auth',
                             OIDC_AUTH_ENDPOINT: 'http://www.example.com/rinspace/auth/authorize') do
-        get '/auth/sign_in', headers: { 'Referer' => 'http://www.example.com/rinspace/auth/authorize?client_id=rin&state=probe' }
+        get '/auth/sign_in', headers: { 'Referer' => 'https://www.example.com/rinspace/auth/authorize?client_id=rin&state=probe' }
 
         expect(response).to have_http_status(:ok)
         expect(session['user_return_to']).to be_nil
@@ -118,9 +120,9 @@ RSpec.describe 'Rinspace SSO preparation' do
     end
 
     it 'still returns the browser to the inner product page that started the login' do
-      get '/auth/sign_in', headers: { 'Referer' => 'http://www.example.com/explore?world=inner' }
+      get '/auth/sign_in', headers: { 'Referer' => 'https://www.example.com/explore?world=inner' }
 
-      expect(session['user_return_to']).to eq('http://www.example.com/explore?world=inner')
+      expect(session['user_return_to']).to eq('https://www.example.com/explore?world=inner')
     end
   end
 end
