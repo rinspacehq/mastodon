@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # Narrow compatible maintenance image. No assets, gems, schema or workers change.
 # The complete matching fork source is distributed with every release.
 FROM ghcr.io/rinspacehq/mastodon@sha256:0a7ed8cbe9d00a71847b1c162f6f5ca85c0ec1248584fe0d4f48f2649ae12a54
