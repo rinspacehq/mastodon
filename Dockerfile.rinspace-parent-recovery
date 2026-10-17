@@ -1,0 +1,9 @@
+# Narrow compatible maintenance image. No assets, gems, schema or workers change.
+# The complete matching fork source is distributed with every release.
+FROM ghcr.io/rinspacehq/mastodon@sha256:0a7ed8cbe9d00a71847b1c162f6f5ca85c0ec1248584fe0d4f48f2649ae12a54
+ARG SOURCE_COMMIT
+LABEL org.opencontainers.image.source="https://github.com/rinspacehq/mastodon" \
+      org.opencontainers.image.revision="${SOURCE_COMMIT}" \
+      com.rinspace.release.component="mastodon-parent-recovery" \
+      com.rinspace.release.base="sha256:0a7ed8cbe9d00a71847b1c162f6f5ca85c0ec1248584fe0d4f48f2649ae12a54"
+COPY --chown=mastodon:mastodon app/controllers/application_controller.rb /opt/mastodon/app/controllers/application_controller.rb

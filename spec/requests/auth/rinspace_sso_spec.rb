@@ -82,7 +82,7 @@ RSpec.describe 'Rinspace SSO preparation' do
       get '/auth/sign_up'
       expect(response).to redirect_to('/auth/rinspace/recover')
 
-      post '/auth/sign_up', params: { user: { email: 'legacy@example.com', password: 'unused' } }
+      post user_registration_path, params: { user: { email: 'legacy@example.com', password: 'unused' } }
       expect(response).to redirect_to('/auth/rinspace/recover')
 
       get '/auth/rinspace/recover'
@@ -107,10 +107,12 @@ RSpec.describe 'Rinspace SSO preparation' do
   end
 
   describe 'post-login return targets' do
+    before { host! 'www.example.com' }
+
     it 'never returns the browser to the identity authorization endpoint' do
       ClimateControl.modify(OIDC_ISSUER: 'http://www.example.com/rinspace/auth',
                             OIDC_AUTH_ENDPOINT: 'http://www.example.com/rinspace/auth/authorize') do
-        get '/auth/sign_in', headers: { 'Referer' => 'http://www.example.com/rinspace/auth/authorize?client_id=rin&state=probe' }
+        get '/auth/sign_in', headers: { 'Referer' => 'https://www.example.com/rinspace/auth/authorize?client_id=rin&state=probe' }
 
         expect(response).to have_http_status(:ok)
         expect(session['user_return_to']).to be_nil
@@ -118,9 +120,45 @@ RSpec.describe 'Rinspace SSO preparation' do
     end
 
     it 'still returns the browser to the inner product page that started the login' do
-      get '/auth/sign_in', headers: { 'Referer' => 'http://www.example.com/explore?world=inner' }
+      get '/auth/sign_in', headers: { 'Referer' => 'https://www.example.com/explore?world=inner' }
 
-      expect(session['user_return_to']).to eq('http://www.example.com/explore?world=inner')
+      expect(session['user_return_to']).to eq('/explore?world=inner')
+    end
+  end
+
+  # Multi-request cookie recovery must use the actual Rack session middleware,
+  # not Devise's controller-only Warden stub, which retains an old test session.
+  describe 'inactive browser cookie recovery' do
+    it 'allows the next request to reach the anonymous flow instead of looping on 401' do
+      user = Fabricate(:user)
+      parent_client = instance_double(Rinspace::ParentSessionClient, assert_active!: true)
+      allow(Rinspace::ParentSessionClient).to receive(:new).and_return(parent_client)
+      sign_in user
+      get '/?world=inner'
+      expect(response).to have_http_status(:ok)
+
+      user.session_activations.sole.update!(
+        rinspace_parent_issuer: 'https://example.com/rinspace/auth',
+        rinspace_parent_uid: 'recovery-spec',
+        rinspace_parent_sid: SecureRandom.uuid,
+        rinspace_parent_version: 1,
+        rinspace_parent_auth_time: Time.current,
+        rinspace_binding_id: SecureRandom.uuid
+      )
+      allow(parent_client).to receive(:assert_active!).and_raise(Rinspace::ParentSessionClient::InactiveError)
+      expect(parent_client).not_to receive(:revoke_parent!)
+
+      get '/?world=inner'
+      expect(response).to have_http_status(:see_other)
+      expect(response.location).to include('/auth/rinspace/recover?')
+      follow_redirect!
+      expect(response).to have_http_status(:found)
+      follow_redirect!
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body[/<script id="initial-state"[^>]*>(.*?)<\/script>/m, 1]).dig('meta', 'me')).to be_nil
+
+      get '/?world=inner'
+      expect(response).to have_http_status(:ok)
     end
   end
 end
