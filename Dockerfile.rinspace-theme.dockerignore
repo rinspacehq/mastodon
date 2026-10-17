@@ -1,0 +1,10 @@
+# This assets-only recipe must override the upstream exclusion of public/packs.
+# Do not send dependencies, Git metadata, environment files or runtime data.
+**
+!app/
+!app/javascript/
+!app/javascript/inline/
+!app/javascript/inline/theme-selection.js
+!public/
+!public/packs/
+!public/packs/**
