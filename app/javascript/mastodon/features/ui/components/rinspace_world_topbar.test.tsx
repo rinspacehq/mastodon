@@ -92,6 +92,9 @@ describe('RinspaceWorldTopbar', () => {
     expect(
       screen.getByRole('button', { name: 'Switch to dark theme' }),
     ).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to dark theme' }));
+    expect(window.localStorage.getItem('rinspace-theme-v2')).toBe('dark');
+    expect(document.documentElement.dataset.colorScheme).toBe('dark');
     expect(screen.queryByRole('link', { name: 'Mine' })).toBeNull();
     expect(
       screen

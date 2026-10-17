@@ -1,17 +1,21 @@
 // Presentation snapshot from private rinspace/ui/src/styles/topbar-shell.css at
 // commit 3aedfb63. Mastodon selectors are namespaced; source hashes are recorded
 // in the private two-worlds specification.
+// Shared theme tokens follow accepted Web v0.2.6 (ab8feceb); the 2026-10-17
+// private shared-theme contract repairs preferences without replacing layout.
 :root {
   --font-body:
     'IBM Plex Sans', 'Rinspace Noto Sans SC', 'Noto Sans SC', 'PingFang SC',
     sans-serif;
   --rin-canvas: #f8fafc;
   --rin-surface: #fff;
-  --rin-surface-subtle: #eef2f5;
+  --rin-surface-subtle: #edf2f7;
   --rin-ink: #2c3e50;
-  --rin-ink-muted: #64748b;
+  --rin-ink-muted: #4a5568;
   --rin-accent: #2b577a;
   --rin-border: #cbd5df;
+  --rin-border-strong: #cbd5df;
+  --rin-on-accent: #fff;
   --rin-dialog-overlay: rgb(11 18 24 / 62%);
   --rin-radius-md: 8px;
   --rin-font-editorial:
@@ -49,22 +53,43 @@
 }
 
 :root[data-color-scheme='dark'] {
-  --rin-canvas: #111820;
-  --rin-surface: #18222d;
-  --rin-surface-subtle: #22303d;
-  --rin-ink: #e5edf3;
-  --rin-ink-muted: #9fb0bf;
-  --rin-accent: #81a9c7;
-  --rin-border: #354757;
-  --color-text-brand: #9fc2dc;
+  --rin-canvas: #0b1218;
+  --rin-surface: #111c25;
+  --rin-surface-subtle: #0f1921;
+  --rin-ink: #e8f0f5;
+  --rin-ink-muted: #a8b6c2;
+  --rin-accent: #83b4d4;
+  --rin-border: #40515e;
+  --rin-border-strong: #52697a;
+  --rin-on-accent: #0b1218;
+  --color-text-brand: var(--rin-accent);
   --color-text-brand-soft: #b4ccdd;
   --color-text-brand-on-inverted: #2b577a;
-  --color-bg-brand-base: #456f8e;
-  --color-bg-brand-base-hover: #5686a8;
+  --color-bg-brand-base: var(--rin-accent);
+  --color-bg-brand-base-hover: #9fc2dc;
   --color-bg-brand-soft: #20394b;
   --color-bg-brand-softest: #172a38;
-  --color-border-brand: #81a9c7;
+  --color-border-brand: var(--rin-accent);
   --color-border-brand-soft: #354f63;
+}
+
+// Preserve upstream high-contrast semantics rather than overriding them with
+// the ordinary surface palette. Both runtimes share the normal-mode tokens.
+:root:not([data-contrast='high']) {
+  --color-text-primary: var(--rin-ink);
+  --color-text-secondary: var(--rin-ink-muted);
+  --color-text-tertiary: var(--rin-ink-muted);
+  --color-bg-primary: var(--rin-canvas);
+  --color-bg-secondary: var(--rin-surface);
+  --color-bg-tertiary: var(--rin-surface-subtle);
+  --color-border-primary: var(--rin-border);
+  --color-border-strong: var(--rin-border-strong);
+  --color-text-on-brand-base: var(--rin-on-accent);
+}
+
+:root[data-color-scheme='dark'][data-contrast='high'] {
+  --color-bg-brand-base: #456f8e;
+  --color-bg-brand-base-hover: #5686a8;
 }
 
 .ui > .topbar {
@@ -214,7 +239,7 @@
   border: 0;
   border-radius: 999px;
   background: var(--rin-accent);
-  color: #fff;
+  color: var(--rin-on-accent);
 }
 
 .ui > .topbar .rinspace-topbar-search .search__icon--clear-button {
@@ -281,7 +306,7 @@
   border: 0;
   border-radius: 999px;
   background: var(--rin-accent);
-  color: #fff;
+  color: var(--rin-on-accent);
 }
 
 .ui > .topbar .topbar-search-preview {
@@ -421,7 +446,7 @@
   border: 1px solid var(--rin-canvas);
   border-radius: 999px;
   background: var(--rin-accent);
-  color: #fff;
+  color: var(--rin-on-accent);
   font-family: var(--rin-font-mono);
   font-size: 0.64rem;
   font-weight: 700;
@@ -444,7 +469,7 @@
   border: 1px solid var(--rin-canvas);
   border-radius: 999px;
   background: var(--rin-accent);
-  color: #fff;
+  color: var(--rin-on-accent);
   font-family: var(--rin-font-mono);
   font-size: 0.64rem;
   font-weight: 700;
@@ -456,7 +481,7 @@
   padding-inline: 5px;
   border-radius: 999px;
   background: var(--rin-accent);
-  color: #fff;
+  color: var(--rin-on-accent);
   font-family: var(--rin-font-mono);
   font-size: 0.64rem;
   font-weight: 700;
@@ -531,7 +556,7 @@
   border: 1px solid var(--rin-border);
   border-radius: 999px;
   background: var(--rin-accent);
-  color: #fff;
+  color: var(--rin-on-accent);
   font-family: var(--rin-font-mono);
   font-size: 0.62rem;
   font-weight: 700;
@@ -707,7 +732,7 @@
   border: 1px solid var(--rin-accent);
   border-radius: var(--rin-radius-md);
   background: var(--rin-accent);
-  color: #fff;
+  color: var(--rin-on-accent);
   font: inherit;
   cursor: pointer;
 }

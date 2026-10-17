@@ -48,6 +48,7 @@ import {
 import type { RinspaceOtpChallenge } from 'mastodon/services/rinspace_auth';
 import { useAppSelector } from 'mastodon/store';
 import { RINSPACE_LOGIN_REQUEST_EVENT } from 'mastodon/utils/rinspace_login';
+import { setRinspaceTheme } from 'mastodon/utils/rinspace_theme';
 
 const messages = defineMessages({
   brandName: { id: 'rinspace.world.brand_name', defaultMessage: 'Rinspace' },
@@ -680,19 +681,9 @@ export const RinspaceWorldTopbar: React.FC<{
     [location.hash, location.pathname, location.search],
   );
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem('rinspace-inner-color-scheme');
-    if (stored === 'light' || stored === 'dark') {
-      document.documentElement.dataset.colorScheme = stored;
-      document.documentElement.dataset.systemTheme = 'false';
-    }
-  }, []);
-
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
-    document.documentElement.dataset.colorScheme = next;
-    document.documentElement.dataset.systemTheme = 'false';
-    window.localStorage.setItem('rinspace-inner-color-scheme', next);
+    setRinspaceTheme(next);
   };
 
   const beginLogin = useCallback(async () => {
