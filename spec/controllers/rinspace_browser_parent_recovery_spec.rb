@@ -70,17 +70,6 @@ RSpec.describe ApplicationController do
       expect(other_activation.access_token.reload).not_to be_revoked
     end
 
-    it 'allows the next request to reach the anonymous flow instead of looping on 401' do
-      get :success
-      # Controller specs retain the Warden proxy; real Rack middleware creates
-      # a fresh proxy for each request, reading the reset session and cookies.
-      request.env['warden'] = Warden::Proxy.new(request.env, warden.manager)
-      get :success
-
-      expect(response).to have_http_status(:ok)
-      expect(response.headers['X-Protected-Action']).to eq('executed')
-    end
-
     it 'keeps JSON responses as 401 without an HTML login redirect' do
       get :success, format: :json
 

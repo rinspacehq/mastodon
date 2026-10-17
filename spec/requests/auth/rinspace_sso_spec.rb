@@ -122,7 +122,43 @@ RSpec.describe 'Rinspace SSO preparation' do
     it 'still returns the browser to the inner product page that started the login' do
       get '/auth/sign_in', headers: { 'Referer' => 'https://www.example.com/explore?world=inner' }
 
-      expect(session['user_return_to']).to eq('https://www.example.com/explore?world=inner')
+      expect(session['user_return_to']).to eq('/explore?world=inner')
+    end
+  end
+
+  # Multi-request cookie recovery must use the actual Rack session middleware,
+  # not Devise's controller-only Warden stub, which retains an old test session.
+  describe 'inactive browser cookie recovery' do
+    it 'allows the next request to reach the anonymous flow instead of looping on 401' do
+      user = Fabricate(:user)
+      parent_client = instance_double(Rinspace::ParentSessionClient, assert_active!: true)
+      allow(Rinspace::ParentSessionClient).to receive(:new).and_return(parent_client)
+      sign_in user
+      get '/?world=inner'
+      expect(response).to have_http_status(:ok)
+
+      user.session_activations.sole.update!(
+        rinspace_parent_issuer: 'https://example.com/rinspace/auth',
+        rinspace_parent_uid: 'recovery-spec',
+        rinspace_parent_sid: SecureRandom.uuid,
+        rinspace_parent_version: 1,
+        rinspace_parent_auth_time: Time.current,
+        rinspace_binding_id: SecureRandom.uuid
+      )
+      allow(parent_client).to receive(:assert_active!).and_raise(Rinspace::ParentSessionClient::InactiveError)
+      expect(parent_client).not_to receive(:revoke_parent!)
+
+      get '/?world=inner'
+      expect(response).to have_http_status(:see_other)
+      expect(response.location).to include('/auth/rinspace/recover?')
+      follow_redirect!
+      expect(response).to have_http_status(:found)
+      follow_redirect!
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body[/<script id="initial-state"[^>]*>(.*?)<\/script>/m, 1]).dig('meta', 'me')).to be_nil
+
+      get '/?world=inner'
+      expect(response).to have_http_status(:ok)
     end
   end
 end
