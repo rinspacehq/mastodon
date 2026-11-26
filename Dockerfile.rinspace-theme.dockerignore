@@ -5,6 +5,9 @@
 !app/javascript/
 !app/javascript/inline/
 !app/javascript/inline/theme-selection.js
+!app/services/
+!app/services/search_service.rb
+!app/services/rinspace_local_statuses_search_service.rb
 !public/
 !public/packs/
 !public/packs/**
