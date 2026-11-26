@@ -43,7 +43,8 @@ class SearchService < BaseService
   end
 
   def perform_statuses_search!
-    StatusesSearchService.new.call(
+    backend = Chewy.enabled? ? StatusesSearchService : RinspaceLocalStatusesSearchService
+    backend.new.call(
       @query,
       @account,
       limit: @limit,
@@ -84,7 +85,7 @@ class SearchService < BaseService
   end
 
   def status_searchable?
-    Chewy.enabled? && status_search? && @account.present?
+    status_search? && @account.present? && (Chewy.enabled? || Mastodon::RinspaceLocalOnly.enabled?)
   end
 
   def account_searchable?
