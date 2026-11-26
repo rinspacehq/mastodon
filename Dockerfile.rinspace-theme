@@ -1,4 +1,4 @@
-# Compatible assets maintenance on the accepted parent-session recovery runtime.
+# Compatible assets and search maintenance on the accepted parent-session recovery runtime.
 # Load the exact base from its public release before building with --network none.
 FROM rinspace-mastodon-parent-recovery@sha256:054857f92b319ef195831a18a3a65a71ac8b34f869a24395c6ac4e2bf8b1ad1a
 ARG SOURCE_COMMIT
@@ -7,4 +7,5 @@ LABEL org.opencontainers.image.source="https://github.com/rinspacehq/mastodon" \
       com.rinspace.release.component="mastodon-shared-theme" \
       com.rinspace.release.base="sha256:054857f92b319ef195831a18a3a65a71ac8b34f869a24395c6ac4e2bf8b1ad1a"
 COPY --chown=mastodon:mastodon app/javascript/inline/theme-selection.js /opt/mastodon/app/javascript/inline/theme-selection.js
+COPY --chown=mastodon:mastodon app/services/search_service.rb app/services/rinspace_local_statuses_search_service.rb /opt/mastodon/app/services/
 COPY --chown=mastodon:mastodon public/packs/ /opt/mastodon/public/packs/

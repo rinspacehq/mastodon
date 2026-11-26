@@ -81,6 +81,8 @@ function normalizePath(
     location.pathname = `/deck${location.pathname}`;
   }
 
+  // Search filters push a query-only location, keeping the current route.
+  location.pathname ||= browserHistory.location.pathname;
   const canonicalInnerPath = parsePath(innerWorldPath(createPath(location)));
   location.pathname = canonicalInnerPath.pathname;
   location.search = canonicalInnerPath.search;
