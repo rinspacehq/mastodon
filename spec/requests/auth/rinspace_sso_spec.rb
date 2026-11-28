@@ -106,6 +106,64 @@ RSpec.describe 'Rinspace SSO preparation' do
     end
   end
 
+  describe 'a native App authorization' do
+    let(:application) do
+      Doorkeeper::Application.create!(
+        name: 'Rinspace App fixture',
+        redirect_uri: Rinspace::MobileOAuthResume::REDIRECT_URI,
+        scopes: Rinspace::MobileOAuthResume::SCOPES.join(' ')
+      )
+    end
+    let(:authorization) do
+      {
+        client_id: application.uid,
+        redirect_uri: application.redirect_uri,
+        response_type: 'code',
+        scope: application.scopes.to_s,
+        state: 'native-fixture-state',
+        code_challenge: 'a' * 43,
+        code_challenge_method: 'S256',
+      }
+    end
+
+    it 'resumes the exact requested authorization once after the product login' do
+      ClimateControl.modify RINSPACE_CLOUDBASE_ENV_ID: 'rin-test' do
+        get '/oauth/authorize', params: authorization
+        expect(response).to redirect_to('/auth/sign_in')
+
+        follow_redirect!
+        expect(response).to redirect_to('/auth/rinspace/recover')
+        follow_redirect!
+        marker = Rack::Utils.parse_query(URI.parse(response.location).query).fetch('rinspace_return_to')
+        expect(marker).to match(%r{\A/\?world=inner&rinspace_mobile_oauth=[0-9a-f]{48}\z})
+
+        post '/auth/rinspace', params: { return_to: marker.dup.sub(/.$/) { |last| last == '0' ? '1' : '0' } }
+        expect(response).to have_http_status(:bad_request)
+
+        post '/auth/rinspace', params: { return_to: marker }
+        expect(response).to redirect_to('/auth/auth/openid_connect')
+        target = URI.parse(session['user_return_to'])
+        expect(target.path).to eq('/oauth/authorize')
+        expect(Rack::Utils.parse_query(target.query)).to eq(authorization.stringify_keys)
+
+        post '/auth/rinspace', params: { return_to: marker }
+        expect(response).to have_http_status(:bad_request)
+      end
+    end
+
+    it 'does not stage a request without the registered callback and S256 proof' do
+      [
+        { redirect_uri: 'https://other.example/callback' },
+        { code_challenge_method: 'plain' },
+        { client_id: 'unregistered-client-id' },
+        { scope: 'read write' },
+      ].each do |overrides|
+        get '/oauth/authorize', params: authorization.merge(overrides)
+        expect(session[Rinspace::MobileOAuthResume::SESSION_KEY]).to be_nil
+      end
+    end
+  end
+
   describe 'post-login return targets' do
     before { host! 'www.example.com' }
 

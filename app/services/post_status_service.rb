@@ -46,7 +46,9 @@ class PostStatusService < BaseService
     @in_reply_to = @options[:thread]
     @quoted_status = @options[:quoted_status]
 
-    with_idempotency do
+    with_idempotency do |existing_status|
+      return existing_status if existing_status
+
       validate_media!
       preprocess_attributes!
 
@@ -222,11 +224,8 @@ class PostStatusService < BaseService
   end
 
   def idempotency_duplicate
-    if scheduled?
+    @account.statuses.find_by(id: @idempotency_duplicate) ||
       @account.scheduled_statuses.find(@idempotency_duplicate)
-    else
-      @account.statuses.find(@idempotency_duplicate)
-    end
   end
 
   def idempotency_duplicate?
@@ -237,7 +236,7 @@ class PostStatusService < BaseService
     return yield unless idempotency_given?
 
     with_redis_lock("idempotency:lock:status:#{@account.id}:#{@options[:idempotency]}") do
-      return idempotency_duplicate if idempotency_duplicate?
+      return yield(idempotency_duplicate) if idempotency_duplicate?
 
       yield
 

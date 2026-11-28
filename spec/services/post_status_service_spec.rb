@@ -58,7 +58,7 @@ RSpec.describe PostStatusService do
     it 'returns existing status when used twice with idempotency key' do
       account = Fabricate(:account)
       status1 = subject.call(account, text: 'test', idempotency: 'meepmeep', scheduled_at: future)
-      status2 = subject.call(account, text: 'test', idempotency: 'meepmeep', scheduled_at: future)
+      status2 = described_class.new.call(account, text: 'test', idempotency: 'meepmeep', scheduled_at: future)
       expect(status2.id).to eq status1.id
     end
 
@@ -342,7 +342,7 @@ RSpec.describe PostStatusService do
   it 'returns existing status when used twice with idempotency key' do
     account = Fabricate(:account)
     status1 = subject.call(account, text: 'test', idempotency: 'meepmeep')
-    status2 = subject.call(account, text: 'test', idempotency: 'meepmeep')
+    status2 = described_class.new.call(account, text: 'test', idempotency: 'meepmeep')
     expect(status2.id).to eq status1.id
   end
 

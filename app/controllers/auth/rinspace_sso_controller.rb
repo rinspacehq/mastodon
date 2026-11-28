@@ -14,6 +14,13 @@ class Auth::RinspaceSsoController < ApplicationController
     provider = Devise.omniauth_providers.first
     return render json: { error: 'rinspace_sso_unavailable' }, status: :service_unavailable if provider.nil?
 
+    target = Addressable::URI.parse(return_to)
+    query = Rack::Utils.parse_nested_query(target.query.to_s)
+    if target.path == '/' && query.key?(Rinspace::MobileOAuthResume::MARKER)
+      return_to = Rinspace::MobileOAuthResume.take(session, query[Rinspace::MobileOAuthResume::MARKER])
+      return render json: { error: 'invalid_return_to' }, status: :bad_request if return_to.nil?
+    end
+
     store_location_for(:user, return_to)
     # Devise only defines the provider-specific route helper when the provider
     # was enabled while routes were drawn.  The generic helper is available in
