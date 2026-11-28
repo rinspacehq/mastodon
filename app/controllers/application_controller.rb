@@ -199,7 +199,8 @@ class ApplicationController < ActionController::Base
     if request.get? && request.format.html? && !request.xhr?
       # The recovery controller already validates the return path against its
       # product allowlist. Never replay a write or redirect to a client URL.
-      redirect_to "/auth/rinspace/recover?#{ { return_to: request.fullpath }.to_query }", status: :see_other
+      mobile_return = Rinspace::MobileOAuthResume.stage(session, request.query_parameters) if request.path == '/oauth/authorize'
+      redirect_to "/auth/rinspace/recover?#{ { return_to: mobile_return || request.fullpath }.to_query }", status: :see_other
     else
       request.env.fetch('warden').custom_failure!
       if request.format.json?

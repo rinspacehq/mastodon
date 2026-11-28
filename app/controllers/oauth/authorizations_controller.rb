@@ -14,7 +14,8 @@ class OAuth::AuthorizationsController < Doorkeeper::AuthorizationsController
   private
 
   def store_current_location
-    store_location_for(:user, request.url)
+    mobile_return = Rinspace::MobileOAuthResume.stage(session, request.query_parameters) if request.get? && current_user.nil?
+    store_location_for(:user, mobile_return || request.url)
   end
 
   def can_authorize_response?
